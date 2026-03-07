@@ -1,5 +1,6 @@
 namespace GameStore;
-using GameStore.Data;
+using GameStore.Models;
+using GameStore.Services;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -17,11 +18,14 @@ public class Program
             throw new InvalidOperationException("Missing ConnectionStrings:DefaultConnection");
 
         builder.Services.AddDbContext<GameStoreContext>(
-            option => option.UseLazyLoadingProxies()
-            .UseNpgsql(connectionString)
+            option => option.UseNpgsql(connectionString)
         );
 
+        builder.Services.AddScoped<GameService, GameServiceImpl>();
+
         var app = builder.Build();
+
+        app.UseStaticFiles();
 
         app.UseRouting();
 

@@ -101,7 +101,6 @@ D:\do an deploy\GameStore\obj\Debug\net8.0\staticwebassets.build.json
 D:\do an deploy\GameStore\obj\Debug\net8.0\staticwebassets.build.json.cache
 D:\do an deploy\GameStore\obj\Debug\net8.0\staticwebassets.development.json
 D:\do an deploy\GameStore\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-D:\do an deploy\GameStore\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 D:\do an deploy\GameStore\obj\Debug\net8.0\GameStore.csproj.Up2Date
 D:\do an deploy\GameStore\obj\Debug\net8.0\GameStore.dll
 D:\do an deploy\GameStore\obj\Debug\net8.0\refint\GameStore.dll
@@ -110,3 +109,6 @@ D:\do an deploy\GameStore\obj\Debug\net8.0\GameStore.genruntimeconfig.cache
 D:\do an deploy\GameStore\obj\Debug\net8.0\ref\GameStore.dll
 D:\do an deploy\GameStore\obj\Debug\net8.0\GameStore.RazorAssemblyInfo.cache
 D:\do an deploy\GameStore\obj\Debug\net8.0\GameStore.RazorAssemblyInfo.cs
+D:\do an deploy\GameStore\obj\Debug\net8.0\GameStore.sourcelink.json
+D:\do an deploy\GameStore\bin\Debug\net8.0\GameStore.staticwebassets.runtime.json
+D:\do an deploy\GameStore\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
