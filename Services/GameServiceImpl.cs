@@ -15,5 +15,10 @@ namespace GameStore.Services
         {
             return db.Games.ToList();
         }
+
+        public Game? findById(string maGame)
+        {
+            return db.Games.FirstOrDefault(x => x.MaGame == maGame);
+        }
     }
 }

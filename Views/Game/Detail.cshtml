@@ -1,0 +1,77 @@
+﻿@model GameStore.Models.Game
+
+@{
+    ViewData["Title"] = "Chi tiết game";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/game-detail.css" />
+}
+
+<div class="container py-4">
+    <div class="detail-card">
+        <div class="row g-0">
+
+            <div class="col-12 col-lg-7">
+                <div class="detail-card__image-wrap">
+                    <img src="~/images/@Model.Hinh" alt="@Model.TenGame" class="detail-card__image" />
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <div class="detail-card__content">
+
+                    <div class="detail-card__top">
+                        <span class="detail-card__genre">@Model.MaTheLoai</span>
+                        <span class="detail-card__code">Mã: @Model.MaGame</span>
+                    </div>
+
+                    <h1 class="detail-card__title">@Model.TenGame</h1>
+
+                    <div class="detail-card__price">
+                        @String.Format("{0:N0}", Model.Gia) VNĐ
+                    </div>
+
+                    <div class="detail-card__info">
+                        <div class="detail-card__info-item">
+                            <span class="label">Mã game</span>
+                            <span class="value">@Model.MaGame</span>
+                        </div>
+
+                        <div class="detail-card__info-item">
+                            <span class="label">Thể loại</span>
+                            <span class="value">@Model.MaTheLoai</span>
+                        </div>
+
+                        <div class="detail-card__info-item">
+                            <span class="label">Ngày ra mắt</span>
+                            <span class="value">
+                                @(Model.NgayRaMat.HasValue? Model.NgayRaMat.Value.ToString() : "Chưa cập nhật")
+                            </span>
+                        </div>
+
+                        <div class="detail-card__info-item">
+                            <span class="label">Lượt tải</span>
+                            <span class="value">@Model.SoLuotTai</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-card__description">
+                        <h5>Mô tả game</h5>
+                        <p>
+                            @(string.IsNullOrWhiteSpace(Model.MoTa) ? "Chưa có mô tả cho game này." : Model.MoTa)
+                        </p>
+                    </div>
+
+                    <div class="detail-card__actions">
+                        <a href="#" class="game-btn game-btn--primary">Mua ngay</a>
+                        <a href="#" class="game-btn game-btn--secondary">Thêm vào giỏ</a>
+                        <a href="/" class="game-btn game-btn--ghost">Quay lại</a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
