@@ -1,0 +1,89 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Category Game";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Danh sách tể loại game</h4>
+        <p class="card-subtitle mb-3">Quản lý toàn bộ thể loại game trong hệ thống</p>
+
+        <!-- Search + Add Button -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <form method="get" action="/admin/category/index" class="d-flex" style="width:350px;">
+                <input type="text"
+                       name="keyword"
+                       class="form-control me-2"
+                       placeholder="Tìm thể loại theo tên..." />
+
+                <button type="submit" class="btn btn-success">
+                    Search
+                </button>
+            </form>
+
+            <a href="/admin/create" class="btn btn-primary">
+                + Thêm thể loại game mới
+            </a>
+
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Mã thể loại game</th>
+                        <th>Tên loại game</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var theLoai in ViewBag.categories)
+                    {
+                        <tr>
+                            <td>@theLoai.MaTheLoai</td>
+                            <td>@theLoai.TenLoaiGame</td>
+                            <td>
+                                <a href="/admin/edit/@theLoai.MaTheLoai" class="btn btn-sm btn-warning">Sửa</a>
+                                <a href="/admin/delete/@theLoai.MaTheLoai" class="btn btn-sm btn-danger">Xóa</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <!-- Pagination UI only -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-4 mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">Previous</a>
+                    </li>
+
+                    <li class="page-item active">
+                        <a class="page-link" href="#">1</a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link" href="#">2</a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link" href="#">3</a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link" href="#">4</a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link" href="#">5</a>
+                    </li>
+
+                    <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
