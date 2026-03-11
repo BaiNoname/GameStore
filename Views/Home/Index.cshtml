@@ -1,16 +1,19 @@
-﻿@{
+﻿@model List<GameStore.Models.Game>
+@{
     ViewData["Title"] = "Home";
 }
 
     <!-- Main -->
     <main class="gs-page">
         <div class="container-xxl">
-            <h2 class="gs-section-title">All Games</h2>
+        <h2 class="gs-section-title">
+            @(ViewBag.CategoryName ?? "All Games")
+        </h2>
 
             <!-- Featured cards -->
             <div class="gs-featured">
 
-                @foreach (var game in ViewBag.games)
+                @foreach (var game in Model)
                 {
                     <article class="gs-card mb-4 shadow rounded-4 overflow-hidden">
                         <div class="row g-0 align-items-stretch">
@@ -31,11 +34,11 @@
                                         @game.MaTheLoai
                                     </span>
 
-                                    <h3 class="gs-card-title fw-bold mb-2">
+                                <h3 class="gs-card-title fw-bold mb-2 text-center">
                                         @game.TenGame
                                     </h3>
 
-                                    <div class="small text-muted mb-3">
+                                    <div class="mb-3 text-center">
                                         <div>
                                             <strong>Mã game:</strong> @game.MaGame
                                         </div>
@@ -58,7 +61,7 @@
                                         <!-- Nút -->
                                         <a class="btn btn-warning rounded-pill px-4"
                                            href="/Game/Detail/@game.MaGame">
-                                            Xem chi tiết
+                                            Detail
                                         </a>
 
                                     </div>
