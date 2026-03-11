@@ -50,9 +50,21 @@
                         <button class="btn gs-pill dropdown-toggle" data-bs-toggle="dropdown">
                             Recommendations
                         </button>
+
                         <ul class="dropdown-menu gs-dd">
-                            <li><a class="dropdown-item" href="#">For You</a></li>
-                            <li><a class="dropdown-item" href="#">By Genre</a></li>
+
+                            <li>
+                                <a class="dropdown-item" href="/home?type=new">
+                                    New Games
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item" href="/home?type=hot">
+                                    Hot Games
+                                </a>
+                            </li>
+
                         </ul>
                     </div>
 
@@ -61,16 +73,31 @@
                             Categories
                         </button>
                         <ul class="dropdown-menu gs-dd">
-                            <li><a class="dropdown-item" href="#">Action</a></li>
-                            <li><a class="dropdown-item" href="#">RPG</a></li>
-                            <li><a class="dropdown-item" href="#">Co-op</a></li>
+                            <li><a class="dropdown-item" href="/Home">All</a></li>
+                            @if (ViewBag.Categories != null)
+                            {
+                                foreach (var c in ViewBag.Categories)
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="/home?category=@c.MaTheLoai">
+                                            @c.TenLoaiGame
+                                        </a>
+                                    </li>
+                                }
+                            }
                         </ul>
                     </div>
                 </div>
 
-                <form class="gs-search ms-auto" role="search" onsubmit="return false;">
-                    <input class="form-control gs-search-input" type="search" placeholder="Search games..." aria-label="Search">
-                    <button class="btn gs-search-btn" type="submit" aria-label="Search">🔍</button>
+                <form class="gs-search ms-auto" method="get" action="/home">
+                    <input class="form-control gs-search-input"
+                           type="text"
+                           name="search"
+                           placeholder="Search game..." />
+
+                    <button class="btn gs-search-btn" type="submit">
+                        Search
+                    </button>
                 </form>
             </div>
         </div>

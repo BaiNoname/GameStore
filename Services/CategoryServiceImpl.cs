@@ -15,5 +15,11 @@ namespace GameStore.Services
         {
             return db.TheLoaiGames.ToList();
         }
+
+        public TheLoaiGame findById(string id)
+        {
+            return db.TheLoaiGames
+                     .FirstOrDefault(c => c.MaTheLoai == id);
+        }
     }
 }
