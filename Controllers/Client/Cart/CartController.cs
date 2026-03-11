@@ -8,6 +8,7 @@ namespace GameStore.Controllers.Client.Cart
         [Route("")]
         public IActionResult Index()
         {
+            ViewBag.HideSubBar = true;
             return View();
         }
     }
