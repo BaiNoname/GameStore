@@ -18,6 +18,7 @@ namespace GameStore.Controllers.Client.Game
         public IActionResult Detail(string id)
         {
             var game = gameService.findById(id);
+            ViewBag.HideSubBar = true;
 
             ViewBag.Categories = categoryService.findAll();
 

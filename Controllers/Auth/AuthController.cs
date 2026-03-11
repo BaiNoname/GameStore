@@ -10,12 +10,14 @@ namespace GameStore.Controllers.Auth
         [Route("login")]
         public IActionResult Login()
         {
+            ViewBag.HideSubBar = true;
             return View();
         }
 
         [Route("register")]
         public IActionResult Register()
         {
+            ViewBag.HideSubBar = true;
             return View();
         }
     }
