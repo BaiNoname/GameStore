@@ -35,73 +35,83 @@
                 <div class="d-flex align-items-center gap-3">
                     <a class="gs-toplink" href="/Auth/Login">Sign in</a>
                     <span class="gs-sep">|</span>
+                    <a href="/cart" class="btn btn-outline-light">
+                        🛒 Cart
+                    </a>
+                    <span class="gs-sep">|</span>
                     <a class="gs-toplink gs-accent" href="#">Chat with AI</a>
+                    
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Sub Navbar -->
-    <section class="gs-subbar">
-        <div class="container-xxl">
-            <div class="gs-subbar-inner">
-                <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <div class="dropdown">
-                        <button class="btn gs-pill dropdown-toggle" data-bs-toggle="dropdown">
-                            Recommendations
-                        </button>
 
-                        <ul class="dropdown-menu gs-dd">
+    @if (ViewBag.HideSubBar == null)
+    {
+        <!-- Sub Navbar -->
+        <section class="gs-subbar">
+            <div class="container-xxl">
+                <div class="gs-subbar-inner">
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="dropdown">
+                            <button class="btn gs-pill dropdown-toggle" data-bs-toggle="dropdown">
+                                Recommendations
+                            </button>
 
-                            <li>
-                                <a class="dropdown-item" href="/home?type=new">
-                                    New Games
-                                </a>
-                            </li>
+                            <ul class="dropdown-menu gs-dd">
 
-                            <li>
-                                <a class="dropdown-item" href="/home?type=hot">
-                                    Hot Games
-                                </a>
-                            </li>
+                                <li>
+                                    <a class="dropdown-item" href="/home?type=new">
+                                        New Games
+                                    </a>
+                                </li>
 
-                        </ul>
-                    </div>
+                                <li>
+                                    <a class="dropdown-item" href="/home?type=hot">
+                                        Hot Games
+                                    </a>
+                                </li>
 
-                    <div class="dropdown">
-                        <button class="btn gs-pill dropdown-toggle" data-bs-toggle="dropdown">
-                            Categories
-                        </button>
-                        <ul class="dropdown-menu gs-dd">
-                            <li><a class="dropdown-item" href="/Home">All</a></li>
-                            @if (ViewBag.Categories != null)
-                            {
-                                foreach (var c in ViewBag.Categories)
+                            </ul>
+                        </div>
+
+                        <div class="dropdown">
+                            <button class="btn gs-pill dropdown-toggle" data-bs-toggle="dropdown">
+                                Categories
+                            </button>
+                            <ul class="dropdown-menu gs-dd">
+                                <li><a class="dropdown-item" href="/Home">All</a></li>
+                                @if (ViewBag.Categories != null)
                                 {
-                                    <li>
-                                        <a class="dropdown-item" href="/home?category=@c.MaTheLoai">
-                                            @c.TenLoaiGame
-                                        </a>
-                                    </li>
+                                    foreach (var c in ViewBag.Categories)
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" href="/home?category=@c.MaTheLoai">
+                                                @c.TenLoaiGame
+                                            </a>
+                                        </li>
+                                    }
                                 }
-                            }
-                        </ul>
+                            </ul>
+                        </div>
                     </div>
+
+                    <form class="gs-search ms-auto" method="get" action="/home">
+                        <input class="form-control gs-search-input"
+                               type="text"
+                               name="search"
+                               placeholder="Search game..." />
+
+                        <button class="btn gs-search-btn" type="submit">
+                            Search
+                        </button>
+                    </form>
                 </div>
-
-                <form class="gs-search ms-auto" method="get" action="/home">
-                    <input class="form-control gs-search-input"
-                           type="text"
-                           name="search"
-                           placeholder="Search game..." />
-
-                    <button class="btn gs-search-btn" type="submit">
-                        Search
-                    </button>
-                </form>
             </div>
-        </div>
-    </section>
+        </section>
+    }
+    
 
     <!-- Nội dung riêng từng trang -->
     <main>

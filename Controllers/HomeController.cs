@@ -40,7 +40,18 @@ public class HomeController : Controller
         else
         {
             games = gameService.FilterGames(search, category);
-            ViewBag.CategoryName = "All Games";
+
+            if (!string.IsNullOrEmpty(category))
+            {
+                var cate = categoryService.findAll()
+                            .FirstOrDefault(c => c.MaTheLoai == category);
+
+                ViewBag.CategoryName = cate?.TenLoaiGame;
+            }
+            else
+            {
+                ViewBag.CategoryName = "All Games";
+            }
         }
 
         int totalGames = games.Count();
