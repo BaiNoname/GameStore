@@ -70,5 +70,19 @@ public class HomeController : Controller
         return View(pagedGames);
     }
 
+    [Route("about")]
+    public IActionResult About()
+    {
+        ViewBag.HideSubBar = true;
+        return View();
+    }
+
+    [Route("support")]
+    public IActionResult Support()
+    {
+        ViewBag.HideSubBar = true;
+        return View();
+    }
+
 
 }
