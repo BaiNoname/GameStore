@@ -284,4 +284,10 @@ body {
     color: white;
 }
 
+.gs-media img {
+    transition: transform 0.4s;
+}
 
+.gs-card:hover img {
+    transform: scale(1.05);
+}

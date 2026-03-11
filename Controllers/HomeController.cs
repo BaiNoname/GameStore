@@ -21,8 +21,10 @@ public class HomeController : Controller
     [Route("index")]
     [Route("")]
 
-    public IActionResult Index(string search, string category, string type)
+    public IActionResult Index(string search, string category, string type, int page = 1)
     {
+        int pageSize = 5;
+
         List<Game> games;
 
         if (type == "new")
@@ -35,30 +37,26 @@ public class HomeController : Controller
             games = gameService.GetHotGames();
             ViewBag.CategoryName = "🔥 Hot Games";
         }
-        else if (!string.IsNullOrEmpty(category))
-        {
-            games = gameService.FilterGames(search, category);
-
-            var cate = categoryService.findById(category);
-            if (cate != null)
-                ViewBag.CategoryName = "🎮 " + cate.TenLoaiGame;
-            else
-                ViewBag.CategoryName = "Games";
-        }
-        else if (!string.IsNullOrEmpty(search))
-        {
-            games = gameService.FilterGames(search, category);
-            ViewBag.CategoryName = "🔍 Search: " + search;
-        }
         else
         {
             games = gameService.FilterGames(search, category);
             ViewBag.CategoryName = "All Games";
         }
 
+        int totalGames = games.Count();
+        int totalPages = (int)Math.Ceiling((double)totalGames / pageSize);
+
+        var pagedGames = games
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        ViewBag.CurrentPage = page;
+        ViewBag.TotalPages = totalPages;
+
         ViewBag.Categories = categoryService.findAll();
 
-        return View(games);
+        return View(pagedGames);
     }
 
 

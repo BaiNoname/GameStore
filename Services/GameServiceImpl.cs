@@ -52,7 +52,6 @@ namespace GameStore.Services
             return db.Games
                 .Where(g => g.NgayRaMat != null && g.NgayRaMat >= oneMonthAgo)
                 .OrderByDescending(g => g.NgayRaMat)
-                .Take(3)
                 .ToList();
         }
 
