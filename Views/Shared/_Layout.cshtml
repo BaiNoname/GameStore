@@ -12,36 +12,63 @@
 </head>
 <body>
 
-    <!-- Top Navbar -->
     <header class="gs-topbar">
         <div class="container-xxl">
-            <div class="d-flex align-items-center justify-content-between py-3">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="gs-logo">
-                        <a href="/">
-                            <img src="https://store.fastly.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016"
-                                 width="176" height="44" alt="GameStore Logo">
+
+            <nav class="navbar navbar-expand-md navbar-dark">
+
+                <!-- Logo -->
+                <a class="navbar-brand" href="/">
+                    <img src="https://store.fastly.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016"
+                         width="176" height="44">
+                </a>
+
+                <!-- Nút menu mobile -->
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mainMenu">
+
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Menu -->
+                <div class="collapse navbar-collapse" id="mainMenu">
+
+                    <!-- Menu trái -->
+                    <ul class="navbar-nav ms-3 fw-bold text-white">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">STORE</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Home/About">ABOUT</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Home/Support">SUPPORT</a>
+                        </li>
+                    </ul>
+
+                    <!-- Menu phải -->
+                    <div class="ms-auto d-flex align-items-center gap-3">
+
+                        <a class="gs-toplink" href="/Auth/Login">Sign in</a>
+
+                        <a href="/cart" class="btn btn-outline-light">
+                            🛒 Cart
                         </a>
+
+                        <a class="gs-toplink gs-accent" href="#">
+                            Chat with AI
+                        </a>
+
                     </div>
 
-                    <nav class="d-none d-md-flex align-items-center gap-4 gs-topnav">
-                        <a href="/">STORE</a>
-                        <a href="/Home/About">ABOUT</a>
-                        <a href="/Home/Support">SUPPORT</a>
-                    </nav>
                 </div>
 
-                <div class="d-flex align-items-center gap-3">
-                    <a class="gs-toplink" href="/Auth/Login">Sign in</a>
-                    <span class="gs-sep">|</span>
-                    <a href="/cart" class="btn btn-outline-light">
-                        🛒 Cart
-                    </a>
-                    <span class="gs-sep">|</span>
-                    <a class="gs-toplink gs-accent" href="#">Chat with AI</a>
-                    
-                </div>
-            </div>
+            </nav>
+
         </div>
     </header>
 

@@ -41,7 +41,11 @@ public class HomeController : Controller
         {
             games = gameService.FilterGames(search, category);
 
-            if (!string.IsNullOrEmpty(category))
+            if (!string.IsNullOrEmpty(search))
+            {
+                ViewBag.CategoryName = "Search result: " + search;
+            }
+            else if (!string.IsNullOrEmpty(category))
             {
                 var cate = categoryService.findAll()
                             .FirstOrDefault(c => c.MaTheLoai == category);
