@@ -23,6 +23,7 @@ public class Program
 
         builder.Services.AddScoped<GameService, GameServiceImpl>();
         builder.Services.AddScoped<CategoryService, CategoryServiceImpl>();
+        builder.Services.AddScoped<UserService, UserServiceImpl>();
 
         var app = builder.Build();
 

@@ -1,30 +1,29 @@
-﻿
-@{
+﻿@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Quản lý Category Game";
+    ViewData["Title"] = "Quản lý User";
 }
 
 <div class="card">
     <div class="card-body">
-        <h4 class="card-title">Danh sách thể loại game</h4>
-        <p class="card-subtitle mb-3">Quản lý toàn bộ thể loại game trong hệ thống</p>
+        <h4 class="card-title">Danh sách Users</h4>
+        <p class="card-subtitle mb-3">Quản lý toàn bộ Users trong hệ thống</p>
 
         <!-- Search + Add Button -->
         <div class="d-flex justify-content-between align-items-center mb-3">
 
-            <form method="get" action="/admin/category/index" class="d-flex" style="width:350px;">
+            <form method="get" action="/admin/user/index" class="d-flex" style="width:350px;">
                 <input type="text"
                        name="keyword"
                        class="form-control me-2"
-                       placeholder="Tìm thể loại theo tên..." />
+                       placeholder="Tìm user theo email..." />
 
                 <button type="submit" class="btn btn-success">
                     Search
                 </button>
             </form>
 
-            <a href="/admin/create" class="btn btn-primary">
-                + Thêm thể loại game mới
+            <a href="/admin/user/create" class="btn btn-primary">
+                + Thêm User mới
             </a>
 
         </div>
@@ -33,20 +32,28 @@
             <table class="table table-striped align-middle">
                 <thead>
                     <tr>
-                        <th>Mã thể loại game</th>
-                        <th>Tên loại game</th>
+                        <th>User ID</th>
+                        <th>UserName</th>
+                        <th>Email</th>
+                        <th>Date Register</th>
+                        <th>Role</th>
+                        <th>Balance</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var theLoai in ViewBag.categories)
+                    @foreach (var user in ViewBag.users)
                     {
                         <tr>
-                            <td>@theLoai.MaTheLoai</td>
-                            <td>@theLoai.TenLoaiGame</td>
+                            <td>@user.MaNguoiDung</td>
+                            <td>@user.TenNguoiDung</td>
+                            <td>@user.Email</td>
+                            <td>@user.NgayDangKy</td>
+                            <td>@user.Quyen</td>
+                            <td>@user.SoDu</td>
                             <td>
-                                <a href="/admin/edit/@theLoai.MaTheLoai" class="btn btn-sm btn-warning">Sửa</a>
-                                <a href="/admin/delete/@theLoai.MaTheLoai" class="btn btn-sm btn-danger">Xóa</a>
+                                <a href="/admin/user/edit/@user.MaNguoiDung" class="btn btn-sm btn-warning">Sửa</a>
+                                <a href="/admin/user/delete/@user.MaNguoiDung" class="btn btn-sm btn-danger">Xóa</a>
                             </td>
                         </tr>
                     }
