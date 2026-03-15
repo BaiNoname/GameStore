@@ -23,10 +23,13 @@
                 </button>
             </form>
 
-            <a href="/admin/create" class="btn btn-primary">
+            <a href="/admin/category/add" class="btn btn-primary">
                 + Thêm thể loại game mới
             </a>
 
+        </div>
+        <div class="text-danger">
+            @TempData["Msg"]
         </div>
 
         <div class="table-responsive">
@@ -45,8 +48,8 @@
                             <td>@theLoai.MaTheLoai</td>
                             <td>@theLoai.TenLoaiGame</td>
                             <td>
-                                <a href="/admin/edit/@theLoai.MaTheLoai" class="btn btn-sm btn-warning">Sửa</a>
-                                <a href="/admin/delete/@theLoai.MaTheLoai" class="btn btn-sm btn-danger">Xóa</a>
+                                <a class="btn btn-sm btn-warning" asp-controller="category" asp-action="edit" asp-route-id="@theLoai.MaTheLoai">Edit</a>
+                                <a class="btn btn-sm btn-danger" asp-controller="category" asp-action="delete" asp-route-id="@theLoai.MaTheLoai" onclick="return confirm(`Are you Sure`)">Delete</a>
                             </td>
                         </tr>
                     }

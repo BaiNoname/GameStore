@@ -6,6 +6,11 @@ namespace GameStore.Services
     {
         public List<TheLoaiGame> findAll();
 
-        TheLoaiGame findById(string id);
+        public TheLoaiGame findById(string id);
+
+        public bool Create(TheLoaiGame category);
+        public bool Update(TheLoaiGame category);
+        public bool Delete(string id);
+
     }
 }

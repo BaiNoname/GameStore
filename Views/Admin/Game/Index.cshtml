@@ -24,12 +24,14 @@
                 </button>
             </form>
 
-            <a href="/admin/create" class="btn btn-primary">
+            <a href="/admin/game/add" class="btn btn-primary">
                 + Thêm game mới
             </a>
 
         </div>
-
+        <div class="p-2 text-success">
+            @TempData["Msg"]
+        </div>
         <div class="table-responsive">
             <table class="table table-striped align-middle">
                 <thead>
