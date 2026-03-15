@@ -14,7 +14,7 @@ namespace GameStore.Services
 
         public List<Game> findAll()
         {
-            return db.Games.ToList();
+            return db.Games.OrderBy(g => g.MaGame).ToList();
         }
 
         public Game? findById(string maGame)
@@ -64,5 +64,43 @@ namespace GameStore.Services
                 .ToList();
         }
 
+        public bool Create(Game game)
+        {
+            try
+            {
+                db.Games.Add(game);
+                return db.SaveChanges() > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool Update(Game game)
+        {
+            try
+            {
+                db.Entry(game).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                return db.SaveChanges() > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool Delete(string id)
+        {
+            try
+            {
+                db.Games.Remove(db.Games.Find(id));
+                return db.SaveChanges() > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }
