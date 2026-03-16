@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameStore.Migrations
 {
     [DbContext(typeof(GameStoreContext))]
-    [Migration("20260307073345_InitFullDatabase")]
-    partial class InitFullDatabase
+    [Migration("20260316101033_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -61,9 +61,8 @@ namespace GameStore.Migrations
                         .HasColumnType("text")
                         .HasColumnName("magame");
 
-                    b.Property<string>("MaNguoiDung")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<int>("MaNguoiDung")
+                        .HasColumnType("integer")
                         .HasColumnName("manguoidung");
 
                     b.Property<int>("MucDiem")
@@ -131,9 +130,8 @@ namespace GameStore.Migrations
                         .HasColumnType("text")
                         .HasColumnName("magd");
 
-                    b.Property<string>("MaNguoiDung")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<int>("MaNguoiDung")
+                        .HasColumnType("integer")
                         .HasColumnName("manguoidung");
 
                     b.Property<DateOnly>("NgayMua")
@@ -161,9 +159,8 @@ namespace GameStore.Migrations
                         .HasColumnType("text")
                         .HasColumnName("magh");
 
-                    b.Property<string>("MaNguoiDung")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<int>("MaNguoiDung")
+                        .HasColumnType("integer")
                         .HasColumnName("manguoidung");
 
                     b.HasKey("MaGH");
@@ -175,9 +172,12 @@ namespace GameStore.Migrations
 
             modelBuilder.Entity("GameStore.Models.NguoiDung", b =>
                 {
-                    b.Property<string>("MaNguoiDung")
-                        .HasColumnType("text")
+                    b.Property<int>("MaNguoiDung")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
                         .HasColumnName("manguoidung");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MaNguoiDung"));
 
                     b.Property<string>("Email")
                         .IsRequired()

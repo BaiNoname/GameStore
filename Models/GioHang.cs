@@ -3,7 +3,7 @@
     public class GioHang
     {
         public string MaGH { get; set; } = null!;
-        public string MaNguoiDung { get; set; } = null!;
+        public int MaNguoiDung { get; set; }
 
         public NguoiDung NguoiDung { get; set; } = null!;
         public List<ChiTietGioHang> ChiTietGioHangs { get; set; } = new();

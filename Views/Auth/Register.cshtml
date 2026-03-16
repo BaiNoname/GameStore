@@ -1,14 +1,17 @@
-﻿@{
+﻿@model GameStore.Models.NguoiDung
+
+@{
     ViewData["Title"] = "Register";
 }
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Steam Sign Up</title>
 
-    <!-- Bootstrap -->
+    <title>Register</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
@@ -23,55 +26,60 @@
             border-radius: 10px;
         }
     </style>
+
 </head>
 
 <body>
 
     <div class="container vh-100 d-flex align-items-center justify-content-center">
+
         <div class="signup-box col-md-5">
 
             <h2 class="text-center mb-4">Create Your Account</h2>
 
-            <form>
+            <form method="post" asp-controller="auth" asp-action="register">
 
                 <div class="mb-3">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" class="form-control" placeholder="Enter your email">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" asp-for="Email" placeholder="Enter email">
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Steam Username</label>
-                    <input type="text" class="form-control" placeholder="Choose a username">
+                    <label class="form-label">Username</label>
+                    <input class="form-control" asp-for="TenNguoiDung" placeholder="Enter username">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Password</label>
-                    <input type="password" class="form-control" placeholder="Enter password">
+                    <input type="password" class="form-control" asp-for="MatKhau" placeholder="Enter password">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Confirm Password</label>
-                    <input type="password" class="form-control" placeholder="Confirm password">
+                    <input type="password" class="form-control" name="confirmPassword" placeholder="Confirm password">
                 </div>
 
                 <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox">
+                    <input class="form-check-input" type="checkbox" required>
                     <label class="form-check-label">
-                        I agree to the terms and conditions
+                        I agree to the terms
                     </label>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100">
                     Create Account
                 </button>
-                <br/><br/>
-                <button type="submit" class="btn btn-warning w-100">
-                    <a class="gs-toplink" href="/Auth/Login">Sign in</a>
-                </button>
+
+                <div class="text-center mt-3">
+                    <a asp-controller="auth" asp-action="login" class="btn btn-warning w-100">
+                        Sign In
+                    </a>
+                </div>
 
             </form>
 
         </div>
+
     </div>
 
 </body>

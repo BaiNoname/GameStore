@@ -24,7 +24,7 @@ namespace GameStore.Services
             }
         }
 
-        public bool Delete(string id)
+        public bool Delete(int id)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace GameStore.Services
             return db.NguoiDungs.OrderBy(user => user.MaNguoiDung).ToList();
         }
 
-        public NguoiDung findById(string id)
+        public NguoiDung findById(int id)
         {
             return db.NguoiDungs
                      .FirstOrDefault(user => user.MaNguoiDung == id);

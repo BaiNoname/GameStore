@@ -45,7 +45,7 @@ namespace GameStore.Controllers.Admin
         }
 
         [Route("user/delete/{id}")]
-        public IActionResult Delete(string id)
+        public IActionResult Delete(int id)
         {
             if (userService.Delete(id))
             {
@@ -60,7 +60,7 @@ namespace GameStore.Controllers.Admin
         }
 
         [Route("user/edit/{id}")]
-        public IActionResult Edit(string id)
+        public IActionResult Edit(int id)
         {
             return View("~/Views/Admin/User/Edit.cshtml", userService.findById(id));
 
