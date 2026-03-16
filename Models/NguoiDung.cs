@@ -2,7 +2,7 @@
 {
     public class NguoiDung
     {
-        public string MaNguoiDung { get; set; } = null!;
+        public int MaNguoiDung { get; set; }
         public string TenNguoiDung { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string MatKhau { get; set; } = null!;

@@ -1,4 +1,5 @@
-﻿using GameStore.Services;
+﻿using GameStore.Models;
+using GameStore.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Auth
@@ -18,7 +19,7 @@ namespace GameStore.Controllers.Auth
         public IActionResult Register()
         {
             ViewBag.HideSubBar = true;
-            return View();
+            return View("Register", new NguoiDung());
         }
     }
 }

@@ -1,12 +1,13 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace GameStore.Migrations
 {
     /// <inheritdoc />
-    public partial class InitFullDatabase : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,7 +16,8 @@ namespace GameStore.Migrations
                 name: "nguoidung",
                 columns: table => new
                 {
-                    manguoidung = table.Column<string>(type: "text", nullable: false),
+                    manguoidung = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     tennguoidung = table.Column<string>(type: "text", nullable: false),
                     email = table.Column<string>(type: "text", nullable: false),
                     matkhau = table.Column<string>(type: "text", nullable: false),
@@ -45,7 +47,7 @@ namespace GameStore.Migrations
                 columns: table => new
                 {
                     magd = table.Column<string>(type: "text", nullable: false),
-                    manguoidung = table.Column<string>(type: "text", nullable: false),
+                    manguoidung = table.Column<int>(type: "integer", nullable: false),
                     ngaymua = table.Column<DateOnly>(type: "date", nullable: false),
                     thanhtien = table.Column<decimal>(type: "numeric", nullable: false),
                     trangthai = table.Column<string>(type: "text", nullable: true)
@@ -66,7 +68,7 @@ namespace GameStore.Migrations
                 columns: table => new
                 {
                     magh = table.Column<string>(type: "text", nullable: false),
-                    manguoidung = table.Column<string>(type: "text", nullable: false)
+                    manguoidung = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -133,7 +135,7 @@ namespace GameStore.Migrations
                 columns: table => new
                 {
                     madg = table.Column<string>(type: "text", nullable: false),
-                    manguoidung = table.Column<string>(type: "text", nullable: false),
+                    manguoidung = table.Column<int>(type: "integer", nullable: false),
                     magame = table.Column<string>(type: "text", nullable: false),
                     mucdiem = table.Column<int>(type: "integer", nullable: false),
                     nhanxet = table.Column<string>(type: "text", nullable: true)
