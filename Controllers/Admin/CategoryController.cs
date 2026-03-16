@@ -1,9 +1,11 @@
 ﻿using GameStore.Models;
 using GameStore.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Admin
 {
+    [Authorize(Roles = "admin")]
     [Route("admin")]
     public class CategoryController : Controller
     {

@@ -1,10 +1,12 @@
 ﻿using GameStore.Models;
 using GameStore.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace GameStore.Controllers.Admin
 {
+    [Authorize(Roles = "admin")]
     [Route("admin")]
     public class GameController : Controller
     {

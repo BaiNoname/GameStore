@@ -1,4 +1,11 @@
-﻿<!doctype html>
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");
+}
+
+<!doctype html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -53,7 +60,16 @@
                     <!-- Menu phải -->
                     <div class="ms-auto d-flex align-items-center gap-3">
 
-                        <a class="gs-toplink" href="/Auth/Login">Sign in</a>
+                        @if (!User.Identity.IsAuthenticated)
+                        {
+                            <a asp-controller="Auth" asp-action="Login">Sign in</a>
+                        }
+                        else
+                        {
+                            <span>👤 @User.Identity.Name</span>
+
+                            <a class="btn btn-outline-warning btn-sm" asp-controller="Auth" asp-action="Logout">Logout</a>
+                        }
 
                         <a href="/cart" class="btn btn-outline-light">
                             🛒 Cart

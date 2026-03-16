@@ -46,36 +46,39 @@
 
         <div class="login-box col-md-4">
 
-            <h2 class="text-center mb-4">Sign in to Steam</h2>
+            <h2 class="text-center mb-4">Sign in to GameStore</h2>
 
-            <form>
+            <form method="post" asp-controller="Auth" asp-action="Login">
 
                 <div class="mb-3">
                     <label class="form-label">Email</label>
-                    <input type="text" class="form-control" placeholder="Enter email">
+                    <input name="email" class="form-control" placeholder="Enter email">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Password</label>
-                    <input type="password" class="form-control" placeholder="Enter password">
+                    <input name="password" type="password" class="form-control" placeholder="Enter password">
                 </div>
 
                 <div class="d-grid mb-3">
-                    <button class="btn btn-steam">Sign In</button>
-                </div>
-
-                <div class="text-center">
-                    <a href="#" class="text-info">Forgot password?</a>
-                </div>
-
-                <hr>
-
-                <div class="text-center">
-                    <p>No have account Steam?</p>
-                    <a href="/Auth/Register" class="btn btn-outline-light w-100">Create an Account</a>
+                    <button type="submit" class="btn btn-steam">Sign In</button>
                 </div>
 
             </form>
+
+            <div class="text-center">
+                <a href="#" class="text-info">Forgot password?</a>
+            </div>
+
+            <hr>
+
+            <div class="text-center">
+                <p>No have account Steam?</p>
+                <a asp-controller="Auth" asp-action="Register" class="btn btn-outline-light w-100">
+                    Create an Account
+                </a>
+            </div>
+
 
         </div>
 
