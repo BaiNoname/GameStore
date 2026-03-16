@@ -15,6 +15,9 @@ namespace GameStore.Services
         {
             try
             {
+                user.MatKhau = BCrypt.Net.BCrypt.HashPassword(user.MatKhau);
+                user.NgayDangKy = DateOnly.FromDateTime(DateTime.Now);
+
                 db.NguoiDungs.Add(user);
                 return db.SaveChanges() > 0;
             }
@@ -28,7 +31,12 @@ namespace GameStore.Services
         {
             try
             {
-                db.NguoiDungs.Remove(db.NguoiDungs.Find(id));
+                var user = db.NguoiDungs.Find(id);
+
+                if (user == null)
+                    return false;
+
+                db.NguoiDungs.Remove(user);
                 return db.SaveChanges() > 0;
             }
             catch
@@ -52,7 +60,22 @@ namespace GameStore.Services
         {
             try
             {
-                db.Entry(user).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                var existingUser = db.NguoiDungs.Find(user.MaNguoiDung);
+
+                if (existingUser == null)
+                    return false;
+
+                existingUser.TenNguoiDung = user.TenNguoiDung;
+                existingUser.Email = user.Email;
+                existingUser.Quyen = user.Quyen;
+                existingUser.SoDu = user.SoDu;
+
+                // nếu admin nhập password mới thì hash
+                if (!string.IsNullOrEmpty(user.MatKhau))
+                {
+                    existingUser.MatKhau = BCrypt.Net.BCrypt.HashPassword(user.MatKhau);
+                }
+
                 return db.SaveChanges() > 0;
             }
             catch

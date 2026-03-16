@@ -1,6 +1,7 @@
 namespace GameStore;
 using GameStore.Models;
 using GameStore.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -12,6 +13,19 @@ public class Program
 
         builder.Services.AddControllersWithViews();
 
+        builder.Services.AddSession();
+
+        builder.Services.AddHttpContextAccessor();
+
+        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+        .AddCookie(options =>
+        {
+            options.LoginPath = "/auth/login";
+            options.AccessDeniedPath = "/auth/login";
+        });
+
+        builder.Services.AddAuthentication();
+
         var connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"];
 
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -21,17 +35,24 @@ public class Program
             option => option.UseNpgsql(connectionString)
         );
 
+
         builder.Services.AddScoped<GameService, GameServiceImpl>();
         builder.Services.AddScoped<CategoryService, CategoryServiceImpl>();
         builder.Services.AddScoped<UserService, UserServiceImpl>();
+        builder.Services.AddScoped<AuthService, AuthServiceImpl>();
+
 
         var app = builder.Build();
+        app.UseSession();
 
         app.UseStaticFiles();
 
         app.UseRouting();
 
         app.MapControllers();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
 
         app.MapControllerRoute(
             name: "default",

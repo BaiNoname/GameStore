@@ -1,9 +1,11 @@
 ﻿using GameStore.Models;
 using GameStore.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Admin
 {
+    [Authorize(Roles = "admin")]
     [Route("admin")]
     public class UserController: Controller
     {
@@ -79,7 +81,7 @@ namespace GameStore.Controllers.Admin
             else
             {
                 TempData["Msg"] = "Edit Failed";
-                return RedirectToAction("Edit");
+                return RedirectToAction("Edit", new { id = user.MaNguoiDung });
 
             }
 
