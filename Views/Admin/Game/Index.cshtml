@@ -25,7 +25,7 @@
             </form>
 
             <a href="/admin/game/add" class="btn btn-primary">
-                + Thêm game mới
+                + Add New Game
             </a>
 
         </div>
@@ -39,6 +39,7 @@
                         <th>Mã game</th>
                         <th>Tên game</th>
                         <th>Thể loại</th>
+                        <th>Hình</th>
                         <th>Giá</th>
                         <th>Lượt tải</th>
                         <th>Thao tác</th>
@@ -51,11 +52,14 @@
                             <td>@game.MaGame</td>
                             <td>@game.TenGame</td>
                             <td>@game.MaTheLoai</td>
+                            <td>
+                                <img src="/images/@game.Hinh" width="120" />
+                            </td>
                             <td>@String.Format("{0:N0} VNĐ", game.Gia)</td>
                             <td>@game.SoLuotTai</td>
                             <td>
-                                <a href="/admin/edit/@game.MaGame" class="btn btn-sm btn-warning">Sửa</a>
-                                <a href="/admin/delete/@game.MaGame" class="btn btn-sm btn-danger">Xóa</a>
+                                <a class="btn btn-sm btn-warning" asp-controller="game" asp-action="edit" asp-route-id="@game.MaGame">Edit</a>
+                                <a class="btn btn-sm btn-danger" asp-controller="game" asp-action="delete" asp-route-id="@game.MaGame" onclick="return confirm(`Are you Sure`)">Delete</a>
                             </td>
                         </tr>
                     }
