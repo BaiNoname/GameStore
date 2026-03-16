@@ -1,0 +1,129 @@
+﻿@model GameStore.Models.NguoiDung
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Add Users";
+}
+
+<div class="container mt-5">
+
+    <div class="card bg-light text-light shadow-lg border-0">
+
+        <div class="card-header border-bottom border-secondary">
+            <h4 class="mb-0">🎮 Add Users</h4>
+        </div>
+
+        <div class="text-success">
+            @TempData["Msg"]
+        </div>
+
+        <div class="card-body">
+            <form method="post" asp-controller="user" asp-action="add">
+
+                <!-- Category ID -->
+                <div class="mb-3">
+                    <label class="form-label">User ID</label>
+
+                    <input type="text"
+                           class="form-control"
+                           asp-for="MaNguoiDung"
+                           placeholder="Enter User Id..." />
+
+                    <span asp-validation-for="MaNguoiDung"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Category Name -->
+                <div class="mb-3">
+                    <label class="form-label">User Name</label>
+
+                    <input type="text"
+                           class="form-control"
+                           asp-for="TenNguoiDung"
+                           placeholder="Enter User Name..." />
+
+                    <span asp-validation-for="TenNguoiDung"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+
+                    <input type="email"
+                           class="form-control"
+                           asp-for="Email"
+                           placeholder="Enter Email..." />
+
+                    <span asp-validation-for="Email"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">PassWord</label>
+
+                    <input type="password"
+                           class="form-control"
+                           asp-for="MatKhau"
+                           placeholder="Enter PassWord..." />
+
+                    <span asp-validation-for="MatKhau"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Realease Date</label>
+
+                    <input type="date"
+                           class="form-control"
+                           asp-for="NgayDangKy"
+                           placeholder="Enter Realease Date..." />
+
+                    <span asp-validation-for="NgayDangKy"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+
+                    <input type="text"
+                           class="form-control"
+                           asp-for="Quyen"
+                           placeholder="Enter Role..." />
+
+                    <span asp-validation-for="Quyen"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Blance</label>
+
+                    <input type="text"
+                           class="form-control"
+                           asp-for="SoDu"
+                           placeholder="Enter Blance..." />
+
+                    <span asp-validation-for="SoDu"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-end gap-2">
+
+                    <a href="/Admin/user/index"
+                       class="btn btn-secondary">
+                        Back
+                    </a>
+
+                    <button class="btn btn-success" type="submit">
+                        ➕ Add User
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>

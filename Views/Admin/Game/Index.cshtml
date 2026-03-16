@@ -54,8 +54,8 @@
                             <td>@String.Format("{0:N0} VNĐ", game.Gia)</td>
                             <td>@game.SoLuotTai</td>
                             <td>
-                                <a href="/admin/edit/@game.MaGame" class="btn btn-sm btn-warning">Sửa</a>
-                                <a href="/admin/delete/@game.MaGame" class="btn btn-sm btn-danger">Xóa</a>
+                                <a class="btn btn-sm btn-warning" asp-controller="user" asp-action="edit" asp-route-id="@game.MaGame">Edit</a>
+                                <a class="btn btn-sm btn-danger" asp-controller="user" asp-action="delete" asp-route-id="@game.MaGame" onclick="return confirm(`Are you sure ?`)">Delete</a>
                             </td>
                         </tr>
                     }

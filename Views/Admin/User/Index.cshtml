@@ -22,8 +22,8 @@
                 </button>
             </form>
 
-            <a href="/admin/user/create" class="btn btn-primary">
-                + Thêm User mới
+            <a href="/admin/user/add" class="btn btn-primary">
+                + Add New User
             </a>
 
         </div>
@@ -52,8 +52,8 @@
                             <td>@user.Quyen</td>
                             <td>@user.SoDu</td>
                             <td>
-                                <a href="/admin/user/edit/@user.MaNguoiDung" class="btn btn-sm btn-warning">Sửa</a>
-                                <a href="/admin/user/delete/@user.MaNguoiDung" class="btn btn-sm btn-danger">Xóa</a>
+                                <a class="btn btn-sm btn-warning" asp-controller="user" asp-action="edit" asp-route-id="@user.MaNguoiDung">Edit</a>
+                                <a class="btn btn-sm btn-danger" asp-controller="user" asp-action="delete" asp-route-id="@user.MaNguoiDung" onclick="return confirm(`Are you Sure`)">Delete</a>
                             </td>
                         </tr>
                     }
