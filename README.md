@@ -1,1 +1,1 @@
-Read
+Better Stack Uptime
