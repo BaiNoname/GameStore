@@ -11,6 +11,7 @@ namespace GameStore.Services
         public bool Create(TheLoaiGame category);
         public bool Update(TheLoaiGame category);
         public bool Delete(string id);
+        public List<TheLoaiGame> findAll(string keyword, int page, int pageSize, out int totalPages);
 
     }
 }

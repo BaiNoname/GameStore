@@ -20,19 +20,6 @@
         <div class="card-body">
             <form method="post" asp-controller="user" asp-action="add">
 
-                <!-- Category ID -->
-                <div class="mb-3">
-                    <label class="form-label">User ID</label>
-
-                    <input type="text"
-                           class="form-control"
-                           asp-for="MaNguoiDung"
-                           placeholder="Enter User Id..." />
-
-                    <span asp-validation-for="MaNguoiDung"
-                          class="text-danger"></span>
-                </div>
-
                 <!-- Category Name -->
                 <div class="mb-3">
                     <label class="form-label">User Name</label>
@@ -71,39 +58,24 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Realease Date</label>
+                    <label class="form-label">Confirm Password</label>
 
-                    <input type="date"
+                    <input type="password"
                            class="form-control"
-                           asp-for="NgayDangKy"
-                           placeholder="Enter Realease Date..." />
+                           name="confirmPassword"
+                           placeholder="Confirm Password..." />
 
-                    <span asp-validation-for="NgayDangKy"
-                          class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Role</label>
 
-                    <input type="text"
-                           class="form-control"
-                           asp-for="Quyen"
-                           placeholder="Enter Role..." />
+                    <select class="form-control" asp-for="Quyen">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
 
-                    <span asp-validation-for="Quyen"
-                          class="text-danger"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Blance</label>
-
-                    <input type="text"
-                           class="form-control"
-                           asp-for="SoDu"
-                           placeholder="Enter Blance..." />
-
-                    <span asp-validation-for="SoDu"
-                          class="text-danger"></span>
+                    <span asp-validation-for="Quyen" class="text-danger"></span>
                 </div>
 
                 <!-- Buttons -->

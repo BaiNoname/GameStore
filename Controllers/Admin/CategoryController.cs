@@ -19,10 +19,22 @@ namespace GameStore.Controllers.Admin
 
         [Route("category")]
         [Route("category/index")]
-        public IActionResult Index()
+        public IActionResult Index(string keyword = "", int page = 1)
         {
-            ViewBag.categories = categoryService.findAll();
-            return View("~/Views/Admin/Category/Index.cshtml");
+            int pageSize = 10;
+            int totalPages;
+
+            var categories = categoryService.findAll(keyword, page, pageSize, out totalPages);
+
+            var vm = new GameStore.ViewModels.CategoryListVM
+            {
+                Categories = categories,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                Keyword = keyword
+            };
+
+            return View("~/Views/Admin/Category/Index.cshtml", vm);
         }
 
         [Route("category/add")]

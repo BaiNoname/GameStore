@@ -18,10 +18,23 @@ namespace GameStore.Controllers.Admin
         }
 
         [Route("user/index")]
-        public IActionResult Index()
+        public IActionResult Index(string keyword = "", int page = 1)
         {
-            ViewBag.users = userService.findAll();
-            return View("~/Views/Admin/User/Index.cshtml");
+            int pageSize = 10;
+
+            int totalPages;
+
+            var users = userService.findAll(keyword, page, pageSize, out totalPages);
+
+            var vm = new GameStore.ViewModels.UserListVM
+            {
+                Users = users,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                Keyword = keyword
+            };
+
+            return View("~/Views/Admin/User/Index.cshtml", vm);
         }
 
         [Route("user/add")]
@@ -32,9 +45,15 @@ namespace GameStore.Controllers.Admin
 
         [HttpPost]
         [Route("user/add")]
-        public IActionResult Add(NguoiDung user)
+        public IActionResult Add(NguoiDung user, string confirmPassword)
         {
-            if (userService.Create(user))
+            // check confirm password
+            if (user.MatKhau != confirmPassword)
+            {
+                TempData["Msg"] = "Password không khớp";
+                return View("~/Views/Admin/User/Add.cshtml", user);
+            }
+            else if (userService.Create(user))
             {
                 TempData["Msg"] = "Add Oke";
                 return RedirectToAction("Index");
@@ -42,8 +61,9 @@ namespace GameStore.Controllers.Admin
             else
             {
                 TempData["Msg"] = "Add Failed";
-                return RedirectToAction("Add");
+                return View("~/Views/Admin/User/Add.cshtml", user);
             }
+                
         }
 
         [Route("user/delete/{id}")]
@@ -70,9 +90,15 @@ namespace GameStore.Controllers.Admin
 
         [HttpPost]
         [Route("user/edit/{id}")]
-        public IActionResult Edit(NguoiDung user)
+        public IActionResult Edit(NguoiDung user, string confirmPassword)
         {
-            if (userService.Update(user))
+            // check confirm password
+            if (user.MatKhau != confirmPassword)
+            {
+                TempData["Msg"] = "Password không khớp";
+                return View("~/Views/Admin/User/Edit.cshtml", user);
+            }
+            else if (userService.Update(user))
             {
                 TempData["Msg"] = "Edit Oke";
                 return RedirectToAction("Index");

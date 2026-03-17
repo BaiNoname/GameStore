@@ -15,14 +15,33 @@ namespace GameStore.Services
         {
             try
             {
-                user.MatKhau = BCrypt.Net.BCrypt.HashPassword(user.MatKhau);
+                // ❗ check null
+                if (user == null)
+                    return false;
+
+                // ❗ validate email trùng
+                if (db.NguoiDungs.Any(u => u.Email == user.Email))
+                    return false;
+
+                // ❗ validate role
+                if (user.Quyen != "admin" && user.Quyen != "user")
+                    user.Quyen = "user"; // default
+
+                // ❗ set mặc định
+                user.SoDu = 0;
                 user.NgayDangKy = DateOnly.FromDateTime(DateTime.Now);
+                user.GioHang = null;
+
+                // ❗ hash password
+                user.MatKhau = BCrypt.Net.BCrypt.HashPassword(user.MatKhau);
 
                 db.NguoiDungs.Add(user);
+
                 return db.SaveChanges() > 0;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine("ERROR CREATE USER: " + ex.Message);
                 return false;
             }
         }
@@ -45,9 +64,26 @@ namespace GameStore.Services
             }
         }
 
-        public List<NguoiDung> findAll()
+        public List<NguoiDung> findAll(string keyword, int page, int pageSize, out int totalPages)
         {
-            return db.NguoiDungs.OrderBy(user => user.MaNguoiDung).ToList();
+            var query = db.NguoiDungs.AsQueryable();
+
+            // 🔍 filter theo email
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                keyword = keyword.Trim().ToLower();
+                query = query.Where(u => u.Email.ToLower().Contains(keyword));
+            }
+
+            int totalItems = query.Count();
+
+            totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            return query
+                .OrderBy(u => u.MaNguoiDung)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
         }
 
         public NguoiDung findById(int id)
