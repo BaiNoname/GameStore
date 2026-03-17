@@ -44,6 +44,9 @@ public class Program
 
 
         var app = builder.Build();
+
+        app.MapGet("/ping", () => "ok");
+        
         app.UseSession();
 
         app.UseStaticFiles();
