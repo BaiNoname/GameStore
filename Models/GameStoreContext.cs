@@ -15,6 +15,7 @@ namespace GameStore.Models
         public DbSet<DanhGia> DanhGias => Set<DanhGia>();
         public DbSet<GioHang> GioHangs => Set<GioHang>();
         public DbSet<ChiTietGioHang> ChiTietGioHangs => Set<ChiTietGioHang>();
+        public DbSet<ChiTietGiaoDich> ChiTietGiaoDiches => Set<ChiTietGiaoDich>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -87,6 +88,7 @@ namespace GameStore.Models
                 entity.Property(e => e.NgayMua).HasColumnName("ngaymua");
                 entity.Property(e => e.ThanhTien).HasColumnName("thanhtien");
                 entity.Property(e => e.TrangThai).HasColumnName("trangthai");
+                entity.Property(e => e.PhuongThuc).HasColumnName("phuongthuc");
 
                 entity.HasOne(e => e.NguoiDung)
                       .WithMany(n => n.GiaoDiches)
@@ -117,6 +119,7 @@ namespace GameStore.Models
                       .WithMany(g => g.DanhGias)
                       .HasForeignKey(e => e.MaGame)
                       .HasConstraintName("fk_danhgia_game");
+                entity.HasIndex(e => new { e.MaNguoiDung, e.MaGame }).IsUnique();
             });
 
             // =========================
@@ -131,9 +134,10 @@ namespace GameStore.Models
                 entity.Property(e => e.MaNguoiDung).HasColumnName("manguoidung");
 
                 entity.HasOne(e => e.NguoiDung)
-                      .WithMany(n => n.GioHangs)
-                      .HasForeignKey(e => e.MaNguoiDung)
+                      .WithOne(n => n.GioHang)
+                      .HasForeignKey<GioHang>(e => e.MaNguoiDung)
                       .HasConstraintName("fk_giohang_nguoidung");
+                entity.HasIndex(e => e.MaNguoiDung).IsUnique();
             });
 
             // =========================
@@ -146,7 +150,6 @@ namespace GameStore.Models
 
                 entity.Property(e => e.MaGH).HasColumnName("magh");
                 entity.Property(e => e.MaGame).HasColumnName("magame");
-                entity.Property(e => e.SoLuong).HasColumnName("soluong");
                 entity.Property(e => e.DonGiaHienTai).HasColumnName("dongiahientai");
 
                 entity.HasOne(e => e.GioHang)
@@ -158,6 +161,30 @@ namespace GameStore.Models
                       .WithMany(g => g.ChiTietGioHangs)
                       .HasForeignKey(e => e.MaGame)
                       .HasConstraintName("fk_chitietgiohang_game");
+            });
+
+            // =========================
+            // ChiTietGiaoDich
+            // =========================
+            modelBuilder.Entity<ChiTietGiaoDich>(entity =>
+            {
+                entity.ToTable("chitietgiaodich");
+
+                entity.HasKey(e => new { e.MaGD, e.MaGame });
+
+                entity.Property(e => e.MaGD).HasColumnName("magd");
+                entity.Property(e => e.MaGame).HasColumnName("magame");
+                entity.Property(e => e.DonGia).HasColumnName("dongia");
+
+                entity.HasOne(e => e.GiaoDich)
+                      .WithMany(g => g.ChiTietGiaoDiches)
+                      .HasForeignKey(e => e.MaGD)
+                      .HasConstraintName("fk_ctgd_giaodich");
+
+                entity.HasOne(e => e.Game)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaGame)
+                      .HasConstraintName("fk_ctgd_game");
             });
         }
     }

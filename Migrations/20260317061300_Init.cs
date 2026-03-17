@@ -50,7 +50,8 @@ namespace GameStore.Migrations
                     manguoidung = table.Column<int>(type: "integer", nullable: false),
                     ngaymua = table.Column<DateOnly>(type: "date", nullable: false),
                     thanhtien = table.Column<decimal>(type: "numeric", nullable: false),
-                    trangthai = table.Column<string>(type: "text", nullable: true)
+                    trangthai = table.Column<string>(type: "text", nullable: false),
+                    phuongthuc = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -105,12 +106,36 @@ namespace GameStore.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "chitietgiaodich",
+                columns: table => new
+                {
+                    magd = table.Column<string>(type: "text", nullable: false),
+                    magame = table.Column<string>(type: "text", nullable: false),
+                    dongia = table.Column<decimal>(type: "numeric", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_chitietgiaodich", x => new { x.magd, x.magame });
+                    table.ForeignKey(
+                        name: "fk_ctgd_game",
+                        column: x => x.magame,
+                        principalTable: "game",
+                        principalColumn: "magame",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_ctgd_giaodich",
+                        column: x => x.magd,
+                        principalTable: "giaodich",
+                        principalColumn: "magd",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "chitietgiohang",
                 columns: table => new
                 {
                     magh = table.Column<string>(type: "text", nullable: false),
                     magame = table.Column<string>(type: "text", nullable: false),
-                    soluong = table.Column<int>(type: "integer", nullable: false),
                     dongiahientai = table.Column<decimal>(type: "numeric", nullable: false)
                 },
                 constraints: table =>
@@ -158,6 +183,11 @@ namespace GameStore.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_chitietgiaodich_magame",
+                table: "chitietgiaodich",
+                column: "magame");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_chitietgiohang_magame",
                 table: "chitietgiohang",
                 column: "magame");
@@ -168,9 +198,10 @@ namespace GameStore.Migrations
                 column: "magame");
 
             migrationBuilder.CreateIndex(
-                name: "IX_danhgia_manguoidung",
+                name: "IX_danhgia_manguoidung_magame",
                 table: "danhgia",
-                column: "manguoidung");
+                columns: new[] { "manguoidung", "magame" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_game_matheloai",
@@ -185,7 +216,8 @@ namespace GameStore.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_giohang_manguoidung",
                 table: "giohang",
-                column: "manguoidung");
+                column: "manguoidung",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_nguoidung_email",
@@ -197,6 +229,9 @@ namespace GameStore.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "chitietgiaodich");
+
             migrationBuilder.DropTable(
                 name: "chitietgiohang");
 
