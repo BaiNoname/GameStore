@@ -1,1 +1,1 @@
-Better Stack Uptime
+Ping server = Better Stack Uptime 
