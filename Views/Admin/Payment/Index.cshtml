@@ -1,0 +1,124 @@
+@model GameStore.ViewModels.PaymentListVM
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Payment";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Danh sách Payment</h4>
+        <p class="card-subtitle mb-3">Quản lý toàn bộ Payment trong hệ thống</p>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <form method="get" action="/admin/payment/index" class="d-flex gap-2">
+
+                <input type="text"
+                       name="keyword"
+                       value="@Model.Keyword"
+                       class="form-control"
+                       placeholder="Tìm theo email..." />
+
+                <select name="status" class="form-control">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="Success" selected="@(Model.Status == "Success")">Success</option>
+                    <option value="Failed" selected="@(Model.Status == "Failed")">Failed</option>
+                </select>
+
+                <button class="btn btn-success">Search</button>
+            </form>
+
+        </div>
+        <div class="p-2 text-success">
+            @TempData["Msg"]
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Mã GD</th>
+                        <th>User</th>
+                        <th>Tiền</th>
+                        <th>Phương thức</th>
+                        <th>Trạng thái</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Payments)
+                    {
+                        <tr>
+                            <td>@item.MaGD</td>
+                            <td>
+                            <td>@item.NguoiDung?.Email</td>
+                            <td>@item.ThanhTien</td>
+                            <td>@item.PhuongThuc</td>
+                            <td>@item.TrangThai</td>
+                            <td>
+                                <form method="post"
+                                      action="/admin/payment/update-status"
+                                      class="d-flex align-items-center gap-2">
+
+                                    <input type="hidden" name="id" value="@item.MaGD" />
+
+                                    <!-- STATUS SELECT -->
+                                    <select name="status"
+                                            class="form-select form-select-sm">
+
+                                        <option value="Success"
+                                                selected="@(item.TrangThai == "Success")">
+                                            ✔ Success
+                                        </option>
+
+                                        <option value="Failed"
+                                                selected="@(item.TrangThai == "Failed")">
+                                            ❌ Failed
+                                        </option>
+
+                                    </select>
+
+                                    <!-- BUTTON -->
+                                    <button type="submit"
+                                            class="btn btn-sm btn-warning">
+                                        🔄
+                                    </button>
+
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <!-- Pagination UI only -->
+            <nav>
+                <ul class="pagination justify-content-center mt-4">
+
+                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link"
+                           href="?keyword=@Model.Keyword&status=@Model.Status&page=@(Model.CurrentPage - 1)">
+                            Previous
+                        </a>
+                    </li>
+
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                            <a class="page-link"
+                               href="?keyword=@Model.Keyword&status=@Model.Status&page=@i">
+                                @i
+                            </a>
+                        </li>
+                    }
+
+                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link"
+                           href="?keyword=@Model.Keyword&status=@Model.Status&page=@(Model.CurrentPage + 1)">
+                            Next
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>

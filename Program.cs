@@ -40,6 +40,7 @@ public class Program
         builder.Services.AddScoped<CategoryService, CategoryServiceImpl>();
         builder.Services.AddScoped<UserService, UserServiceImpl>();
         builder.Services.AddScoped<AuthService, AuthServiceImpl>();
+        builder.Services.AddScoped<PaymentService, PaymentServiceImpl>();
 
 
         var app = builder.Build();

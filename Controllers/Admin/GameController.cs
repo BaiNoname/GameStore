@@ -24,10 +24,24 @@ namespace GameStore.Controllers.Admin
         }
 
         [Route("game/index")]
-        public IActionResult Index()
+        public IActionResult Index(string keyword = "", string categoryId = "", int page = 1)
         {
-            var games = gameService.findAll();
-            return View("~/Views/Admin/Game/Index.cshtml", games);
+            int pageSize = 10;
+            int totalPages;
+
+            var games = gameService.findAll(keyword, categoryId, page, pageSize, out totalPages);
+
+            var vm = new GameStore.ViewModels.GameListVM
+            {
+                Games = games,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                Keyword = keyword,
+                CategoryId = categoryId,
+                Categories = categoryService.findAll()
+            };
+
+            return View("~/Views/Admin/Game/Index.cshtml", vm);
         }
 
         [Route("game/add")]

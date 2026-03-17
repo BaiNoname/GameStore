@@ -17,6 +17,34 @@ namespace GameStore.Services
             return db.Games.OrderBy(g => g.MaGame).ToList();
         }
 
+        public List<Game> findAll(string keyword, string categoryId, int page, int pageSize, out int totalPages)
+        {
+            var query = db.Games.Include(g => g.TheLoaiGame).AsQueryable();
+
+            // 🔍 search tên game (không phân biệt hoa thường)
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                keyword = keyword.Trim().ToLower();
+                query = query.Where(g => g.TenGame.ToLower().Contains(keyword));
+            }
+
+            // 🎯 filter theo thể loại
+            if (!string.IsNullOrEmpty(categoryId))
+            {
+                query = query.Where(g => g.MaTheLoai == categoryId);
+            }
+
+            int totalItems = query.Count();
+
+            totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            return query
+                .OrderBy(g => g.MaGame)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+        }
+
         public Game? findById(string maGame)
         {
             return db.Games.FirstOrDefault(x => x.MaGame == maGame);
