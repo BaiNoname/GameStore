@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameStore.Migrations
 {
     [DbContext(typeof(GameStoreContext))]
-    [Migration("20260316101033_Init")]
+    [Migration("20260317061300_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -24,6 +24,27 @@ namespace GameStore.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("GameStore.Models.ChiTietGiaoDich", b =>
+                {
+                    b.Property<string>("MaGD")
+                        .HasColumnType("text")
+                        .HasColumnName("magd");
+
+                    b.Property<string>("MaGame")
+                        .HasColumnType("text")
+                        .HasColumnName("magame");
+
+                    b.Property<decimal>("DonGia")
+                        .HasColumnType("numeric")
+                        .HasColumnName("dongia");
+
+                    b.HasKey("MaGD", "MaGame");
+
+                    b.HasIndex("MaGame");
+
+                    b.ToTable("chitietgiaodich", (string)null);
+                });
 
             modelBuilder.Entity("GameStore.Models.ChiTietGioHang", b =>
                 {
@@ -38,10 +59,6 @@ namespace GameStore.Migrations
                     b.Property<decimal>("DonGiaHienTai")
                         .HasColumnType("numeric")
                         .HasColumnName("dongiahientai");
-
-                    b.Property<int>("SoLuong")
-                        .HasColumnType("integer")
-                        .HasColumnName("soluong");
 
                     b.HasKey("MaGH", "MaGame");
 
@@ -77,7 +94,8 @@ namespace GameStore.Migrations
 
                     b.HasIndex("MaGame");
 
-                    b.HasIndex("MaNguoiDung");
+                    b.HasIndex("MaNguoiDung", "MaGame")
+                        .IsUnique();
 
                     b.ToTable("danhgia", (string)null);
                 });
@@ -138,11 +156,17 @@ namespace GameStore.Migrations
                         .HasColumnType("date")
                         .HasColumnName("ngaymua");
 
+                    b.Property<string>("PhuongThuc")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("phuongthuc");
+
                     b.Property<decimal>("ThanhTien")
                         .HasColumnType("numeric")
                         .HasColumnName("thanhtien");
 
                     b.Property<string>("TrangThai")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("trangthai");
 
@@ -165,7 +189,8 @@ namespace GameStore.Migrations
 
                     b.HasKey("MaGH");
 
-                    b.HasIndex("MaNguoiDung");
+                    b.HasIndex("MaNguoiDung")
+                        .IsUnique();
 
                     b.ToTable("giohang", (string)null);
                 });
@@ -229,6 +254,27 @@ namespace GameStore.Migrations
                     b.HasKey("MaTheLoai");
 
                     b.ToTable("theloaigame", (string)null);
+                });
+
+            modelBuilder.Entity("GameStore.Models.ChiTietGiaoDich", b =>
+                {
+                    b.HasOne("GameStore.Models.GiaoDich", "GiaoDich")
+                        .WithMany("ChiTietGiaoDiches")
+                        .HasForeignKey("MaGD")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ctgd_giaodich");
+
+                    b.HasOne("GameStore.Models.Game", "Game")
+                        .WithMany()
+                        .HasForeignKey("MaGame")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ctgd_game");
+
+                    b.Navigation("Game");
+
+                    b.Navigation("GiaoDich");
                 });
 
             modelBuilder.Entity("GameStore.Models.ChiTietGioHang", b =>
@@ -298,8 +344,8 @@ namespace GameStore.Migrations
             modelBuilder.Entity("GameStore.Models.GioHang", b =>
                 {
                     b.HasOne("GameStore.Models.NguoiDung", "NguoiDung")
-                        .WithMany("GioHangs")
-                        .HasForeignKey("MaNguoiDung")
+                        .WithOne("GioHang")
+                        .HasForeignKey("GameStore.Models.GioHang", "MaNguoiDung")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_giohang_nguoidung");
@@ -314,6 +360,11 @@ namespace GameStore.Migrations
                     b.Navigation("DanhGias");
                 });
 
+            modelBuilder.Entity("GameStore.Models.GiaoDich", b =>
+                {
+                    b.Navigation("ChiTietGiaoDiches");
+                });
+
             modelBuilder.Entity("GameStore.Models.GioHang", b =>
                 {
                     b.Navigation("ChiTietGioHangs");
@@ -325,7 +376,8 @@ namespace GameStore.Migrations
 
                     b.Navigation("GiaoDiches");
 
-                    b.Navigation("GioHangs");
+                    b.Navigation("GioHang")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GameStore.Models.TheLoaiGame", b =>
