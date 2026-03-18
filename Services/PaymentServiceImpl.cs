@@ -77,5 +77,61 @@ namespace GameStore.Services
                 return false;
             }
         }
+
+        // user page 
+        public bool Checkout(int userId)
+        {
+            using var transaction = db.Database.BeginTransaction();
+
+            try
+            {
+                var cart = db.GioHangs
+                    .Include(g => g.ChiTietGioHangs)
+                    .FirstOrDefault(g => g.MaNguoiDung == userId);
+
+                if (cart == null || !cart.ChiTietGioHangs.Any())
+                    return false;
+
+                var giaoDich = new GiaoDich
+                {
+                    MaGD = Guid.NewGuid().ToString(),
+                    MaNguoiDung = userId,
+                    NgayMua = DateOnly.FromDateTime(DateTime.Now),
+                    TrangThai = "Success",
+                    PhuongThuc = "Balance"
+                };
+
+                db.GiaoDiches.Add(giaoDich);
+
+                decimal total = 0;
+
+                foreach (var item in cart.ChiTietGioHangs)
+                {
+                    db.ChiTietGiaoDiches.Add(new ChiTietGiaoDich
+                    {
+                        MaGD = giaoDich.MaGD,
+                        MaGame = item.MaGame,
+                        DonGia = item.DonGiaHienTai
+                    });
+
+                    total += item.DonGiaHienTai;
+                }
+
+                giaoDich.ThanhTien = total;
+
+                // clear cart
+                db.ChiTietGioHangs.RemoveRange(cart.ChiTietGioHangs);
+
+                db.SaveChanges();
+
+                transaction.Commit();
+                return true;
+            }
+            catch
+            {
+                transaction.Rollback();
+                return false;
+            }
+        }
     }
 }

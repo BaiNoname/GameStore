@@ -43,7 +43,8 @@ namespace GameStore.Controllers.Auth
             {
                 new Claim(ClaimTypes.Name, user.TenNguoiDung),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Quyen.ToLower())
+                new Claim(ClaimTypes.Role, user.Quyen.ToLower()),
+                new Claim("UserId", user.MaNguoiDung.ToString())
             };
 
             var identity = new ClaimsIdentity(

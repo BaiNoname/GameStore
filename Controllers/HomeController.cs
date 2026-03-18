@@ -20,7 +20,6 @@ public class HomeController : Controller
     [Route("~/")]
     [Route("index")]
     [Route("")]
-
     public IActionResult Index(string search, string category, string type, int page = 1)
     {
         int pageSize = 5;
@@ -58,6 +57,7 @@ public class HomeController : Controller
             }
         }
 
+        // 🔥 PHÂN TRANG
         int totalGames = games.Count();
         int totalPages = (int)Math.Ceiling((double)totalGames / pageSize);
 
@@ -68,8 +68,36 @@ public class HomeController : Controller
 
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
-
         ViewBag.Categories = categoryService.findAll();
+
+        // ============================
+        // 🔥 THÊM ĐOẠN NÀY
+        // ============================
+
+        List<string> ownedGameIds = new List<string>();
+        List<string> cartGameIds = new List<string>();
+
+        if (User.Identity.IsAuthenticated)
+        {
+            var userId = int.Parse(User.FindFirst("UserId").Value);
+
+            // 🎮 game đã mua
+            ownedGameIds = gameService.GetDb().ChiTietGiaoDiches
+                .Where(x => x.GiaoDich.MaNguoiDung == userId)
+                .Select(x => x.MaGame)
+                .ToList();
+
+            // 🛒 game trong cart
+            cartGameIds = gameService.GetDb().ChiTietGioHangs
+                .Where(x => x.GioHang.MaNguoiDung == userId)
+                .Select(x => x.MaGame)
+                .ToList();
+        }
+
+        ViewBag.OwnedGames = ownedGameIds;
+        ViewBag.CartGames = cartGameIds;
+
+        // ============================
 
         return View(pagedGames);
     }

@@ -130,5 +130,10 @@ namespace GameStore.Services
                 return false;
             }
         }
+
+        public GameStoreContext GetDb()
+        {
+            return db;
+        }
     }
 }
