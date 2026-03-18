@@ -51,7 +51,7 @@ public class Program
 
         var app = builder.Build();
 
-        app.MapGet("/ping", () => "ok");
+        app.MapGet("/ping", () => "Wake up Sever !!!");
         
         app.UseStaticFiles();
 

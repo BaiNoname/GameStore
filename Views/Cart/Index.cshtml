@@ -26,7 +26,12 @@
             Giỏ hàng của bạn đang trống 😢
         </div>
 
-        <a href="/home" class="btn btn-primary">
+        @* <a href="/home" class="btn btn-primary">
+            ← Quay lại mua game
+        </a> *@
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="btn btn-primary">
             ← Quay lại mua game
         </a>
     }
@@ -46,7 +51,8 @@
                 {
                     <tr>
                         <td class="d-flex align-items-center gap-3">
-                            <img src="@Url.Content("~/images/" + item.Game.Hinh)"
+                            <img asp-append-version="true"
+                                 src="@Url.Content("~/images/" + item.Game.Hinh)"
                                  width="80"
                                  style="border-radius:8px;">
                             <span>@item.Game.TenGame</span>
@@ -57,7 +63,13 @@
                         </td>
 
                         <td>
-                            <a href="/cart/remove?gameId=@item.MaGame"
+                            @* <a href="/cart/remove?gameId=@item.MaGame"
+                               class="btn btn-danger btn-sm">
+                                ❌ Remove
+                            </a> *@
+                            <a asp-controller="Cart"
+                               asp-action="Remove"
+                               asp-route-gameId="@item.MaGame"
                                class="btn btn-danger btn-sm">
                                 ❌ Remove
                             </a>
@@ -79,11 +91,21 @@
             </h4>
 
             <div class="d-flex gap-2">
-                <a href="/cart/clear" class="btn btn-outline-danger" onclick="return confirm(`Are U Sure CLear?`)">
+                @* <a href="/cart/clear" class="btn btn-outline-danger" onclick="return confirm(`Are U Sure CLear?`)">
+                    🧹 Clear Cart
+                </a> *@
+                <a asp-controller="Cart"
+                   asp-action="Clear"
+                   class="btn btn-outline-danger"
+                   onclick="return confirm('Are you sure to clear cart?')">
                     🧹 Clear Cart
                 </a>
-
-                <a href="/checkout" class="btn btn-success btn-lg">
+                @* <a href="/checkout" class="btn btn-success btn-lg">
+                    💳 Checkout
+                </a> *@
+                <a asp-controller="Cart"
+                   asp-action="Checkout"
+                   class="btn btn-success btn-lg">
                     💳 Checkout
                 </a>
             </div>
