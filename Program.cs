@@ -1,4 +1,4 @@
-namespace GameStore;
+﻿namespace GameStore;
 using GameStore.Models;
 using GameStore.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -22,9 +22,14 @@ public class Program
         {
             options.LoginPath = "/auth/login";
             options.AccessDeniedPath = "/auth/login";
-        });
 
-        builder.Services.AddAuthentication();
+            // 🧠 tự redirect nếu chưa login
+            options.Events.OnRedirectToLogin = context =>
+            {
+                context.Response.Redirect("/auth/login");
+                return Task.CompletedTask;
+            };
+        });
 
         var connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"];
 
@@ -41,22 +46,24 @@ public class Program
         builder.Services.AddScoped<UserService, UserServiceImpl>();
         builder.Services.AddScoped<AuthService, AuthServiceImpl>();
         builder.Services.AddScoped<PaymentService, PaymentServiceImpl>();
+        builder.Services.AddScoped<CartService, CartServiceImpl>();
 
 
         var app = builder.Build();
 
         app.MapGet("/ping", () => "ok");
         
-        app.UseSession();
-
         app.UseStaticFiles();
 
         app.UseRouting();
 
-        app.MapControllers();
-
         app.UseAuthentication();
         app.UseAuthorization();
+
+        app.UseSession();
+
+        app.MapControllers();
+
 
         app.MapControllerRoute(
             name: "default",

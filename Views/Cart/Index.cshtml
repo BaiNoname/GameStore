@@ -1,60 +1,94 @@
-﻿<div class="container mt-5">
-
-    <h2 class="mb-4">Your Shopping Cart</h2>
-
-    <table class="table table-dark table-hover align-middle">
-        <thead>
-            <tr>
-                <th>Game</th>
-                <th>Price</th>
-                <th>Remove</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-            <tr>
-                <td class="d-flex align-items-center gap-3">
-                    <img src="/images/game1.jpg" width="80">
-                    <span>Elden Ring</span>
-                </td>
-
-                <td>500,000 VND</td>
-
-                <td>
-                    <button class="btn btn-danger btn-sm">
-                        Remove
-                    </button>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="d-flex align-items-center gap-3">
-                    <img src="/images/game2.jpg" width="80">
-                    <span>Cyberpunk 2077</span>
-                </td>
-
-                <td>450,000 VND</td>
-
-                <td>
-                    <button class="btn btn-danger btn-sm">
-                        Remove
-                    </button>
-                </td>
-            </tr>
-
-        </tbody>
-    </table>
+﻿@model GameStore.Models.GioHang
 
 
-    <div class="d-flex justify-content-between align-items-center mt-4">
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Giỏ hàng";
+    var total = Model.ChiTietGioHangs.Sum(x => x.DonGiaHienTai);
 
-        <h4>Total: <span class="text-warning">950,000 VND</span></h4>
+}
 
-        <a href="/checkout" class="btn btn-success btn-lg">
-            Proceed to Checkout
+
+<div class="container mt-5">
+
+    <h2 class="mb-4">🛒 Your Shopping Cart</h2>
+
+    @if (TempData["Msg"] != null)
+    {
+        <div class="alert alert-warning">
+            @TempData["Msg"]
+        </div>
+    }
+
+    @if (Model == null || !Model.ChiTietGioHangs.Any())
+    {
+        <div class="alert alert-info">
+            Giỏ hàng của bạn đang trống 😢
+        </div>
+
+        <a href="/home" class="btn btn-primary">
+            ← Quay lại mua game
         </a>
+    }
+    else
+    {
+        <table class="table table-dark table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Game</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
 
-    </div>
+            <tbody>
+                @foreach (var item in Model.ChiTietGioHangs)
+                {
+                    <tr>
+                        <td class="d-flex align-items-center gap-3">
+                            <img src="@Url.Content("~/images/" + item.Game.Hinh)"
+                                 width="80"
+                                 style="border-radius:8px;">
+                            <span>@item.Game.TenGame</span>
+                        </td>
+
+                        <td class="text-warning">
+                            @item.DonGiaHienTai.ToString("N0") VND
+                        </td>
+
+                        <td>
+                            <a href="/cart/remove?gameId=@item.MaGame"
+                               class="btn btn-danger btn-sm">
+                                ❌ Remove
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+
+            <h4>
+                Total:
+                <span class="text-warning">
+                    @total.ToString("N0") VND
+                </span>
+            </h4>
+
+            <div class="d-flex gap-2">
+                <a href="/cart/clear" class="btn btn-outline-danger" onclick="return confirm(`Are U Sure CLear?`)">
+                    🧹 Clear Cart
+                </a>
+
+                <a href="/checkout" class="btn btn-success btn-lg">
+                    💳 Checkout
+                </a>
+            </div>
+
+        </div>
+    }
 
 </div>

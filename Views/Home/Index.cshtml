@@ -3,6 +3,11 @@
     ViewData["Title"] = "Home";
 }
 
+@{
+    var owned = ViewBag.OwnedGames as List<string> ?? new List<string>();
+    var cart = ViewBag.CartGames as List<string> ?? new List<string>();
+}
+
 <!-- Main -->
 <main class="gs-page">
     <div class="container-xxl">
@@ -54,11 +59,26 @@
                                     <span class="gs-price text-warning fw-bold fs-5">
                                         @String.Format("{0:N0} VNĐ", game.Gia)
                                     </span>
-                                    <!-- Nút -->
-                                    <a class="btn btn-info rounded-pill px-4"
-                                       href="/Game/Detail/@game.MaGame">
-                                        Buy
-                                    </a>
+                                    <!-- Nút Buy-->
+                                    @if (owned.Contains(game.MaGame))
+                                    {
+                                        <button class="btn btn-secondary rounded-pill px-4" onclick="showToast(`U bought this game Bro !!!`)">
+                                            Owned
+                                        </button>
+                                    }
+                                    else if (cart.Contains(game.MaGame))
+                                    {
+                                        <a class="btn btn-warning rounded-pill px-4" href="/cart">
+                                            In Cart
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a class="btn btn-info rounded-pill px-4"
+                                           href="/cart/add?gameId=@game.MaGame&returnUrl=@Context.Request.Path" onclick="showToast('Added to cart')">
+                                            Add to cart
+                                        </a>
+                                    }
                                     <!-- Nút -->
                                     <a class="btn btn-warning rounded-pill px-4"
                                        href="/Game/Detail/@game.MaGame">

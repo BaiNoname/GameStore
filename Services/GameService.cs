@@ -15,5 +15,6 @@ namespace GameStore.Services
         public bool Update(Game game);
         public bool Delete(string id);
 
+        GameStoreContext GetDb();
     }
 }

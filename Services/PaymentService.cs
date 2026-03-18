@@ -8,5 +8,8 @@ namespace GameStore.Services
         List<GiaoDich> findAll(string keyword, string status, int page, int pageSize, out int totalPages);
         GiaoDich findById(string id);
         bool UpdateStatus(string id, string status);
+        
+        // user page
+        bool Checkout(int userId);
     }
 }
