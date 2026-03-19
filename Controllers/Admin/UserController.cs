@@ -17,6 +17,11 @@ namespace GameStore.Controllers.Admin
             userService = _userService; 
         }
 
+        private int GetCurrentUserId()
+        {
+            return int.Parse(User.FindFirst("UserId").Value);
+        }
+
         [Route("user/index")]
         public IActionResult Index(string keyword = "", int page = 1)
         {
@@ -26,7 +31,7 @@ namespace GameStore.Controllers.Admin
 
             var users = userService.findAll(keyword, page, pageSize, out totalPages);
 
-            var vm = new GameStore.ViewModels.UserListVM
+            var vm = new GameStore.Pagination.Admin.UserListVM
             {
                 Users = users,
                 CurrentPage = page,
