@@ -31,7 +31,7 @@ namespace GameStore.Controllers.Admin
 
             var games = gameService.findAll(keyword, categoryId, page, pageSize, out totalPages);
 
-            var vm = new GameStore.ViewModels.GameListVM
+            var vm = new GameStore.Pagination.Admin.GameListVM
             {
                 Games = games,
                 CurrentPage = page,

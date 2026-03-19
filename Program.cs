@@ -13,7 +13,6 @@ public class Program
 
         builder.Services.AddControllersWithViews();
 
-        builder.Services.AddSession();
 
         builder.Services.AddHttpContextAccessor();
 
@@ -23,12 +22,21 @@ public class Program
             options.LoginPath = "/auth/login";
             options.AccessDeniedPath = "/auth/login";
 
-            // 🧠 tự redirect nếu chưa login
+            options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+            options.SlidingExpiration = true;
+
             options.Events.OnRedirectToLogin = context =>
             {
                 context.Response.Redirect("/auth/login");
                 return Task.CompletedTask;
             };
+        });
+
+        builder.Services.AddSession(options =>
+        {
+            options.IdleTimeout = TimeSpan.FromMinutes(15);
+            options.Cookie.HttpOnly = true;
+            options.Cookie.IsEssential = true;
         });
 
         var connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"];

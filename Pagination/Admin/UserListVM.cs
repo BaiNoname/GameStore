@@ -1,10 +1,10 @@
 ﻿using GameStore.Models;
 
-namespace GameStore.ViewModels
+namespace GameStore.Pagination.Admin
 {
-    public class CategoryListVM
+    public class UserListVM
     {
-        public List<TheLoaiGame> Categories { get; set; } = new();
+        public List<NguoiDung> Users { get; set; } = new();
 
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }

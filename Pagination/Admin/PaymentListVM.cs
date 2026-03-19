@@ -1,6 +1,6 @@
 ﻿using GameStore.Models;
 
-namespace GameStore.ViewModels
+namespace GameStore.Pagination.Admin
 {
     public class PaymentListVM
     {

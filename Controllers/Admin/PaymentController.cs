@@ -25,7 +25,7 @@ namespace GameStore.Controllers.Admin
 
             var payments = paymentService.findAll(keyword, status, page, pageSize, out totalPages);
 
-            var vm = new GameStore.ViewModels.PaymentListVM
+            var vm = new GameStore.Pagination.Admin.PaymentListVM
             {
                 Payments = payments,
                 CurrentPage = page,

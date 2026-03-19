@@ -26,7 +26,7 @@ namespace GameStore.Controllers.Admin
 
             var categories = categoryService.findAll(keyword, page, pageSize, out totalPages);
 
-            var vm = new GameStore.ViewModels.CategoryListVM
+            var vm = new GameStore.Pagination.Admin.CategoryListVM
             {
                 Categories = categories,
                 CurrentPage = page,
