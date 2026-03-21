@@ -68,3 +68,5 @@ INSERT INTO game (magame, tengame, mota, matheloai, gia, ngayramat, hinh, soluot
 
 
 API KEY CHAT : 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
+ENV variable:
+OPENAI_API_KEY=sk-xxxx
