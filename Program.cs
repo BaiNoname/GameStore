@@ -3,7 +3,7 @@ using GameStore.Models;
 using GameStore.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-
+using VNPAY.Extensions;
 
 public class Program
 {
@@ -15,6 +15,15 @@ public class Program
 
 
         builder.Services.AddHttpContextAccessor();
+
+        var vnpayConfig = builder.Configuration.GetSection("VNPAY");
+
+        builder.Services.AddVnpayClient(config =>
+        {
+            config.TmnCode = vnpayConfig["TmnCode"]!;
+            config.HashSecret = vnpayConfig["HashSecret"]!;
+            config.CallbackUrl = vnpayConfig["CallbackUrl"]!;
+        });
 
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
@@ -31,6 +40,10 @@ public class Program
                 return Task.CompletedTask;
             };
         });
+
+        builder.Services.AddSignalR();
+        builder.Services.AddScoped<LocalAiService>();
+
 
         builder.Services.AddSession(options =>
         {
@@ -56,6 +69,9 @@ public class Program
         builder.Services.AddScoped<PaymentService, PaymentServiceImpl>();
         builder.Services.AddScoped<CartService, CartServiceImpl>();
 
+        // Register Vnpay service implementation
+        builder.Services.AddScoped<VnpayService, VnpayServiceImpl>();
+
 
         var app = builder.Build();
 
@@ -65,10 +81,14 @@ public class Program
 
         app.UseRouting();
 
+        app.UseSession();
+
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.UseSession();
+        app.MapHub<GameStore.Hubs.GameHub>("/gameHub");
+        app.MapHub<GameStore.Hubs.AiChatHub>("/aiChatHub");
+        app.MapHub<GameStore.Hubs.ChatHub>("/chatHub");
 
         app.MapControllers();
 

@@ -26,9 +26,6 @@
             Giỏ hàng của bạn đang trống 😢
         </div>
 
-        @* <a href="/home" class="btn btn-primary">
-            ← Quay lại mua game
-        </a> *@
         <a asp-controller="Home"
            asp-action="Index"
            class="btn btn-primary">
@@ -63,10 +60,7 @@
                         </td>
 
                         <td>
-                            @* <a href="/cart/remove?gameId=@item.MaGame"
-                               class="btn btn-danger btn-sm">
-                                ❌ Remove
-                            </a> *@
+
                             <a asp-controller="Cart"
                                asp-action="Remove"
                                asp-route-gameId="@item.MaGame"
@@ -91,25 +85,46 @@
             </h4>
 
             <div class="d-flex gap-2">
-                @* <a href="/cart/clear" class="btn btn-outline-danger" onclick="return confirm(`Are U Sure CLear?`)">
-                    🧹 Clear Cart
-                </a> *@
+
                 <a asp-controller="Cart"
                    asp-action="Clear"
                    class="btn btn-outline-danger"
                    onclick="return confirm('Are you sure to clear cart?')">
                     🧹 Clear Cart
                 </a>
-                @* <a href="/checkout" class="btn btn-success btn-lg">
-                    💳 Checkout
-                </a> *@
-                <a asp-controller="Cart"
-                   asp-action="Checkout"
-                   class="btn btn-success btn-lg">
-                    💳 Checkout
+ 
+                <form method="get" action="/checkout" class="d-inline">
+                    <input type="hidden" name="method" value="balance" />
+                    <button type="submit" class="btn btn-success btn-lg">
+                        💳 Pay with Balance
+                    </button>
+                </form>
+
+                <a asp-controller="Vnpay"
+                   asp-action="Pay"
+                   class="btn btn-outline-primary btn-lg">
+                    🟦 Pay with VNPay
                 </a>
             </div>
 
+        </div>
+
+        <!-- Top-up card -->
+        <div class="card mt-4 bg-dark text-light p-3" style="max-width:420px;">
+            <h5>Nạp tiền vào ví (Top-up)</h5>
+            <p class="small text-muted">Quét mã hoặc thanh toán qua VNPay để nạp tiền vào tài khoản của bạn.</p>
+
+            <form method="get" action="/api/vnpay/topup" class="row g-2">
+                <div class="col-8">
+                    <input type="number" step="1000" min="1000" name="amount" class="form-control" placeholder="Số tiền (VND)" required />
+                </div>
+                <div class="col-4">
+                    <button type="submit" class="btn btn-warning w-100">Nạp VNPay</button>
+                </div>
+                <div class="col-12">
+                    <small class="text-muted">Lưu ý: hệ thống sẽ chuyển bạn đến trang VNPay để hoàn tất nạp tiền.</small>
+                </div>
+            </form>
         </div>
     }
 

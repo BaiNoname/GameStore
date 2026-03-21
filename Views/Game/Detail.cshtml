@@ -52,7 +52,7 @@
 
                         <div class="detail-card__info-item">
                             <span class="label">Lượt tải</span>
-                            <span class="value">@Model.SoLuotTai</span>
+                            <span id="download-count">@Model.SoLuotTai</span>
                         </div>
                     </div>
 
@@ -151,3 +151,20 @@
     </div>
 
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
+<script>
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/gameHub")
+        .build();
+
+    connection.start().then(function () {
+        connection.invoke("JoinGame", "@Model.MaGame");
+    });
+
+    connection.on("UpdateDownload", function (gameId, count) {
+        if (gameId == "@Model.MaGame") {
+            document.getElementById("download-count").innerText = count;
+        }
+    });
+</script>

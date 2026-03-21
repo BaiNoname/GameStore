@@ -16,6 +16,7 @@ namespace GameStore.Models
         public DbSet<GioHang> GioHangs => Set<GioHang>();
         public DbSet<ChiTietGioHang> ChiTietGioHangs => Set<ChiTietGioHang>();
         public DbSet<ChiTietGiaoDich> ChiTietGiaoDiches => Set<ChiTietGiaoDich>();
+        public DbSet<ThuVienGame> ThuVienGames => Set<ThuVienGame>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -87,8 +88,18 @@ namespace GameStore.Models
                 entity.Property(e => e.MaNguoiDung).HasColumnName("manguoidung");
                 entity.Property(e => e.NgayMua).HasColumnName("ngaymua");
                 entity.Property(e => e.ThanhTien).HasColumnName("thanhtien");
-                entity.Property(e => e.TrangThai).HasColumnName("trangthai");
+
+                entity.Property(e => e.TrangThai)
+                      .HasColumnName("trangthai")
+                      .HasDefaultValue("Pending");
+
                 entity.Property(e => e.PhuongThuc).HasColumnName("phuongthuc");
+
+                entity.Property(e => e.CreatedAt).HasColumnName("createdat");
+                entity.Property(e => e.VnpTransactionNo).HasColumnName("vnptransactionno");
+
+                entity.HasIndex(e => e.MaNguoiDung);
+                entity.HasIndex(e => e.TrangThai);
 
                 entity.HasOne(e => e.NguoiDung)
                       .WithMany(n => n.GiaoDiches)
@@ -185,6 +196,32 @@ namespace GameStore.Models
                       .WithMany()
                       .HasForeignKey(e => e.MaGame)
                       .HasConstraintName("fk_ctgd_game");
+            });
+            // =========================
+            // ThuVienGame (Library)
+            // =========================
+            modelBuilder.Entity<ThuVienGame>(entity =>
+            {
+                entity.ToTable("thuviengame");
+
+                entity.HasKey(e => new { e.MaNguoiDung, e.MaGame });
+
+                entity.Property(e => e.MaNguoiDung).HasColumnName("manguoidung");
+                entity.Property(e => e.MaGame).HasColumnName("magame");
+                entity.Property(e => e.NgayMua).HasColumnName("ngaymua");
+
+                entity.HasOne<NguoiDung>()
+                      .WithMany()
+                      .HasForeignKey(e => e.MaNguoiDung)
+                      .HasConstraintName("fk_thuvien_nguoidung");
+
+                entity.HasOne<Game>()
+                      .WithMany()
+                      .HasForeignKey(e => e.MaGame)
+                      .HasConstraintName("fk_thuvien_game");
+
+                // 🔥 chống mua trùng ở DB level
+                entity.HasIndex(e => new { e.MaNguoiDung, e.MaGame }).IsUnique();
             });
         }
     }

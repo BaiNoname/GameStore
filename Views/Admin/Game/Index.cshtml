@@ -109,3 +109,20 @@
         </div>
     </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+
+<script>
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/gameHub")
+        .build();
+
+    connection.start();
+
+    // nhận update lượt tải
+    connection.on("UpdateDownload", function (gameId, newCount) {
+        let el = document.getElementById("game-" + gameId);
+        if (el) {
+            el.innerText = newCount;
+        }
+    });
+</script>

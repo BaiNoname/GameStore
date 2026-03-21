@@ -50,8 +50,10 @@ namespace GameStore.Migrations
                     manguoidung = table.Column<int>(type: "integer", nullable: false),
                     ngaymua = table.Column<DateOnly>(type: "date", nullable: false),
                     thanhtien = table.Column<decimal>(type: "numeric", nullable: false),
-                    trangthai = table.Column<string>(type: "text", nullable: false),
-                    phuongthuc = table.Column<string>(type: "text", nullable: false)
+                    trangthai = table.Column<string>(type: "text", nullable: false, defaultValue: "Pending"),
+                    phuongthuc = table.Column<string>(type: "text", nullable: false),
+                    createdat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    vnptransactionno = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -182,6 +184,31 @@ namespace GameStore.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "thuviengame",
+                columns: table => new
+                {
+                    manguoidung = table.Column<int>(type: "integer", nullable: false),
+                    magame = table.Column<string>(type: "text", nullable: false),
+                    ngaymua = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_thuviengame", x => new { x.manguoidung, x.magame });
+                    table.ForeignKey(
+                        name: "fk_thuvien_game",
+                        column: x => x.magame,
+                        principalTable: "game",
+                        principalColumn: "magame",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_thuvien_nguoidung",
+                        column: x => x.manguoidung,
+                        principalTable: "nguoidung",
+                        principalColumn: "manguoidung",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_chitietgiaodich_magame",
                 table: "chitietgiaodich",
@@ -214,6 +241,11 @@ namespace GameStore.Migrations
                 column: "manguoidung");
 
             migrationBuilder.CreateIndex(
+                name: "IX_giaodich_trangthai",
+                table: "giaodich",
+                column: "trangthai");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_giohang_manguoidung",
                 table: "giohang",
                 column: "manguoidung",
@@ -223,6 +255,17 @@ namespace GameStore.Migrations
                 name: "IX_nguoidung_email",
                 table: "nguoidung",
                 column: "email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_thuviengame_magame",
+                table: "thuviengame",
+                column: "magame");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_thuviengame_manguoidung_magame",
+                table: "thuviengame",
+                columns: new[] { "manguoidung", "magame" },
                 unique: true);
         }
 
@@ -237,6 +280,9 @@ namespace GameStore.Migrations
 
             migrationBuilder.DropTable(
                 name: "danhgia");
+
+            migrationBuilder.DropTable(
+                name: "thuviengame");
 
             migrationBuilder.DropTable(
                 name: "giaodich");

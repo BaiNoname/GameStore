@@ -21,7 +21,7 @@ namespace GameStore.Controllers.Admin
         {
             return int.Parse(User.FindFirst("UserId").Value);
         }
-
+        
         [Route("user/index")]
         public IActionResult Index(string keyword = "", int page = 1)
         {

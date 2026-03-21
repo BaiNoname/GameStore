@@ -12,6 +12,14 @@ namespace GameStore.Services
             db = _db;
         }
 
+        public List<string> GetAllGameNames()
+        {
+            return db.Games
+                .Select(x => x.TenGame)
+                .Take(50)
+                .ToList();
+        }
+
         public List<Game> findAll()
         {
             return db.Games.OrderBy(g => g.MaGame).ToList();
