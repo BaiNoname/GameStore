@@ -10,11 +10,13 @@ namespace GameStore.Controllers.Client.Cart
     {
         private readonly CartService cartService;
         private readonly PaymentService paymentService;
+        private readonly VnpayService vnpayService;
 
-        public CartController(CartService _cartService, PaymentService _paymentService)
+        public CartController(CartService _cartService, PaymentService _paymentService, VnpayService _vnpayService)
         {
             cartService = _cartService;
             paymentService = _paymentService;
+            vnpayService = _vnpayService;
         }
 
         private int GetUserId()
@@ -56,16 +58,36 @@ namespace GameStore.Controllers.Client.Cart
             return RedirectToAction("Index");
         }
 
+        // method = "balance" -> use existing balance checkout
+        // method = "vnpay"   -> redirect to VNPAY payment url for the order
         [HttpGet("/checkout")]
-        public IActionResult Checkout()
+        public async Task<IActionResult> Checkout(string method = "balance")
         {
-            var result = paymentService.Checkout(GetUserId());
+            if (method.Equals("vnpay", StringComparison.OrdinalIgnoreCase))
+            {
+                var cart = cartService.GetCart(GetUserId());
+                if (cart == null || !cart.ChiTietGioHangs.Any())
+                {
+                    TempData["Msg"] = "Giỏ hàng trống!";
+                    return Redirect("/cart");
+                }
 
-            TempData["Msg"] = result
-                ? "Thanh toán thành công!"
-                : "Thanh toán thất bại!";
+                var total = cart.ChiTietGioHangs.Sum(x => x.DonGiaHienTai);
 
-            return Redirect("/cart");
+                // Pass null so VnpayService uses configured CallbackUrl from appsettings
+                var paymentUrl = vnpayService.CreatePaymentUrlForOrder(GetUserId(), total, null);
+                return Redirect(paymentUrl);
+            }
+            else
+            {
+                var result = await paymentService.Checkout(GetUserId());
+
+                TempData["Msg"] = result
+                    ? "Thanh toán bằng số dư thành công!"
+                    : "Thanh toán thất bại!";
+
+                return Redirect("/cart");
+            }
         }
     }
 }

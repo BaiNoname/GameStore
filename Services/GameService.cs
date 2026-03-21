@@ -16,5 +16,7 @@ namespace GameStore.Services
         public bool Delete(string id);
 
         GameStoreContext GetDb();
+
+        public List<string> GetAllGameNames();
     }
 }

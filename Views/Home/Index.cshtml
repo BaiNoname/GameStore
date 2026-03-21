@@ -20,7 +20,7 @@
 
             @foreach (var game in Model)
             {
-                <article class="gs-card mb-4 shadow rounded-4 overflow-hidden">
+                <article id="game-@game.MaGame" class="gs-card mb-4 shadow rounded-4 overflow-hidden">
                     <div class="row g-0 align-items-stretch">
 
                         <!-- Hình game -->
@@ -49,7 +49,8 @@
                                         <strong>Mã game:</strong> @game.MaGame
                                     </div>
                                     <div>
-                                        <strong>Lượt tải:</strong> @game.SoLuotTai
+                                        <strong>Lượt tải:</strong>
+                                        <span class="download-count">@game.SoLuotTai</span>
                                     </div>
                                 </div>
 
@@ -68,9 +69,7 @@
                                     }
                                     else if (cart.Contains(game.MaGame))
                                     {
-                                        // <a class="btn btn-warning rounded-pill px-4" href="/cart">
-                                        //     In Cart
-                                        // </a>
+           
                                         <a asp-controller="Cart"
                                            asp-action="Index"
                                            asp-route-focus="@game.MaGame"
@@ -80,15 +79,12 @@
                                     }
                                     else
                                     {
-                                        // <a class="btn btn-info rounded-pill px-4"
-                                        //    href="/cart/add?gameId=@game.MaGame&returnUrl=@Context.Request.Path" onclick="showToast('Added to cart')">
-                                        //     Add to cart
-                                        // </a>
+                
                                         <a asp-controller="Cart"
                                            asp-action="Add"
                                            asp-route-gameId="@game.MaGame"
                                            asp-route-returnUrl="@Context.Request.Path"
-                                           class="btn btn-info rounded-pill px-4" onclick="return alert(`Added to cart !!!`)">
+                                           class="btn btn-info rounded-pill px-4">
                                             Add to cart
                                         </a>
                                     }
@@ -169,3 +165,19 @@
     </div>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
+<script>
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/gameHub")
+        .build();
+
+    connection.start();
+
+    connection.on("UpdateDownload", function (gameId, count) {
+        const row = document.getElementById("game-" + gameId);
+        if (row) {
+            row.querySelector(".download-count").innerText = count;
+        }
+    });
+</script>
