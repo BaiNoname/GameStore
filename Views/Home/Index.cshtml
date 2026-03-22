@@ -83,7 +83,7 @@
                                         <a asp-controller="Cart"
                                            asp-action="Add"
                                            asp-route-gameId="@game.MaGame"
-                                           asp-route-returnUrl="@Context.Request.Path"
+                                           asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
                                            class="btn btn-info rounded-pill px-4">
                                             Add to cart
                                         </a>
@@ -165,19 +165,3 @@
     </div>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-
-<script>
-    const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/gameHub")
-        .build();
-
-    connection.start();
-
-    connection.on("UpdateDownload", function (gameId, count) {
-        const row = document.getElementById("game-" + gameId);
-        if (row) {
-            row.querySelector(".download-count").innerText = count;
-        }
-    });
-</script>

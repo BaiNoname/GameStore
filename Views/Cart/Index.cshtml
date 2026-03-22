@@ -77,6 +77,15 @@
 
         <div class="d-flex justify-content-between align-items-center mt-4">
 
+            <div>
+                @{
+                    var returnUrl = TempData["ReturnUrl"]?.ToString() ?? "/home";
+                }
+
+                <a href="@returnUrl" class="btn btn-secondary">
+                    ← Quay lại game
+                </a>
+            </div>
             <h4>
                 Total:
                 <span class="text-warning">

@@ -105,7 +105,7 @@ namespace GameStore.Controllers.Auth
                 return View("Register", user);
             }
 
-            TempData["Success"] = "Đăng ký thành công! Vui lòng đăng nhập.";
+            TempData["Register Success"] = "Đăng ký thành công! Vui lòng đăng nhập.";
             return RedirectToAction("Login");
         }
 
