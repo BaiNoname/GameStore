@@ -1,14 +1,15 @@
 ﻿using GameStore.Models;
 using GameStore.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace GameStore.Controllers;
 
 [Route("home")]
 public class HomeController : Controller
 {
-    private GameService gameService;
-    private CategoryService categoryService;
+    private readonly GameService gameService;
+    private readonly CategoryService categoryService;
 
     public HomeController(GameService _gameService, CategoryService _categoryService)
     {
@@ -16,40 +17,54 @@ public class HomeController : Controller
         categoryService = _categoryService;
     }
 
-
     [Route("~/")]
     [Route("index")]
     [Route("")]
     public IActionResult Index(string search, string category, string type, int page = 1)
     {
         int pageSize = 5;
-
         List<Game> games;
+        int totalGames;
 
+        // =========================
+        // NEW / HOT CASE
+        // =========================
         if (type == "new")
         {
-            games = gameService.GetNewGames();
+            var all = gameService.GetNewGames();
+
+            totalGames = all.Count;
+            games = Paginate(all, page, pageSize);
+
             ViewBag.CategoryName = "🆕 New Games";
         }
         else if (type == "hot")
         {
-            games = gameService.GetHotGames();
+            var all = gameService.GetHotGames();
+
+            totalGames = all.Count;
+            games = Paginate(all, page, pageSize);
+
             ViewBag.CategoryName = "🔥 Hot Games";
         }
         else
         {
-            games = gameService.FilterGames(search, category);
+            // FILTER + CACHE + DB
+            games = gameService.FilterGames(search, category, page, pageSize);
 
+            totalGames = gameService.CountGames(search, category);
+
+            // Title
             if (!string.IsNullOrEmpty(search))
             {
-                ViewBag.CategoryName = "Search result: " + search;
+                ViewBag.CategoryName = $"Search result: {search}";
             }
             else if (!string.IsNullOrEmpty(category))
             {
                 var cate = categoryService.findAll()
-                            .FirstOrDefault(c => c.MaTheLoai == category);
+                    .FirstOrDefault(c => c.MaTheLoai == category);
 
-                ViewBag.CategoryName = cate?.TenLoaiGame;
+                ViewBag.CategoryName = cate?.TenLoaiGame ?? "Category";
             }
             else
             {
@@ -57,49 +72,56 @@ public class HomeController : Controller
             }
         }
 
-        // 🔥 PHÂN TRANG
-        int totalGames = games.Count();
+        // =========================
+        // PAGINATION
+        // =========================
         int totalPages = (int)Math.Ceiling((double)totalGames / pageSize);
-
-        var pagedGames = games
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
 
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
         ViewBag.Categories = categoryService.findAll();
 
-        // ============================
-        // 🔥 THÊM ĐOẠN NÀY
-        // ============================
+        // =========================
+        // USER DATA (Owned + Cart)
+        // =========================
+        List<string> ownedGameIds = new();
+        List<string> cartGameIds = new();
 
-        List<string> ownedGameIds = new List<string>();
-        List<string> cartGameIds = new List<string>();
-
-        if (User.Identity.IsAuthenticated)
+        if (User.Identity?.IsAuthenticated == true)
         {
-            var userId = int.Parse(User.FindFirst("UserId").Value);
+            var userIdClaim = User.FindFirst("UserId")?.Value;
 
-            // 🎮 game đã mua
-            ownedGameIds = gameService.GetDb().ChiTietGiaoDiches
-                .Where(x => x.GiaoDich.MaNguoiDung == userId)
-                .Select(x => x.MaGame)
-                .ToList();
+            if (int.TryParse(userIdClaim, out int userId))
+            {
+                var db = gameService.GetDb();
 
-            // 🛒 game trong cart
-            cartGameIds = gameService.GetDb().ChiTietGioHangs
-                .Where(x => x.GioHang.MaNguoiDung == userId)
-                .Select(x => x.MaGame)
-                .ToList();
+                ownedGameIds = db.ChiTietGiaoDiches
+                    .Where(x => x.GiaoDich.MaNguoiDung == userId)
+                    .Select(x => x.MaGame)
+                    .ToList();
+
+                cartGameIds = db.ChiTietGioHangs
+                    .Where(x => x.GioHang.MaNguoiDung == userId)
+                    .Select(x => x.MaGame)
+                    .ToList();
+            }
         }
 
         ViewBag.OwnedGames = ownedGameIds;
         ViewBag.CartGames = cartGameIds;
 
-        // ============================
+        return View(games);
+    }
 
-        return View(pagedGames);
+    // =========================
+    // HELPERS
+    // =========================
+    private List<Game> Paginate(List<Game> source, int page, int pageSize)
+    {
+        return source
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
     }
 
     [Route("about")]
@@ -115,6 +137,4 @@ public class HomeController : Controller
         ViewBag.HideSubBar = true;
         return View();
     }
-
-
 }
