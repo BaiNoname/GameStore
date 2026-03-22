@@ -41,6 +41,20 @@ public class Program
             };
         });
 
+        builder.Services.AddControllers()
+        .AddJsonOptions(x =>
+        {
+            x.JsonSerializerOptions.ReferenceHandler =
+                System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        });
+
+        builder.Services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = "localhost:6379";
+            options.InstanceName = "GameStore_";
+        });
+
+
         builder.Services.AddSignalR();
         builder.Services.AddScoped<LocalAiService>();
 

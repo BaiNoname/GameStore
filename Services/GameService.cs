@@ -8,7 +8,7 @@ namespace GameStore.Services
         public List<Game> findAll(string keyword, string categoryId, int page, int pageSize, out int totalPages);
         Game? findById(string maGame);
         public List<Game> SearchGames(string keyword);
-        public List<Game> FilterGames(string search, string category);
+        public List<Game> FilterGames(string search, string category, int page, int pageSize);
         public List<Game> GetNewGames();
         public List<Game> GetHotGames();
         public bool Create(Game game);
@@ -18,5 +18,6 @@ namespace GameStore.Services
         GameStoreContext GetDb();
 
         public List<string> GetAllGameNames();
+        public int CountGames(string search, string category);
     }
 }

@@ -1,14 +1,20 @@
 ﻿using GameStore.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
+
 
 namespace GameStore.Services
 {
     public class CategoryServiceImpl : CategoryService
     {
         private GameStoreContext db;
+        private readonly IDistributedCache cache;
 
-        public CategoryServiceImpl(GameStoreContext _db)
+        public CategoryServiceImpl(GameStoreContext _db, IDistributedCache _cache)
         {
             db = _db;
+            cache = _cache;
         }
 
         public bool Create(TheLoaiGame category)
@@ -16,7 +22,12 @@ namespace GameStore.Services
             try
             {
                 db.TheLoaiGames.Add(category);
-                return db.SaveChanges() > 0;
+                var result = db.SaveChanges() > 0;
+
+                if (result)
+                    cache.Remove("categories");
+
+                return result;
             }
             catch
             {
@@ -28,8 +39,34 @@ namespace GameStore.Services
         {
             try
             {
-                db.TheLoaiGames.Remove(db.TheLoaiGames.Find(id));
-                return db.SaveChanges() > 0;
+                var entity = db.TheLoaiGames.Find(id);
+                if (entity == null) return false;
+
+                db.TheLoaiGames.Remove(entity);
+                var result = db.SaveChanges() > 0;
+
+                if (result)
+                    cache.Remove("categories");
+
+                return result;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool Update(TheLoaiGame category)
+        {
+            try
+            {
+                db.Entry(category).State = EntityState.Modified;
+                var result = db.SaveChanges() > 0;
+
+                if (result)
+                    cache.Remove("categories");
+
+                return result;
             }
             catch
             {
@@ -39,7 +76,28 @@ namespace GameStore.Services
 
         public List<TheLoaiGame> findAll()
         {
-            return db.TheLoaiGames.OrderBy(tl => tl.MaTheLoai).ToList();
+            string cacheKey = "categories";
+
+            var cached = cache.GetString(cacheKey);
+
+            if (!string.IsNullOrEmpty(cached))
+            {
+                Console.WriteLine("🔥 CATEGORY FROM CACHE");
+                return JsonSerializer.Deserialize<List<TheLoaiGame>>(cached);
+            }
+
+            Console.WriteLine("🐢 CATEGORY FROM DB");
+
+            var data = db.TheLoaiGames.OrderBy(x => x.MaTheLoai).ToList();
+
+            cache.SetString(cacheKey,
+                JsonSerializer.Serialize(data),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                });
+
+            return data;
         }
 
         public List<TheLoaiGame> findAll(string keyword, int page, int pageSize, out int totalPages)
@@ -70,17 +128,6 @@ namespace GameStore.Services
                      .FirstOrDefault(c => c.MaTheLoai == id);
         }
 
-        public bool Update(TheLoaiGame category)
-        {
-            try
-            {
-                db.Entry(category).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                return db.SaveChanges() > 0;
-            }
-            catch
-            {
-                return false;
-            }
-        }
+     
     }
 }
