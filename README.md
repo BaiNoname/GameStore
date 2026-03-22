@@ -65,8 +65,3 @@ INSERT INTO game (magame, tengame, mota, matheloai, gia, ngayramat, hinh, soluot
 ('G063','Chay nhanh','21321','TL006',3123,'2026-03-09','35d727ce-a74b-4baa-b5a0-65f174a626b4.jpg',0);
 
 
-
-
-API KEY CHAT : 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
-ENV variable:
-OPENAI_API_KEY=sk-xxxx
