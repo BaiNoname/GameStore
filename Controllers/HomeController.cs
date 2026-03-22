@@ -1,7 +1,8 @@
 ﻿using GameStore.Models;
 using GameStore.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace GameStore.Controllers;
 
@@ -10,11 +11,16 @@ public class HomeController : Controller
 {
     private readonly GameService gameService;
     private readonly CategoryService categoryService;
+    private readonly IDistributedCache cache;
 
-    public HomeController(GameService _gameService, CategoryService _categoryService)
+    public HomeController(
+        GameService _gameService,
+        CategoryService _categoryService,
+        IDistributedCache _cache)
     {
         gameService = _gameService;
         categoryService = _categoryService;
+        cache = _cache;
     }
 
     [Route("~/")]
@@ -23,16 +29,16 @@ public class HomeController : Controller
     public IActionResult Index(string search, string category, string type, int page = 1)
     {
         int pageSize = 5;
+
         List<Game> games;
         int totalGames;
 
         // =========================
-        // NEW / HOT CASE
+        // NEW / HOT
         // =========================
         if (type == "new")
         {
             var all = gameService.GetNewGames();
-
             totalGames = all.Count;
             games = Paginate(all, page, pageSize);
 
@@ -41,7 +47,6 @@ public class HomeController : Controller
         else if (type == "hot")
         {
             var all = gameService.GetHotGames();
-
             totalGames = all.Count;
             games = Paginate(all, page, pageSize);
 
@@ -49,16 +54,11 @@ public class HomeController : Controller
         }
         else
         {
-            // FILTER + CACHE + DB
             games = gameService.FilterGames(search, category, page, pageSize);
-
             totalGames = gameService.CountGames(search, category);
 
-            // Title
             if (!string.IsNullOrEmpty(search))
-            {
                 ViewBag.CategoryName = $"Search result: {search}";
-            }
             else if (!string.IsNullOrEmpty(category))
             {
                 var cate = categoryService.findAll()
@@ -82,7 +82,7 @@ public class HomeController : Controller
         ViewBag.Categories = categoryService.findAll();
 
         // =========================
-        // USER DATA (Owned + Cart)
+        // USER CACHE (FIX Ở ĐÂY)
         // =========================
         List<string> ownedGameIds = new();
         List<string> cartGameIds = new();
@@ -93,17 +93,63 @@ public class HomeController : Controller
 
             if (int.TryParse(userIdClaim, out int userId))
             {
-                var db = gameService.GetDb();
+                // ===== CACHE KEYS =====
+                string ownedKey = $"owned_{userId}";
+                string cartKey = $"cart_{userId}";
 
-                ownedGameIds = db.ChiTietGiaoDiches
-                    .Where(x => x.GiaoDich.MaNguoiDung == userId)
-                    .Select(x => x.MaGame)
-                    .ToList();
+                // =========================
+                // OWNED GAMES CACHE
+                // =========================
+                var ownedCached = cache.GetString(ownedKey);
 
-                cartGameIds = db.ChiTietGioHangs
-                    .Where(x => x.GioHang.MaNguoiDung == userId)
-                    .Select(x => x.MaGame)
-                    .ToList();
+                if (!string.IsNullOrEmpty(ownedCached))
+                {
+                    ownedGameIds = JsonSerializer.Deserialize<List<string>>(ownedCached);
+                }
+                else
+                {
+                    var db = gameService.GetDb();
+
+                    ownedGameIds = db.ChiTietGiaoDiches
+                        .Where(x => x.GiaoDich.MaNguoiDung == userId)
+                        .Select(x => x.MaGame)
+                        .ToList();
+
+                    cache.SetString(
+                        ownedKey,
+                        JsonSerializer.Serialize(ownedGameIds),
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                        });
+                }
+
+                // =========================
+                // CART CACHE
+                // =========================
+                var cartCached = cache.GetString(cartKey);
+
+                if (!string.IsNullOrEmpty(cartCached))
+                {
+                    cartGameIds = JsonSerializer.Deserialize<List<string>>(cartCached);
+                }
+                else
+                {
+                    var db = gameService.GetDb();
+
+                    cartGameIds = db.ChiTietGioHangs
+                        .Where(x => x.GioHang.MaNguoiDung == userId)
+                        .Select(x => x.MaGame)
+                        .ToList();
+
+                    cache.SetString(
+                        cartKey,
+                        JsonSerializer.Serialize(cartGameIds),
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+                        });
+                }
             }
         }
 
@@ -113,9 +159,6 @@ public class HomeController : Controller
         return View(games);
     }
 
-    // =========================
-    // HELPERS
-    // =========================
     private List<Game> Paginate(List<Game> source, int page, int pageSize)
     {
         return source
