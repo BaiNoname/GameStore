@@ -71,3 +71,5 @@ Cache 1 game theo ID
 Cache đếm số game
 Cache game mới
 Cache game hot
+
+dùng upstash để làm redis online
