@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace GameStore.Services
 {
@@ -9,6 +10,11 @@ namespace GameStore.Services
     {
         private GameStoreContext db;
         private readonly IDistributedCache cache;
+        private static readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            ReferenceHandler = ReferenceHandler.IgnoreCycles,
+            WriteIndented = false
+        };
 
         public GameServiceImpl(GameStoreContext _db, IDistributedCache _cache)
         {
@@ -33,7 +39,7 @@ namespace GameStore.Services
 
             if (!string.IsNullOrEmpty(cachedData))
             {
-                return System.Text.Json.JsonSerializer.Deserialize<List<Game>>(cachedData);
+                return JsonSerializer.Deserialize<List<Game>>(cachedData, _jsonOptions);
             }
 
             var games = db.Games.OrderBy(g => g.MaGame).ToList();
@@ -44,9 +50,9 @@ namespace GameStore.Services
             };
 
             cache.SetString(
-                cacheKey,
-                System.Text.Json.JsonSerializer.Serialize(games),
-                options
+            cacheKey,
+            JsonSerializer.Serialize(games, _jsonOptions),
+            options
             );
             return games;
 
@@ -88,7 +94,7 @@ namespace GameStore.Services
 
             if (!string.IsNullOrEmpty(cachedData))
             {
-                return System.Text.Json.JsonSerializer.Deserialize<Game>(cachedData);
+                return JsonSerializer.Deserialize<Game>(cachedData, _jsonOptions);
             }
 
             var game = db.Games.FirstOrDefault(x => x.MaGame == maGame);
@@ -156,7 +162,7 @@ namespace GameStore.Services
 
             cache.SetString(
                 cacheKey,
-                System.Text.Json.JsonSerializer.Serialize(games),
+                System.Text.Json.JsonSerializer.Serialize(games, _jsonOptions),
                 new DistributedCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
@@ -201,7 +207,7 @@ namespace GameStore.Services
             Console.WriteLine("🐢 NEW GAMES DONE");
             Console.WriteLine($"⏱ DB TIME: {(dbEnd - dbStart).TotalMilliseconds} ms");
 
-            cache.SetString(key, JsonSerializer.Serialize(data),
+            cache.SetString(key, JsonSerializer.Serialize(data, _jsonOptions),
                 new DistributedCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
@@ -241,7 +247,7 @@ namespace GameStore.Services
             Console.WriteLine("🐢 HOT GAMES DONE");
             Console.WriteLine($"⏱ DB TIME: {(dbEnd - dbStart).TotalMilliseconds} ms");
 
-            cache.SetString(key, JsonSerializer.Serialize(data),
+            cache.SetString(key, JsonSerializer.Serialize(data, _jsonOptions),
                 new DistributedCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
