@@ -3,6 +3,7 @@ using GameStore.Models;
 using GameStore.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using VNPAY.Extensions;
 
 public class Program
@@ -41,18 +42,34 @@ public class Program
             };
         });
 
-        builder.Services.AddControllers()
+        builder.Services.AddControllersWithViews()
         .AddJsonOptions(x =>
         {
             x.JsonSerializerOptions.ReferenceHandler =
                 System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
         });
 
-        builder.Services.AddStackExchangeRedisCache(options =>
+        var upstash = builder.Configuration.GetSection("Upstash");
+
+        var host = new Uri(upstash["Url"]).Host;
+        var token = upstash["Token"];
+
+        builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
         {
-            options.Configuration = "localhost:6379";
-            options.InstanceName = "GameStore_";
+            return ConnectionMultiplexer.Connect(new ConfigurationOptions
+            {
+                EndPoints = { $"{host}:6379" },
+                Password = token,
+                Ssl = true,
+                AbortOnConnectFail = false
+            });
         });
+
+        //builder.Services.AddStackExchangeRedisCache(options =>
+        //{
+        //    options.Configuration = "localhost:6379";
+        //    options.InstanceName = "GameStore_";
+        //});
 
 
         builder.Services.AddSignalR();

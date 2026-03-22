@@ -91,11 +91,14 @@ namespace GameStore.Services
             var data = db.TheLoaiGames.OrderBy(x => x.MaTheLoai).ToList();
 
             cache.SetString(cacheKey,
-                JsonSerializer.Serialize(data),
-                new DistributedCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-                });
+    JsonSerializer.Serialize(data, new JsonSerializerOptions
+    {
+        ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+    }),
+    new DistributedCacheEntryOptions
+    {
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+    });
 
             return data;
         }
