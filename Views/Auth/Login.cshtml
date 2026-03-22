@@ -47,17 +47,28 @@
         <div class="login-box col-md-4">
 
             <h2 class="text-center mb-4">Sign in to GameStore</h2>
-
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success text-center">
+                    @TempData["Success"]
+                </div>
+            }
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">
+                    @ViewBag.Error
+                </div>
+            }
             <form method="post" asp-controller="Auth" asp-action="Login">
 
                 <div class="mb-3">
                     <label class="form-label">Email</label>
-                    <input name="email" class="form-control" placeholder="Enter email">
+                    <input name="email" class="form-control" placeholder="Enter email" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Password</label>
-                    <input name="password" type="password" class="form-control" placeholder="Enter password">
+                    <input name="password" type="password" class="form-control" placeholder="Enter password" required>
                 </div>
 
                 <div class="d-grid mb-3">

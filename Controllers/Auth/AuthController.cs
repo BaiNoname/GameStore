@@ -25,11 +25,16 @@ namespace GameStore.Controllers.Auth
             return View();
         }
 
-        // POST: /auth/login
         [HttpPost("login")]
         public async Task<IActionResult> Login(string email, string password)
         {
             ViewBag.HideSubBar = true;
+
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                ViewBag.Error = "Vui lòng nhập đầy đủ thông tin";
+                return View();
+            }
 
             var user = authService.Login(email, password);
 
@@ -58,6 +63,7 @@ namespace GameStore.Controllers.Auth
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 principal
             );
+            TempData["Success"] = "Đăng nhập thành công!";
 
             if (user.Quyen.Equals("Admin", StringComparison.OrdinalIgnoreCase))
                 return Redirect("/admin");
@@ -65,7 +71,6 @@ namespace GameStore.Controllers.Auth
             return Redirect("/");
         }
 
-        // GET: /auth/register
         [HttpGet("register")]
         public IActionResult Register()
         {
@@ -73,11 +78,18 @@ namespace GameStore.Controllers.Auth
             return View(new NguoiDung());
         }
 
-        // POST: /auth/register
         [HttpPost("register")]
         public IActionResult Register(NguoiDung user, string confirmPassword)
         {
             ViewBag.HideSubBar = true;
+
+            if (string.IsNullOrWhiteSpace(user.Email) ||
+            string.IsNullOrWhiteSpace(user.TenNguoiDung) ||
+            string.IsNullOrWhiteSpace(user.MatKhau))
+            {
+                ViewBag.Error = "Vui lòng nhập đầy đủ thông tin";
+                return View(user);
+            }
 
             if (user.MatKhau != confirmPassword)
             {
@@ -93,6 +105,7 @@ namespace GameStore.Controllers.Auth
                 return View("Register", user);
             }
 
+            TempData["Success"] = "Đăng ký thành công! Vui lòng đăng nhập.";
             return RedirectToAction("Login");
         }
 

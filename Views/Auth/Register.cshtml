@@ -37,6 +37,12 @@
 
             <h2 class="text-center mb-4">Create Your Account</h2>
 
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">
+                    @ViewBag.Error
+                </div>
+            }
             <form method="post" asp-controller="Auth" asp-action="Register">
 
                 <div class="mb-3">
