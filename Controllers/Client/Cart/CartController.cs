@@ -41,6 +41,8 @@ namespace GameStore.Controllers.Client.Cart
             if (!result)
                 TempData["Msg"] = "Game đã có trong giỏ hàng!";
 
+            TempData["ReturnUrl"] = returnUrl;
+
             return Redirect(returnUrl ?? "/");
         }
 

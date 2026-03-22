@@ -4,6 +4,10 @@
     ViewData["Title"] = "Chi tiết game";
 }
 
+@{
+    var owned = ViewBag.OwnedGames as List<string> ?? new List<string>();
+    var cart = ViewBag.CartGames as List<string> ?? new List<string>();
+}
 @section Styles {
     <link rel="stylesheet" href="~/css/game-detail.css" />
 }
@@ -64,9 +68,59 @@
                     </div>
 
                     <div class="detail-card__actions">
-                        <a href="#" class="btn btn-primary rounded-pill px-4">Mua ngay</a>
-                        <a href="#" class="btn btn-warning rounded-pill px-4">Thêm vào giỏ</a>
-                        <a href="/home" class="btn btn-danger rounded-pill px-4">Quay lại</a>
+
+                        @* ===== ĐÃ MUA ===== *@
+                        @if (owned.Contains(Model.MaGame))
+                        {
+                            <button class="btn btn-secondary rounded-pill px-4"
+                                    onclick="alert('Bạn đã mua game này rồi!')">
+                                Owned
+                            </button>
+
+                            <a href="/home" class="btn btn-danger rounded-pill px-4">
+                                Quay lại
+                            </a>
+                        }
+
+                        @* ===== ĐÃ CÓ TRONG GIỎ ===== *@
+                        else if (cart.Contains(Model.MaGame))
+                        {
+                            <a asp-controller="Cart"
+                               asp-action="Index"
+                               asp-route-focus="@Model.MaGame"
+                               class="btn btn-primary rounded-pill px-4">
+                                Mua ngay
+                            </a>
+
+                            <a href="/home" class="btn btn-danger rounded-pill px-4">
+                                Quay lại
+                            </a>
+                        }
+
+                        @* ===== CHƯA CÓ GÌ ===== *@
+                        else
+                        {
+                            <a asp-controller="Cart"
+                               asp-action="Add"
+                               asp-route-gameId="@Model.MaGame"
+                               asp-route-returnUrl="/cart"
+                               class="btn btn-primary rounded-pill px-4">
+                                Mua ngay
+                            </a>
+
+                            <a asp-controller="Cart"
+                               asp-action="Add"
+                               asp-route-gameId="@Model.MaGame"
+                               asp-route-returnUrl="@Context.Request.Path"
+                               class="btn btn-warning rounded-pill px-4">
+                                Thêm vào giỏ
+                            </a>
+
+                            <a href="/home" class="btn btn-danger rounded-pill px-4">
+                                Quay lại
+                            </a>
+                        }
+
                     </div>
 
                 </div>

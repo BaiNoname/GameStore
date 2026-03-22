@@ -22,6 +22,30 @@ namespace GameStore.Controllers.Client.Game
 
             ViewBag.Categories = categoryService.findAll();
 
+            // 🔥 THÊM ĐOẠN NÀY (GIỐNG HOME)
+            List<string> ownedGameIds = new List<string>();
+            List<string> cartGameIds = new List<string>();
+
+            if (User.Identity.IsAuthenticated)
+            {
+                var userId = int.Parse(User.FindFirst("UserId").Value);
+
+                // 🎮 game đã mua
+                ownedGameIds = gameService.GetDb().ChiTietGiaoDiches
+                    .Where(x => x.GiaoDich.MaNguoiDung == userId)
+                    .Select(x => x.MaGame)
+                    .ToList();
+
+                // 🛒 game trong cart
+                cartGameIds = gameService.GetDb().ChiTietGioHangs
+                    .Where(x => x.GioHang.MaNguoiDung == userId)
+                    .Select(x => x.MaGame)
+                    .ToList();
+            }
+
+            ViewBag.OwnedGames = ownedGameIds;
+            ViewBag.CartGames = cartGameIds;
+
             return View(game);
         }
     }
