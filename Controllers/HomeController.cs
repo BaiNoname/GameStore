@@ -1,27 +1,21 @@
 ﻿using GameStore.Models;
 using GameStore.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
-using System.Text.Json;
 
 namespace GameStore.Controllers;
 
 [Route("home")]
 public class HomeController : Controller
 {
-    private readonly GameService gameService;
-    private readonly CategoryService categoryService;
-    private readonly IDistributedCache cache;
+    private GameService gameService;
+    private CategoryService categoryService;
 
-    public HomeController(
-        GameService _gameService,
-        CategoryService _categoryService,
-        IDistributedCache _cache)
+    public HomeController(GameService _gameService, CategoryService _categoryService)
     {
         gameService = _gameService;
         categoryService = _categoryService;
-        cache = _cache;
     }
+
 
     [Route("~/")]
     [Route("index")]
@@ -31,16 +25,20 @@ public class HomeController : Controller
         int pageSize = 5;
 
         List<Game> games;
-        int totalGames;
+        int totalGames = 0;
 
         // =========================
-        // NEW / HOT
+        // 🔥 CASE NEW / HOT
         // =========================
         if (type == "new")
         {
             var all = gameService.GetNewGames();
             totalGames = all.Count;
-            games = Paginate(all, page, pageSize);
+
+            games = all
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
             ViewBag.CategoryName = "🆕 New Games";
         }
@@ -48,23 +46,41 @@ public class HomeController : Controller
         {
             var all = gameService.GetHotGames();
             totalGames = all.Count;
-            games = Paginate(all, page, pageSize);
+
+            games = all
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
             ViewBag.CategoryName = "🔥 Hot Games";
         }
         else
         {
+            // 🔥 DATA (đã có cache + pagination)
             games = gameService.FilterGames(search, category, page, pageSize);
-            totalGames = gameService.CountGames(search, category);
+
+            // 🔥 COUNT (phải query riêng)
+            var query = gameService.GetDb().Games.AsQueryable();
 
             if (!string.IsNullOrEmpty(search))
-                ViewBag.CategoryName = $"Search result: {search}";
+                query = query.Where(g => g.TenGame.ToLower().Contains(search.ToLower()));
+
+            if (!string.IsNullOrEmpty(category))
+                query = query.Where(g => g.MaTheLoai == category);
+
+            totalGames = gameService.CountGames(search, category);
+
+            // 🎯 Title
+            if (!string.IsNullOrEmpty(search))
+            {
+                ViewBag.CategoryName = "Search result: " + search;
+            }
             else if (!string.IsNullOrEmpty(category))
             {
                 var cate = categoryService.findAll()
-                    .FirstOrDefault(c => c.MaTheLoai == category);
+                            .FirstOrDefault(c => c.MaTheLoai == category);
 
-                ViewBag.CategoryName = cate?.TenLoaiGame ?? "Category";
+                ViewBag.CategoryName = cate?.TenLoaiGame;
             }
             else
             {
@@ -73,7 +89,7 @@ public class HomeController : Controller
         }
 
         // =========================
-        // PAGINATION
+        // 🔥 PAGINATION
         // =========================
         int totalPages = (int)Math.Ceiling((double)totalGames / pageSize);
 
@@ -82,89 +98,30 @@ public class HomeController : Controller
         ViewBag.Categories = categoryService.findAll();
 
         // =========================
-        // USER CACHE (FIX Ở ĐÂY)
+        // 🔥 OWNED + CART
         // =========================
-        List<string> ownedGameIds = new();
-        List<string> cartGameIds = new();
+        List<string> ownedGameIds = new List<string>();
+        List<string> cartGameIds = new List<string>();
 
-        if (User.Identity?.IsAuthenticated == true)
+        if (User.Identity.IsAuthenticated)
         {
-            var userIdClaim = User.FindFirst("UserId")?.Value;
+            var userId = int.Parse(User.FindFirst("UserId").Value);
 
-            if (int.TryParse(userIdClaim, out int userId))
-            {
-                // ===== CACHE KEYS =====
-                string ownedKey = $"owned_{userId}";
-                string cartKey = $"cart_{userId}";
+            ownedGameIds = gameService.GetDb().ChiTietGiaoDiches
+                .Where(x => x.GiaoDich.MaNguoiDung == userId)
+                .Select(x => x.MaGame)
+                .ToList();
 
-                // =========================
-                // OWNED GAMES CACHE
-                // =========================
-                var ownedCached = cache.GetString(ownedKey);
-
-                if (!string.IsNullOrEmpty(ownedCached))
-                {
-                    ownedGameIds = JsonSerializer.Deserialize<List<string>>(ownedCached);
-                }
-                else
-                {
-                    var db = gameService.GetDb();
-
-                    ownedGameIds = db.ChiTietGiaoDiches
-                        .Where(x => x.GiaoDich.MaNguoiDung == userId)
-                        .Select(x => x.MaGame)
-                        .ToList();
-
-                    cache.SetString(
-                        ownedKey,
-                        JsonSerializer.Serialize(ownedGameIds),
-                        new DistributedCacheEntryOptions
-                        {
-                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-                        });
-                }
-
-                // =========================
-                // CART CACHE
-                // =========================
-                var cartCached = cache.GetString(cartKey);
-
-                if (!string.IsNullOrEmpty(cartCached))
-                {
-                    cartGameIds = JsonSerializer.Deserialize<List<string>>(cartCached);
-                }
-                else
-                {
-                    var db = gameService.GetDb();
-
-                    cartGameIds = db.ChiTietGioHangs
-                        .Where(x => x.GioHang.MaNguoiDung == userId)
-                        .Select(x => x.MaGame)
-                        .ToList();
-
-                    cache.SetString(
-                        cartKey,
-                        JsonSerializer.Serialize(cartGameIds),
-                        new DistributedCacheEntryOptions
-                        {
-                            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-                        });
-                }
-            }
+            cartGameIds = gameService.GetDb().ChiTietGioHangs
+                .Where(x => x.GioHang.MaNguoiDung == userId)
+                .Select(x => x.MaGame)
+                .ToList();
         }
 
         ViewBag.OwnedGames = ownedGameIds;
         ViewBag.CartGames = cartGameIds;
 
         return View(games);
-    }
-
-    private List<Game> Paginate(List<Game> source, int page, int pageSize)
-    {
-        return source
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
     }
 
     [Route("about")]
@@ -180,4 +137,6 @@ public class HomeController : Controller
         ViewBag.HideSubBar = true;
         return View();
     }
+
+
 }
