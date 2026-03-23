@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
+using System.Diagnostics;
 
 
 namespace GameStore.Services
@@ -25,7 +26,10 @@ namespace GameStore.Services
                 var result = db.SaveChanges() > 0;
 
                 if (result)
+                {
                     cache.Remove("categories");
+                    Console.WriteLine("🗑️ REDIS REMOVE: categories (CREATE)");
+                }
 
                 return result;
             }
@@ -46,7 +50,10 @@ namespace GameStore.Services
                 var result = db.SaveChanges() > 0;
 
                 if (result)
+                {
                     cache.Remove("categories");
+                    Console.WriteLine("🗑️ REDIS REMOVE: categories (DELETE)");
+                }
 
                 return result;
             }
@@ -64,7 +71,10 @@ namespace GameStore.Services
                 var result = db.SaveChanges() > 0;
 
                 if (result)
+                {
                     cache.Remove("categories");
+                    Console.WriteLine("🗑️ REDIS REMOVE: categories (UPDATE)");
+                }
 
                 return result;
             }
@@ -78,27 +88,57 @@ namespace GameStore.Services
         {
             string cacheKey = "categories";
 
+            var totalWatch = Stopwatch.StartNew();
+
+            Console.WriteLine("🔍 CHECK CACHE: categories");
+
+            var cacheWatch = Stopwatch.StartNew();
             var cached = cache.GetString(cacheKey);
+            cacheWatch.Stop();
+
+            Console.WriteLine($"⏱ REDIS TIME: {cacheWatch.ElapsedMilliseconds} ms");
 
             if (!string.IsNullOrEmpty(cached))
             {
-                Console.WriteLine("🔥 CATEGORY FROM CACHE");
+                Console.WriteLine("🔥 REDIS HIT: categories");
+                Console.WriteLine($"📦 SIZE: {cached.Length} chars");
+
+                totalWatch.Stop();
+                Console.WriteLine($"⚡ TOTAL TIME (CACHE): {totalWatch.ElapsedMilliseconds} ms");
+
                 return JsonSerializer.Deserialize<List<TheLoaiGame>>(cached);
             }
 
-            Console.WriteLine("🐢 CATEGORY FROM DB");
+            Console.WriteLine("🐢 REDIS MISS → QUERY DB");
 
-            var data = db.TheLoaiGames.OrderBy(x => x.MaTheLoai).ToList();
+            var dbWatch = Stopwatch.StartNew();
 
-            cache.SetString(cacheKey,
-    JsonSerializer.Serialize(data, new JsonSerializerOptions
-    {
-        ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
-    }),
-    new DistributedCacheEntryOptions
-    {
-        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-    });
+            var data = db.TheLoaiGames
+                .OrderBy(x => x.MaTheLoai)
+                .ToList();
+
+            dbWatch.Stop();
+
+            Console.WriteLine($"⏱ DB TIME: {dbWatch.ElapsedMilliseconds} ms");
+
+            var serializeWatch = Stopwatch.StartNew();
+
+            var json = JsonSerializer.Serialize(data, new JsonSerializerOptions
+            {
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+            });
+
+            cache.SetString(cacheKey, json, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            });
+
+            serializeWatch.Stop();
+
+            Console.WriteLine($"⏱ SERIALIZE + SET CACHE: {serializeWatch.ElapsedMilliseconds} ms");
+
+            totalWatch.Stop();
+            Console.WriteLine($"⚡ TOTAL TIME (DB): {totalWatch.ElapsedMilliseconds} ms");
 
             return data;
         }

@@ -114,7 +114,6 @@ namespace GameStore.Services
                     return false;
                 }
 
-                // 🔥 reload lại balance từ DB (tránh cache)
                 db.Entry(user).Reload();
 
                 decimal total = cart.ChiTietGioHangs.Sum(x => x.DonGiaHienTai);

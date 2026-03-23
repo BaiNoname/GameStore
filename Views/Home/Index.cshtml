@@ -50,7 +50,9 @@
                                     </div>
                                     <div>
                                         <strong>Lượt tải:</strong>
-                                        <span class="download-count">@game.SoLuotTai</span>
+                                        <span id="download-@game.MaGame">
+                                            @game.SoLuotTai
+                                        </span>
                                     </div>
                                 </div>
 
@@ -164,4 +166,24 @@
         </div>
     </div>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
+<script>
+        const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/gameHub")
+        .build();
+
+    connection.start().then(function () {
+        console.log("Connected to GameHub");
+    }).catch(err => console.error(err));
+
+    connection.on("UpdateDownload", function (gameId, count) {
+        console.log("RECEIVED:", gameId, count);
+
+        const el = document.getElementById("download-" + gameId);
+        if (el) {
+            el.innerText = count;
+        }
+    });
+</script>
 
