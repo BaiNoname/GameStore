@@ -15,8 +15,10 @@ namespace GameStore.Controllers.Client.Game
         }
 
 
-        public IActionResult Detail(string id)
+        public IActionResult Detail(string id, string returnUrl)
         {
+            ViewBag.ReturnUrl = returnUrl;
+
             var game = gameService.findById(id);
             ViewBag.HideSubBar = true;
 

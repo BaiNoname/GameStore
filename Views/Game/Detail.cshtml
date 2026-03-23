@@ -78,7 +78,7 @@
                             </button>
 
                             <a href="/home" class="btn btn-danger rounded-pill px-4">
-                                Quay lại
+                                Back
                             </a>
                         }
 
@@ -89,11 +89,11 @@
                                asp-action="Index"
                                asp-route-focus="@Model.MaGame"
                                class="btn btn-primary rounded-pill px-4">
-                                Mua ngay
+                                Buy now
                             </a>
 
                             <a href="/home" class="btn btn-danger rounded-pill px-4">
-                                Quay lại
+                                Back
                             </a>
                         }
 
@@ -105,7 +105,7 @@
                                asp-route-gameId="@Model.MaGame"
                                asp-route-returnUrl="/cart"
                                class="btn btn-primary rounded-pill px-4">
-                                Mua ngay
+                                Buy now
                             </a>
 
                             <a asp-controller="Cart"
@@ -113,11 +113,12 @@
                                asp-route-gameId="@Model.MaGame"
                                asp-route-returnUrl="@Context.Request.Path"
                                class="btn btn-warning rounded-pill px-4">
-                                Thêm vào giỏ
+                                Add in cart
                             </a>
 
-                            <a href="/home" class="btn btn-danger rounded-pill px-4">
-                                Quay lại
+                            <a href="@(ViewBag.ReturnUrl ?? "/home")"
+                               class="btn btn-danger rounded-pill px-4">
+                                Back
                             </a>
                         }
 
