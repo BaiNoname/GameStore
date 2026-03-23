@@ -23,13 +23,13 @@
     @if (Model == null || !Model.ChiTietGioHangs.Any())
     {
         <div class="alert alert-info">
-            Giỏ hàng của bạn đang trống 😢
+            Your shopping cart is empty. 😢
         </div>
 
         <a asp-controller="Home"
            asp-action="Index"
            class="btn btn-primary">
-            ← Quay lại mua game
+            ← Back Home
         </a>
     }
     else
@@ -83,7 +83,7 @@
                 }
 
                 <a href="@returnUrl" class="btn btn-secondary">
-                    ← Quay lại game
+                    ← Back
                 </a>
             </div>
             <h4>
@@ -120,7 +120,7 @@
 
         <!-- Top-up card -->
         <div class="card mt-4 bg-dark text-light p-3" style="max-width:420px;">
-            <h5>Nạp tiền vào ví (Top-up)</h5>
+            <h5>Top up your wallet (Top-up)</h5>
             <p class="small text-muted">Quét mã hoặc thanh toán qua VNPay để nạp tiền vào tài khoản của bạn.</p>
 
             <form method="get" action="/api/vnpay/topup" class="row g-2">
