@@ -215,63 +215,167 @@
     <style>
         .ai-popup {
             position: fixed;
-            bottom: 80px;
+            bottom: 90px;
             right: 20px;
             width: 360px;
-            height: 460px;
-            background: #111;
+            height: 480px;
+            background: #0f172a;
             color: #fff;
             display: flex;
             flex-direction: column;
-            border-radius: 12px;
+            border-radius: 16px;
             z-index: 9999;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            overflow: hidden;
+            animation: fadeIn 0.25s ease;
         }
 
         .hidden {
             display: none;
         }
 
+        /* header */
         .ai-header {
-            padding: 10px;
-            background: #222;
+            padding: 12px 15px;
+            background: linear-gradient(90deg, #0d6efd, #00c6ff);
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
         }
 
+        /* nút close */
+        .ai-close {
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+            .ai-close:hover {
+                transform: scale(1.2);
+                color: #ff4d4f;
+            }
+
+        /* body */
         .ai-body {
             flex: 1;
-            overflow: auto;
+            overflow-y: auto;
             padding: 10px;
+            background: #020617;
         }
 
+        /* message bubble */
+        .ai-msg {
+            max-width: 75%;
+            padding: 8px 12px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .ai-user {
+            background: #0d6efd;
+            margin-left: auto;
+        }
+
+        .ai-bot {
+            background: #1e293b;
+            margin-right: auto;
+        }
+
+        /* footer */
         .ai-footer {
             display: flex;
-            gap: 5px;
+            gap: 6px;
             padding: 10px;
+            background: #020617;
+            border-top: 1px solid #1e293b;
+            position: relative;
         }
 
+            /* input */
             .ai-footer input {
                 flex: 1;
+                border-radius: 20px;
+                border: none;
+                padding: 8px 12px;
+                outline: none;
             }
+
+        /* send button */
+        .ai-send {
+            background: #0d6efd;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+            .ai-send:hover {
+                background: #0b5ed7;
+                transform: scale(1.15);
+            }
+
+        /* suggest box */
+        .ai-suggest {
+            position: absolute;
+            bottom: 50px;
+            left: 0;
+            width: 300px;
+            background: #1e293b;
+            display: none;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+            .ai-suggest div {
+                padding: 8px;
+                cursor: pointer;
+            }
+
+                .ai-suggest div:hover {
+                    background: #334155;
+                }
+
+        /* animation */
+        @@keyframes fadeIn {
+            from
+
+        {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        }
     </style>
     <div id="aiChatPopup" class="ai-popup hidden">
 
         <div class="ai-header">
             🤖 Game AI Assistant
-            <span onclick="document.getElementById('aiChatPopup').classList.add('hidden')">✖</span>
+            <span id="closeChat" class="ai-close">✖</span>
         </div>
 
         <div id="aiBox" class="ai-body"></div>
 
         <div class="ai-footer">
             <input id="aiInput" placeholder="Ask about games..." />
-            <button onclick="sendMsg()">Send</button>
-            <div id="suggestBox"
-                 style="background:#222;color:#fff;position:absolute;width:300px;bottom:50px;left:0;display:none;z-index:9999;">
-            </div>
+
+            <!-- nút send đẹp -->
+            <button class="ai-send" onclick="sendMsg()">➤</button>
+
+            <!-- suggest -->
+            <div id="suggestBox" class="ai-suggest"></div>
         </div>
 
     </div>
+
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
