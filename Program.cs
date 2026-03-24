@@ -30,7 +30,7 @@ public class Program
         .AddCookie(options =>
         {
             options.LoginPath = "/auth/login";
-            options.AccessDeniedPath = "/auth/login";
+            options.AccessDeniedPath = "/auth/access-denied";
 
             options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
             options.SlidingExpiration = true;
