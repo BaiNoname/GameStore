@@ -71,6 +71,12 @@ namespace GameStore.Controllers.Auth
             return Redirect("/");
         }
 
+        [HttpGet("access-denied")]
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
         [HttpGet("register")]
         public IActionResult Register()
         {
