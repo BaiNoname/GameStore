@@ -83,6 +83,12 @@ namespace GameStore.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("mucdiem");
 
+                    b.Property<DateTime>("NgayDanhGia")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ngaydanhgia")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
                     b.Property<string>("NhanXet")
                         .HasColumnType("text")
                         .HasColumnName("nhanxet");
@@ -110,6 +116,10 @@ namespace GameStore.Migrations
                     b.Property<string>("Hinh")
                         .HasColumnType("text")
                         .HasColumnName("hinh");
+
+                    b.Property<string>("LinkGame")
+                        .HasColumnType("text")
+                        .HasColumnName("linkgame");
 
                     b.Property<string>("MaTheLoai")
                         .HasColumnType("text")
@@ -171,6 +181,12 @@ namespace GameStore.Migrations
                         .HasColumnType("text")
                         .HasColumnName("email");
 
+                    b.Property<bool>("IsVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isverified");
+
                     b.Property<string>("MatKhau")
                         .IsRequired()
                         .HasColumnType("text")
@@ -184,6 +200,14 @@ namespace GameStore.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("quyen");
+
+                    b.Property<string>("ResetCode")
+                        .HasColumnType("text")
+                        .HasColumnName("resetcode");
+
+                    b.Property<DateTime?>("ResetCodeExpiry")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resetcodeexpiry");
 
                     b.Property<decimal>("SoDu")
                         .HasColumnType("numeric")
@@ -228,9 +252,17 @@ namespace GameStore.Migrations
                         .HasColumnType("text")
                         .HasColumnName("magame");
 
+                    b.Property<bool>("DaTai")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("datai");
+
                     b.Property<DateTime>("NgayMua")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("ngaymua");
+                        .HasColumnName("ngaymua")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("MaNguoiDung", "MaGame");
 
@@ -249,16 +281,20 @@ namespace GameStore.Migrations
                         .HasColumnName("magd");
 
                     b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("createdat");
+                        .HasColumnName("createdat")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("MaNguoiDung")
                         .HasColumnType("integer")
                         .HasColumnName("manguoidung");
 
-                    b.Property<DateOnly>("NgayMua")
-                        .HasColumnType("date")
-                        .HasColumnName("ngaymua");
+                    b.Property<DateTime>("NgayMua")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ngaymua")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("PhuongThuc")
                         .IsRequired()
@@ -376,19 +412,23 @@ namespace GameStore.Migrations
 
             modelBuilder.Entity("GameStore.Models.ThuVienGame", b =>
                 {
-                    b.HasOne("GameStore.Models.Game", null)
+                    b.HasOne("GameStore.Models.Game", "Game")
                         .WithMany()
                         .HasForeignKey("MaGame")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_thuvien_game");
 
-                    b.HasOne("GameStore.Models.NguoiDung", null)
+                    b.HasOne("GameStore.Models.NguoiDung", "NguoiDung")
                         .WithMany()
                         .HasForeignKey("MaNguoiDung")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_thuvien_nguoidung");
+
+                    b.Navigation("Game");
+
+                    b.Navigation("NguoiDung");
                 });
 
             modelBuilder.Entity("GiaoDich", b =>

@@ -67,5 +67,78 @@ namespace GameStore.Services
 
             return user;
         }
+
+        // ================= CHANGE PASSWORD =================
+        public bool ChangePassword(int userId, string oldPass, string newPass, string confirmPass, out string message)
+        {
+            message = "";
+
+            var user = db.NguoiDungs.Find(userId);
+
+            if (user == null)
+            {
+                message = "User không tồn tại";
+                return false;
+            }
+
+            // check mật khẩu cũ
+            bool check = BCrypt.Net.BCrypt.Verify(oldPass, user.MatKhau);
+
+            if (!check)
+            {
+                message = "Mật khẩu cũ không đúng";
+                return false;
+            }
+
+            // confirm
+            if (newPass != confirmPass)
+            {
+                message = "Xác nhận mật khẩu không khớp";
+                return false;
+            }
+
+            // validate password
+            if (newPass.Length < 5)
+            {
+                message = "Mật khẩu phải >= 5 ký tự";
+                return false;
+            }
+
+            user.MatKhau = BCrypt.Net.BCrypt.HashPassword(newPass);
+
+            db.SaveChanges();
+
+            message = "Đổi mật khẩu thành công ✅";
+
+            return true;
+        }
+
+        // ================= UPDATE NAME =================
+        public bool UpdateName(int userId, string newName, out string message)
+        {
+            message = "";
+
+            var user = db.NguoiDungs.Find(userId);
+
+            if (user == null)
+            {
+                message = "User không tồn tại";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                message = "Tên không hợp lệ";
+                return false;
+            }
+
+            user.TenNguoiDung = newName.Trim();
+
+            db.SaveChanges();
+
+            message = "Cập nhật tên thành công ✅";
+
+            return true;
+        }
     }
 }

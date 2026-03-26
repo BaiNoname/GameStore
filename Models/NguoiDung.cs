@@ -10,6 +10,12 @@
         public string Quyen { get; set; } = null!;
         public decimal SoDu { get; set; }
 
+        // 🔥 reset password
+        public string? ResetCode { get; set; }
+        public DateTime? ResetCodeExpiry { get; set; }
+        public bool IsVerified { get; set; } = false;
+
+
         public List<GiaoDich> GiaoDiches { get; set; } = new();
         public List<DanhGia> DanhGias { get; set; } = new();
         public GioHang GioHang { get; set; } = new();

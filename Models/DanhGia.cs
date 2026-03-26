@@ -8,6 +8,8 @@
         public int MucDiem { get; set; }
         public string? NhanXet { get; set; }
 
+        public DateTime NgayDanhGia { get; set; }
+
         public NguoiDung NguoiDung { get; set; } = null!;
         public Game Game { get; set; } = null!;
     }

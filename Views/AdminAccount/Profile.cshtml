@@ -1,0 +1,105 @@
+﻿@model GameStore.Models.NguoiDung
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Admin Profile";
+}
+
+<div class="container-fluid">
+
+    <h3 class="mb-4">👤 Admin Profile</h3>
+
+    @if (TempData["Msg"] != null)
+    {
+        <div class="alert alert-success">@TempData["Msg"]</div>
+    }
+
+    <div class="row">
+
+        <!-- LEFT INFO -->
+        <div class="col-md-6">
+
+            <div class="card">
+                <div class="card-body">
+
+                    <h5 class="card-title mb-3">📌 Thông tin</h5>
+
+                    <p><b>Email:</b> @Model.Email</p>
+                    <p><b>Username:</b> @Model.TenNguoiDung</p>
+                    <p>
+                        <b>Balance:</b>
+                        <span class="text-success">
+                            @Model.SoDu.ToString("N0") VND
+                        </span>
+                    </p>
+                    <p><b>Role:</b> @Model.Quyen</p>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT FORM -->
+        <div class="col-md-6">
+
+            <!-- CHANGE NAME -->
+            <div class="card mb-3">
+                <div class="card-body">
+
+                    <h5 class="mb-3">✏️ Change Username</h5>
+
+                    <form asp-action="UpdateName" method="post">
+                        <input type="text"
+                               name="tenNguoiDung"
+                               value="@Model.TenNguoiDung"
+                               class="form-control mb-2"
+                               required />
+
+                        <button class="btn btn-primary w-100">
+                            Save
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+
+            <!-- CHANGE PASSWORD -->
+            <div class="card">
+                <div class="card-body">
+
+                    <h5 class="mb-3">🔐 Change Password</h5>
+
+                    <form asp-action="ChangePassword" method="post">
+
+                        <input type="password"
+                               name="oldPass"
+                               class="form-control mb-2"
+                               placeholder="Current password"
+                               required />
+
+                        <input type="password"
+                               name="newPass"
+                               class="form-control mb-2"
+                               placeholder="New password"
+                               required />
+
+                        <input type="password"
+                               name="confirmPass"
+                               class="form-control mb-3"
+                               placeholder="Confirm password"
+                               required />
+
+                        <button class="btn btn-warning w-100">
+                            Update Password
+                        </button>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

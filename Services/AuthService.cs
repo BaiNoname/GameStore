@@ -6,5 +6,7 @@ namespace GameStore.Services
     {
         bool Register(NguoiDung user);
         NguoiDung? Login(string email, string password);
+        bool ChangePassword(int userId, string oldPass, string newPass, string confirmPass, out string message);
+        bool UpdateName(int userId, string newName, out string message);
     }
 }
