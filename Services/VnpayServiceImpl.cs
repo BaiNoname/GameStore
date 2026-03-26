@@ -52,7 +52,7 @@ namespace GameStore.Services
             {
                 MaGD = maGD,
                 MaNguoiDung = userId,
-                NgayMua = DateOnly.FromDateTime(DateTime.Now),
+                NgayMua = DateTime.Now,
                 TrangThai = "Pending",
                 PhuongThuc = phuongThuc,
                 ThanhTien = amount

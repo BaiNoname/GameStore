@@ -66,9 +66,44 @@
                         }
                         else
                         {
-                            <span>Hi User 👤 @User.Identity.Name</span>
+                            <div class="dropdown">
 
-                            <a class="btn btn-outline-warning btn-sm" asp-controller="Auth" asp-action="Logout">Logout</a>
+                                <button class="btn btn-outline-light dropdown-toggle"
+                                        data-bs-toggle="dropdown">
+
+                                    👤 @User.Identity.Name
+                                </button>
+
+                                <ul class="dropdown-menu dropdown-menu-end">
+
+                                    <li>
+                                        <a class="dropdown-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Library" ? "active" : "")"
+                                           asp-controller="Library"
+                                           asp-action="Index">
+                                            🎮 My Library
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="Account"
+                                           asp-action="Profile">
+                                            👤 My profile
+                                        </a>
+                                    </li>
+
+                                    <li><hr class="dropdown-divider"></li>
+
+                                    <li>
+                                        <a class="dropdown-item text-danger"
+                                           asp-controller="Auth"
+                                           asp-action="Logout">
+                                            🚪 Logout
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </div>
                         }
 
                         <a href="/cart" class="btn btn-outline-light">

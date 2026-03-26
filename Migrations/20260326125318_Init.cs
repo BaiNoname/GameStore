@@ -23,7 +23,10 @@ namespace GameStore.Migrations
                     matkhau = table.Column<string>(type: "text", nullable: false),
                     ngaydangky = table.Column<DateOnly>(type: "date", nullable: false),
                     quyen = table.Column<string>(type: "text", nullable: false),
-                    sodu = table.Column<decimal>(type: "numeric", nullable: false)
+                    sodu = table.Column<decimal>(type: "numeric", nullable: false),
+                    resetcode = table.Column<string>(type: "text", nullable: true),
+                    resetcodeexpiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    isverified = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
                 },
                 constraints: table =>
                 {
@@ -48,11 +51,11 @@ namespace GameStore.Migrations
                 {
                     magd = table.Column<string>(type: "text", nullable: false),
                     manguoidung = table.Column<int>(type: "integer", nullable: false),
-                    ngaymua = table.Column<DateOnly>(type: "date", nullable: false),
+                    ngaymua = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     thanhtien = table.Column<decimal>(type: "numeric", nullable: false),
                     trangthai = table.Column<string>(type: "text", nullable: false, defaultValue: "Pending"),
                     phuongthuc = table.Column<string>(type: "text", nullable: false),
-                    createdat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    createdat = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     vnptransactionno = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -95,7 +98,8 @@ namespace GameStore.Migrations
                     gia = table.Column<decimal>(type: "numeric", nullable: false),
                     ngayramat = table.Column<DateOnly>(type: "date", nullable: true),
                     hinh = table.Column<string>(type: "text", nullable: true),
-                    soluottai = table.Column<int>(type: "integer", nullable: false)
+                    soluottai = table.Column<int>(type: "integer", nullable: false),
+                    linkgame = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -165,7 +169,8 @@ namespace GameStore.Migrations
                     manguoidung = table.Column<int>(type: "integer", nullable: false),
                     magame = table.Column<string>(type: "text", nullable: false),
                     mucdiem = table.Column<int>(type: "integer", nullable: false),
-                    nhanxet = table.Column<string>(type: "text", nullable: true)
+                    nhanxet = table.Column<string>(type: "text", nullable: true),
+                    ngaydanhgia = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },
                 constraints: table =>
                 {
@@ -190,7 +195,8 @@ namespace GameStore.Migrations
                 {
                     manguoidung = table.Column<int>(type: "integer", nullable: false),
                     magame = table.Column<string>(type: "text", nullable: false),
-                    ngaymua = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    datai = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    ngaymua = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },
                 constraints: table =>
                 {

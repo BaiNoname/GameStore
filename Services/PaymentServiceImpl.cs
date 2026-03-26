@@ -131,9 +131,9 @@ namespace GameStore.Services
                 // 🔥 CHECK đã mua game chưa
                 var gameIds = cart.ChiTietGioHangs.Select(x => x.MaGame).ToList();
 
-                var alreadyOwned = db.ChiTietGiaoDiches
-                    .Where(ct => ct.GiaoDich.MaNguoiDung == userId && gameIds.Contains(ct.MaGame))
-                    .Select(ct => ct.MaGame)
+                var alreadyOwned = db.ThuVienGames
+                    .Where(x => x.MaNguoiDung == userId && gameIds.Contains(x.MaGame))
+                    .Select(x => x.MaGame)
                     .ToList();
 
                 if (alreadyOwned.Any())
@@ -147,7 +147,7 @@ namespace GameStore.Services
                 {
                     MaGD = Guid.NewGuid().ToString(),
                     MaNguoiDung = userId,
-                    NgayMua = DateOnly.FromDateTime(DateTime.Now),
+                    NgayMua = DateTime.UtcNow,
                     TrangThai = "Pending", // 🔥 đổi từ Success → Pending
                     PhuongThuc = "Balance",
                     ThanhTien = total
@@ -167,6 +167,21 @@ namespace GameStore.Services
                         DonGia = item.DonGiaHienTai
                     });
 
+                    // 🔥 ADD VÀO THƯ VIỆN
+                    var exists = db.ThuVienGames
+                        .Any(x => x.MaNguoiDung == userId && x.MaGame == item.MaGame);
+
+                    if (!exists)
+                    {
+                        db.ThuVienGames.Add(new ThuVienGame
+                        {
+                            MaNguoiDung = userId,
+                            MaGame = item.MaGame,
+                            NgayMua = DateTime.UtcNow,
+                            DaTai = false
+                        });
+                    }
+
                     var game = db.Games.Find(item.MaGame);
                     if (game != null)
                     {
@@ -178,6 +193,8 @@ namespace GameStore.Services
                         await hub.Clients.All
                             .SendAsync("UpdateDownload", game.MaGame, game.SoLuotTai);
                     }
+
+
 
                 }
 
