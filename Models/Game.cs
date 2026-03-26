@@ -10,6 +10,7 @@
         public DateOnly? NgayRaMat { get; set; }
         public string? Hinh { get; set; }
         public int SoLuotTai { get; set; }
+        public string? LinkGame { get; set; }
 
         public TheLoaiGame? TheLoaiGame { get; set; }
         public List<DanhGia> DanhGias { get; set; } = new();

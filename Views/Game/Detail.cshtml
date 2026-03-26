@@ -1,4 +1,5 @@
 ﻿@model GameStore.Models.Game
+@using GameStore.Models
 
 @{
     ViewData["Title"] = "Chi tiết game";
@@ -8,6 +9,11 @@
     var owned = ViewBag.OwnedGames as List<string> ?? new List<string>();
     var cart = ViewBag.CartGames as List<string> ?? new List<string>();
 }
+
+@{
+    var myReview = ViewBag.MyReview as DanhGia;
+}
+
 @section Styles {
     <link rel="stylesheet" href="~/css/game-detail.css" />
 }
@@ -78,7 +84,7 @@
                             </button>
 
                             <a href="/home" class="btn btn-danger rounded-pill px-4">
-                                Quay lại
+                                Back
                             </a>
                         }
 
@@ -89,11 +95,11 @@
                                asp-action="Index"
                                asp-route-focus="@Model.MaGame"
                                class="btn btn-primary rounded-pill px-4">
-                                Mua ngay
+                                Buy now
                             </a>
 
                             <a href="/home" class="btn btn-danger rounded-pill px-4">
-                                Quay lại
+                                Back
                             </a>
                         }
 
@@ -105,7 +111,7 @@
                                asp-route-gameId="@Model.MaGame"
                                asp-route-returnUrl="/cart"
                                class="btn btn-primary rounded-pill px-4">
-                                Mua ngay
+                                Buy now
                             </a>
 
                             <a asp-controller="Cart"
@@ -113,11 +119,12 @@
                                asp-route-gameId="@Model.MaGame"
                                asp-route-returnUrl="@Context.Request.Path"
                                class="btn btn-warning rounded-pill px-4">
-                                Thêm vào giỏ
+                                Add in cart
                             </a>
 
-                            <a href="/home" class="btn btn-danger rounded-pill px-4">
-                                Quay lại
+                            <a href="@(ViewBag.ReturnUrl ?? "/home")"
+                               class="btn btn-danger rounded-pill px-4">
+                                Back
                             </a>
                         }
 
@@ -134,75 +141,74 @@
     <h3 class="text-light mb-4">⭐ Player Reviews</h3>
 
     <!-- Form viết đánh giá -->
-    <div class="card bg-dark text-light mb-4 border-secondary">
-        <div class="card-body">
+    @if (owned.Contains(Model.MaGame))
+    {
+        <div class="card bg-dark text-light mb-4 border-secondary">
+            <div class="card-body">
 
-            <h5 class="mb-3">Write a Review</h5>
+                <h5 class="mb-3">Write a Review</h5>
 
-            <form>
-                <div class="mb-3">
-                    <label class="form-label">Rating</label>
-                    <select class="form-select bg-dark text-light border-secondary">
-                        <option>⭐ 5 - Excellent</option>
-                        <option>⭐ 4 - Good</option>
-                        <option>⭐ 3 - Average</option>
-                        <option>⭐ 2 - Bad</option>
-                        <option>⭐ 1 - Terrible</option>
-                    </select>
-                </div>
+                <form method="post" asp-action="SubmitReview" asp-controller="Game">
 
-                <div class="mb-3">
-                    <label class="form-label">Your Review</label>
-                    <textarea class="form-control bg-dark text-light border-secondary"
-                              rows="3"
-                              placeholder="Write your thoughts about this game..."></textarea>
-                </div>
+                    <input type="hidden" name="gameId" value="@Model.MaGame" />
 
-                <button class="btn btn-primary">Submit Review</button>
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <select name="rating" class="form-select bg-dark text-light border-secondary">
 
-            </form>
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <option value="@i" selected="@(myReview?.MucDiem == i)">
+                                    ⭐ @i
+                                </option>
+                            }
 
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Your Review</label>
+                        <textarea name="comment"
+                              class="form-control bg-dark text-light border-secondary"
+                              rows="3">@myReview?.NhanXet</textarea>
+                    </div>
+
+                    <button class="btn btn-success">
+                        @(myReview == null ? "Submit Review" : "Update Review")
+                    </button>
+
+                </form>
+
+            </div>
         </div>
-    </div>
+    }
 
 
     <!-- Danh sách review -->
-    <div class="card bg-dark text-light border-secondary mb-3">
-        <div class="card-body">
+    @foreach (var r in ViewBag.Reviews as List<DanhGia>)
+    {
+        <div class="card bg-dark text-light mb-3 border-secondary">
+            <div class="card-body">
 
-            <div class="d-flex justify-content-between">
-                <strong>Player123</strong>
-                <span class="text-warning">⭐⭐⭐⭐⭐</span>
+                <div class="d-flex justify-content-between">
+                    <strong>@r.NguoiDung.TenNguoiDung</strong>
+                    <span class="text-warning">
+                        @for (int i = 0; i < r.MucDiem; i++)
+                        {
+                            <span>⭐</span>
+                        }
+                    </span>
+                </div>
+
+                <p class="text-secondary small">
+                    @r.NgayDanhGia.ToString("dd/MM/yyyy HH:mm")
+                </p>
+
+                <p>@r.NhanXet</p>
+
             </div>
-
-            <p class="text-secondary small mb-2">2 hours ago</p>
-
-            <p>
-                This game is amazing! Graphics are beautiful and gameplay is smooth.
-                Definitely worth buying.
-            </p>
-
         </div>
-    </div>
-
-
-    <div class="card bg-dark text-light border-secondary mb-3">
-        <div class="card-body">
-
-            <div class="d-flex justify-content-between">
-                <strong>GameFan</strong>
-                <span class="text-warning">⭐⭐⭐⭐</span>
-            </div>
-
-            <p class="text-secondary small mb-2">1 day ago</p>
-
-            <p>
-                Really fun gameplay but the story is a bit short.
-                Still recommend it!
-            </p>
-
-        </div>
-    </div>
+    }
 
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>

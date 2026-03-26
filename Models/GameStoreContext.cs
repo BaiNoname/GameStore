@@ -50,6 +50,7 @@ namespace GameStore.Models
                 entity.Property(e => e.NgayRaMat).HasColumnName("ngayramat");
                 entity.Property(e => e.Hinh).HasColumnName("hinh");
                 entity.Property(e => e.SoLuotTai).HasColumnName("soluottai");
+                entity.Property(e => e.LinkGame).HasColumnName("linkgame");
 
                 entity.HasOne(e => e.TheLoaiGame)
                       .WithMany(t => t.Games)
@@ -73,6 +74,13 @@ namespace GameStore.Models
                 entity.Property(e => e.Quyen).HasColumnName("quyen");
                 entity.Property(e => e.SoDu).HasColumnName("sodu");
 
+                // 🔥 reset password
+                entity.Property(e => e.ResetCode).HasColumnName("resetcode");
+                entity.Property(e => e.ResetCodeExpiry).HasColumnName("resetcodeexpiry");
+                entity.Property(e => e.IsVerified)
+                      .HasColumnName("isverified")
+                      .HasDefaultValue(false);
+
                 entity.HasIndex(e => e.Email).IsUnique();
             });
 
@@ -86,7 +94,7 @@ namespace GameStore.Models
 
                 entity.Property(e => e.MaGD).HasColumnName("magd");
                 entity.Property(e => e.MaNguoiDung).HasColumnName("manguoidung");
-                entity.Property(e => e.NgayMua).HasColumnName("ngaymua");
+                entity.Property(e => e.NgayMua).HasColumnName("ngaymua").HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(e => e.ThanhTien).HasColumnName("thanhtien");
 
                 entity.Property(e => e.TrangThai)
@@ -95,7 +103,9 @@ namespace GameStore.Models
 
                 entity.Property(e => e.PhuongThuc).HasColumnName("phuongthuc");
 
-                entity.Property(e => e.CreatedAt).HasColumnName("createdat");
+                entity.Property(e => e.CreatedAt)
+                      .HasColumnName("createdat")
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(e => e.VnpTransactionNo).HasColumnName("vnptransactionno");
 
                 entity.HasIndex(e => e.MaNguoiDung);
@@ -120,6 +130,9 @@ namespace GameStore.Models
                 entity.Property(e => e.MaGame).HasColumnName("magame");
                 entity.Property(e => e.MucDiem).HasColumnName("mucdiem");
                 entity.Property(e => e.NhanXet).HasColumnName("nhanxet");
+                entity.Property(e => e.NgayDanhGia)
+                      .HasColumnName("ngaydanhgia")
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasOne(e => e.NguoiDung)
                       .WithMany(n => n.DanhGias)
@@ -208,14 +221,19 @@ namespace GameStore.Models
 
                 entity.Property(e => e.MaNguoiDung).HasColumnName("manguoidung");
                 entity.Property(e => e.MaGame).HasColumnName("magame");
-                entity.Property(e => e.NgayMua).HasColumnName("ngaymua");
+                entity.Property(e => e.NgayMua)
+                      .HasColumnName("ngaymua")
+                      .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.DaTai)
+                      .HasColumnName("datai")
+                      .HasDefaultValue(false);
 
-                entity.HasOne<NguoiDung>()
+                entity.HasOne(e => e.NguoiDung)
                       .WithMany()
                       .HasForeignKey(e => e.MaNguoiDung)
                       .HasConstraintName("fk_thuvien_nguoidung");
 
-                entity.HasOne<Game>()
+                entity.HasOne(e => e.Game)
                       .WithMany()
                       .HasForeignKey(e => e.MaGame)
                       .HasConstraintName("fk_thuvien_game");

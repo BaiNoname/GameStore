@@ -127,7 +127,11 @@
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-end">
-                                    <a class="dropdown-item">My Profile</a>
+                                    <a class="dropdown-item"
+                                       asp-controller="AdminAccount"
+                                       asp-action="Profile">
+                                        👤 My Profile
+                                    </a>
 
                                     <a class="dropdown-item text-danger"
                                        asp-controller="auth"

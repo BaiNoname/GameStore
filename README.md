@@ -64,12 +64,6 @@ INSERT INTO game (magame, tengame, mota, matheloai, gia, ngayramat, hinh, soluot
 ('G062','Chay nhanh','aaaaa','TL005',100000,'2026-03-02','dabf347e-b180-4c96-bf33-c7ff71c462fc.png',0),
 ('G063','Chay nhanh','21321','TL006',3123,'2026-03-09','35d727ce-a74b-4baa-b5a0-65f174a626b4.jpg',0);
 
-
-Redis cache Cache danh sách game (ALL) 
-Cache game theo filter + phân trang
-Cache 1 game theo ID
-Cache đếm số game
-Cache game mới
-Cache game hot
+dung redis load category ,realtime soluottai
 
 dùng upstash để làm redis online

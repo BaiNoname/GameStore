@@ -4,6 +4,7 @@ using GameStore.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
+using System.Security.Claims;
 using VNPAY.Extensions;
 
 public class Program
@@ -30,7 +31,7 @@ public class Program
         .AddCookie(options =>
         {
             options.LoginPath = "/auth/login";
-            options.AccessDeniedPath = "/auth/login";
+            options.AccessDeniedPath = "/auth/access-denied";
 
             options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
             options.SlidingExpiration = true;
@@ -99,6 +100,7 @@ public class Program
         builder.Services.AddScoped<AuthService, AuthServiceImpl>();
         builder.Services.AddScoped<PaymentService, PaymentServiceImpl>();
         builder.Services.AddScoped<CartService, CartServiceImpl>();
+        builder.Services.AddScoped<ReviewService, ReviewServiceImpl>();
 
         // Register Vnpay service implementation
         builder.Services.AddScoped<VnpayService, VnpayServiceImpl>();
@@ -116,6 +118,40 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+
+        app.Use(async (context, next) =>
+        {
+            var path = context.Request.Path.ToString().ToLower();
+
+            if (context.User.Identity.IsAuthenticated)
+            {
+                // lấy role từ claims
+                var roleClaim = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "";
+                var isAdmin = roleClaim.Equals("admin", StringComparison.OrdinalIgnoreCase);
+
+                // ❌ Admin không được vào user pages, bao gồm "/"
+                if (isAdmin &&
+                    (path == "/" ||
+                     path.StartsWith("/cart") ||
+                     path.StartsWith("/library") ||
+                     path.StartsWith("/home") ||
+                     path.StartsWith("/account") ||
+                     path.StartsWith("/checkout")))
+                {
+                    context.Response.Redirect("/admin");
+                    return;
+                }
+
+                // ❌ User không được vào admin
+                if (!isAdmin && path.StartsWith("/admin"))
+                {
+                    context.Response.Redirect("/");
+                    return;
+                }
+            }
+
+            await next();
+        });
 
         app.MapHub<GameStore.Hubs.GameHub>("/gameHub");
         app.MapHub<GameStore.Hubs.AiChatHub>("/aiChatHub");
