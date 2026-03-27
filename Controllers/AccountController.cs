@@ -18,6 +18,7 @@ namespace GameStore.Controllers
         // ================= PROFILE =================
         public IActionResult Profile()
         {
+            ViewBag.HideSubBar = true;
             if (!User.Identity.IsAuthenticated)
                 return Redirect("/auth/login");
 
