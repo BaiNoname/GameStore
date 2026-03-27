@@ -1,4 +1,6 @@
 ﻿namespace GameStore;
+
+using GameStore.Helpers;
 using GameStore.Models;
 using GameStore.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -104,6 +106,8 @@ public class Program
 
         // Register Vnpay service implementation
         builder.Services.AddScoped<VnpayService, VnpayServiceImpl>();
+
+        builder.Services.AddScoped<MailHelper>();
 
 
         var app = builder.Build();

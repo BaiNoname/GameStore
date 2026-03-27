@@ -15,6 +15,7 @@ namespace GameStore.Controllers.Client.Library
 
         public IActionResult Index()
         {
+            ViewBag.HideSubBar = true;
             if (!User.Identity.IsAuthenticated)
                 return Redirect("/auth/login");
 

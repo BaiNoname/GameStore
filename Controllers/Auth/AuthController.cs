@@ -1,4 +1,5 @@
-﻿using GameStore.Models;
+﻿using GameStore.Helpers;
+using GameStore.Models;
 using GameStore.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -13,9 +14,12 @@ namespace GameStore.Controllers.Auth
     {
         private AuthService authService;
 
-        public AuthController(AuthService _authService)
+        private readonly MailHelper mailHelper;
+
+        public AuthController(AuthService _authService, MailHelper _mailHelper)
         {
             authService = _authService;
+            mailHelper = _mailHelper;
         }
 
         [HttpGet("login")]
@@ -124,5 +128,94 @@ namespace GameStore.Controllers.Auth
 
             return RedirectToAction("Index", "Home");
         }
+
+        [HttpGet("forgot")]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost("forgot")]
+        public IActionResult ForgotPassword(string email)
+        {
+            email = email.Trim().ToLower();
+
+            if (authService.SendResetCode(email, out string message))
+            {
+                HttpContext.Session.SetString("ResetEmail", email);
+
+                return RedirectToAction("VerifyCode");
+            }
+
+            ViewBag.Error = message;
+            return View();
+        }
+
+        [HttpGet("verify")]
+        public IActionResult VerifyCode()
+        {
+            var email = HttpContext.Session.GetString("ResetEmail");
+
+            if (email == null)
+                return RedirectToAction("ForgotPassword");
+
+            return View();
+        }
+
+        [HttpPost("verify")]
+        public IActionResult VerifyCode(string code)
+        {
+            var email = HttpContext.Session.GetString("ResetEmail");
+
+            Console.WriteLine("EMAIL SESSION: " + email); // debug
+
+            if (string.IsNullOrEmpty(email))
+            {
+                ViewBag.Error = "Phiên làm việc hết hạn, vui lòng nhập lại email";
+                return RedirectToAction("ForgotPassword");
+            }
+
+            if (authService.VerifyResetCode(email, code, out string message))
+            {
+                return RedirectToAction("ResetPassword");
+            }
+
+            ViewBag.Error = message;
+            return View();
+        }
+
+        [HttpGet("reset")]
+        public IActionResult ResetPassword()
+        {
+            var email = HttpContext.Session.GetString("ResetEmail");
+
+            if (email == null)
+                return RedirectToAction("ForgotPassword");
+
+            return View();
+        }
+
+        [HttpPost("reset")]
+        public IActionResult ResetPassword(string password, string confirmPassword)
+        {
+            var email = HttpContext.Session.GetString("ResetEmail");
+
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("ForgotPassword");
+            }
+
+            if (authService.ResetPassword(email, password, confirmPassword, out string message))
+            {
+                HttpContext.Session.Remove("ResetEmail"); // 🔥 xoá sau khi xong
+
+                TempData["Success"] = "Đổi mật khẩu thành công!";
+                return RedirectToAction("Login");
+            }
+
+            ViewBag.Error = message;
+            return View();
+        }
+
     }
 }

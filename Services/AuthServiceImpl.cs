@@ -1,4 +1,5 @@
-﻿using GameStore.Models;
+﻿using GameStore.Helpers;
+using GameStore.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 
@@ -7,10 +8,12 @@ namespace GameStore.Services
     public class AuthServiceImpl : AuthService
     {
         private GameStoreContext db;
+        private MailHelper mailHelper;
 
-        public AuthServiceImpl(GameStoreContext _db)
+        public AuthServiceImpl(GameStoreContext _db, MailHelper _mailHelper)
         {
             db = _db;
+            mailHelper = _mailHelper;
         }
 
         public bool Register(NguoiDung user)
@@ -138,6 +141,129 @@ namespace GameStore.Services
 
             message = "Cập nhật tên thành công ✅";
 
+            return true;
+        }
+
+        public bool SendResetCode(string email, out string message)
+        {
+            message = "";
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                message = "Email không hợp lệ";
+                return false;
+            }
+
+            email = email.Trim().ToLower();
+
+            var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email);
+
+            if (user == null)
+            {
+                message = "Email không tồn tại";
+                return false;
+            }
+
+            var code = new Random().Next(100000, 999999).ToString();
+
+            user.ResetCode = code;
+            user.ResetCodeExpiry = DateTime.UtcNow.AddMinutes(5);
+            user.IsVerified = false;
+
+            db.SaveChanges();
+
+            // gửi mail
+            var body = $"<h3>Mã reset của bạn là: <b>{code}</b></h3><p>Hết hạn sau 5 phút</p>";
+
+            bool sent = mailHelper.SendEmail(email, "Reset Password - GameStore", body);
+
+            if (!sent)
+            {
+                message = "Không gửi được email";
+                return false;
+            }
+
+            message = "Đã gửi mã về email";
+            return true;
+        }
+
+        public bool VerifyResetCode(string email, string code, out string message)
+        {
+            message = "";
+
+            var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email);
+
+            if (user == null)
+            {
+                message = "User không tồn tại";
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(user.ResetCode))
+            {
+                message = "Chưa yêu cầu mã";
+                return false;
+            }
+
+            if (user.ResetCode != code)
+            {
+                message = "Mã không đúng";
+                return false;
+            }
+
+            if (user.ResetCodeExpiry == null || user.ResetCodeExpiry < DateTime.UtcNow)
+            {
+                message = "Mã đã hết hạn";
+                return false;
+            }
+
+            user.IsVerified = true;
+            db.SaveChanges();
+
+            message = "Xác thực thành công";
+            return true;
+        }
+
+        public bool ResetPassword(string email, string newPass, string confirmPass, out string message)
+        {
+            message = "";
+
+            var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email);
+
+            if (user == null)
+            {
+                message = "User không tồn tại";
+                return false;
+            }
+
+            if (!user.IsVerified)
+            {
+                message = "Chưa xác thực";
+                return false;
+            }
+
+            if (newPass != confirmPass)
+            {
+                message = "Mật khẩu không khớp";
+                return false;
+            }
+
+            if (newPass.Length < 5)
+            {
+                message = "Mật khẩu quá yếu";
+                return false;
+            }
+
+            user.MatKhau = BCrypt.Net.BCrypt.HashPassword(newPass);
+
+            // reset lại code
+            user.ResetCode = null;
+            user.ResetCodeExpiry = null;
+            user.IsVerified = false;
+
+            db.SaveChanges();
+
+            message = "Đổi mật khẩu thành công ✅";
             return true;
         }
     }
