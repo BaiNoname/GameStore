@@ -9,7 +9,6 @@ public class GiaoDich
     public string TrangThai { get; set; }
     public string PhuongThuc { get; set; }
 
-    // 🔥 thêm cái này
     public DateTime CreatedAt { get; set; }
     public string? VnpTransactionNo { get; set; }
 
