@@ -182,10 +182,11 @@ namespace GameStore.Services
 
             db.SaveChanges();
 
-            // gửi mail
+            var subject = "Reset Password - GameStore";
+
             var body = $"<h3>Mã reset của bạn là: <b>{code}</b></h3><p>Hết hạn sau 5 phút</p>";
 
-            bool sent = mailHelper.SendEmail(email, "Reset Password - GameStore", body);
+            bool sent = Task.Run(() => mailHelper.SendEmail(email, subject, body)).Result;
 
             if (!sent)
             {

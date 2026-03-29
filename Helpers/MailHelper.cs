@@ -1,50 +1,90 @@
-﻿using System.Net;
-using System.Net.Mail;
+﻿//using System.Net;
+//using System.Net.Mail;
+
+//namespace GameStore.Helpers
+//{
+//    public class MailHelper
+//    {
+//        private readonly IConfiguration _config;
+
+//        public MailHelper(IConfiguration config)
+//        {
+//            _config = config;
+//        }
+
+//        public bool SendEmail(string toEmail, string subject, string body)
+//        {
+//            try
+//            {
+//                var smtpHost = _config["Email:SmtpHost"];
+//                var smtpPort = int.Parse(_config["Email:SmtpPort"]);
+//                var fromEmail = _config["Email:FromEmail"];
+//                var password = _config["Email:Password"];
+
+//                var client = new SmtpClient(smtpHost, smtpPort)
+//                {
+//                    Credentials = new NetworkCredential(fromEmail, password),
+//                    EnableSsl = true
+//                };
+
+//                var mail = new MailMessage
+//                {
+//                    From = new MailAddress(fromEmail, "GameStore"),
+//                    Subject = subject,
+//                    Body = body,
+//                    IsBodyHtml = true
+//                };
+
+//                mail.To.Add(toEmail);
+
+//                client.Send(mail);
+
+//                return true;
+//            }
+//            catch
+//            {
+//                return false;
+//            }
+//        }
+//    }
+//}
+
+
+using Resend;
 
 namespace GameStore.Helpers
 {
     public class MailHelper
     {
-        private readonly IConfiguration _config;
+        private readonly ResendClient _resend;
 
-        public MailHelper(IConfiguration config)
+        public MailHelper(ResendClient resend)
         {
-            _config = config;
+            _resend = resend;
         }
 
-        public bool SendEmail(string toEmail, string subject, string body)
+        public async Task<bool> SendEmail(string toEmail, string subject, string body)
         {
             try
             {
-                // Lấy config cơ bản
-                var smtpHost = Environment.GetEnvironmentVariable("SMTP_HOST") ?? _config["Email:SmtpHost"];
-                var smtpPort = int.Parse(Environment.GetEnvironmentVariable("SMTP_PORT") ?? _config["Email:SmtpPort"]);
-                var fromEmail = Environment.GetEnvironmentVariable("SMTP_FROM_EMAIL") ?? _config["Email:FromEmail"];
-                var password = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? _config["Email:Password"];
-
-                var client = new SmtpClient(smtpHost, smtpPort)
+                var message = new EmailMessage()
                 {
-                    Credentials = new NetworkCredential(fromEmail, password),
-                    EnableSsl = true
-                };
-
-                var mail = new MailMessage
-                {
-                    From = new MailAddress(fromEmail, "GameStore"),
+                    From = "onboarding@resend.dev",
                     Subject = subject,
-                    Body = body,
-                    IsBodyHtml = true
+                    HtmlBody = body
                 };
 
-                mail.To.Add(toEmail);
+                message.To.Add(toEmail);
 
-                client.Send(mail);
+                await _resend.EmailSendAsync(message);
+
+                Console.WriteLine("✅ Email sent");
 
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine("SendEmail error: " + ex.Message); // debug
+                Console.WriteLine("❌ Resend error: " + ex.ToString());
                 return false;
             }
         }
