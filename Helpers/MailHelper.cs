@@ -16,10 +16,11 @@ namespace GameStore.Helpers
         {
             try
             {
-                var smtpHost = _config["Email:SmtpHost"];
-                var smtpPort = int.Parse(_config["Email:SmtpPort"]);
-                var fromEmail = _config["Email:FromEmail"];
-                var password = _config["Email:Password"];
+                // Lấy config cơ bản
+                var smtpHost = Environment.GetEnvironmentVariable("SMTP_HOST") ?? _config["Email:SmtpHost"];
+                var smtpPort = int.Parse(Environment.GetEnvironmentVariable("SMTP_PORT") ?? _config["Email:SmtpPort"]);
+                var fromEmail = Environment.GetEnvironmentVariable("SMTP_FROM_EMAIL") ?? _config["Email:FromEmail"];
+                var password = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? _config["Email:Password"];
 
                 var client = new SmtpClient(smtpHost, smtpPort)
                 {
@@ -41,8 +42,9 @@ namespace GameStore.Helpers
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine("SendEmail error: " + ex.Message); // debug
                 return false;
             }
         }
