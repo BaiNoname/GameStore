@@ -13,9 +13,13 @@
             <h4 class="mb-0">🎮 Add Users</h4>
         </div>
 
-        <div class="text-success">
-            @TempData["Msg"]
-        </div>
+        @if (TempData["Msg"] != null)
+        {
+            var msgType = TempData["MsgType"]?.ToString() ?? "info";
+            <div class="alert alert-@msgType mt-2 fw-bold text-danger">
+                @TempData["Msg"]
+            </div>
+        }
 
         <div class="card-body">
             <form method="post" asp-controller="user" asp-action="add">
@@ -99,3 +103,10 @@
     </div>
 
 </div>
+<script>
+    // Ẩn thông báo sau 3s
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) alert.style.display = 'none';
+    }, 3000);
+</script>

@@ -13,8 +13,14 @@
             <h4 class="mb-0">🎮 Edit Game Category</h4>
         </div>
 
-        <div class="text-success">
-            @TempData["Msg"]
+        <div>
+            @if (TempData["Msg"] != null)
+            {
+                var msgType = TempData["MsgType"]?.ToString() ?? "info";
+                <div class="alert alert-@msgType mt-2 fw-bold text-danger">
+                    @TempData["Msg"]
+                </div>
+            }
         </div>
 
         <div class="card-body">

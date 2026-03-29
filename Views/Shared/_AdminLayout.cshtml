@@ -4,6 +4,7 @@
 @{
     var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");
 }
+
 <!doctype html>
 <html lang="vi">
 
@@ -16,6 +17,7 @@
     <link rel="stylesheet" href="~/assets/css/styles.min.css" />
 
     @RenderSection("Styles", required: false)
+
 </head>
 
 <body>
@@ -211,10 +213,18 @@
             }, 3000);
         }
     </script>
-    @if (TempData["ToastMessage"] != null)
+    @{
+        var msg = TempData.Peek("ToastMessage") as string;
+        var type = TempData.Peek("ToastType") as string;
+    }
+
+    @if (msg != null)
     {
+        TempData.Remove("ToastMessage");
+        TempData.Remove("ToastType");
+
         <script>
-            showToast("@Html.Raw(TempData["ToastMessage"])", "@TempData["ToastType"]");
+            showToast("@Html.Raw(msg)", "@type");
         </script>
     }
 </body>

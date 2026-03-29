@@ -29,6 +29,14 @@
                 + Add New User
             </a>
 
+            @if (TempData["Msg"] != null)
+            {
+                var msgType = TempData["MsgType"]?.ToString() ?? "info";
+                <div class="alert alert-@msgType mt-2 fw-bold text-danger">
+                    @TempData["Msg"]
+                </div>
+            }
+
         </div>
 
         <div class="table-responsive">
@@ -55,8 +63,46 @@
                             <td>@user.Quyen</td>
                             <td>@user.SoDu</td>
                             <td>
-                                <a class="btn btn-sm btn-warning" asp-controller="user" asp-action="edit" asp-route-id="@user.MaNguoiDung">Edit</a>
-                                <a class="btn btn-sm btn-danger" asp-controller="user" asp-action="delete" asp-route-id="@user.MaNguoiDung" onclick="return confirm(`Are you Sure`)">Delete</a>
+                                <a class="btn btn-sm btn-warning"
+                                   asp-controller="User"
+                                   asp-action="Edit"
+                                   asp-route-id="@user.MaNguoiDung"
+                                   asp-route-page="@Model.CurrentPage">
+                                    Edit
+                                </a>
+                                <!-- Nút Delete -->
+                                <button class="btn btn-danger btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal"
+                                        data-user-id="@user.MaNguoiDung"
+                                        data-user-name="@user.TenNguoiDung">
+                                    Delete
+                                </button>
+                                <div class="modal fade" id="deleteModal" tabindex="-1">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content bg-dark text-light">
+
+                                            <div class="modal-header border-secondary">
+                                                <h5 class="modal-title">Xác nhận xóa user</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                Bạn có chắc muốn xóa user <strong id="deleteUserName"></strong> không? 🛑
+                                            </div>
+
+                                            <div class="modal-footer border-secondary">
+                                                <form method="get" id="deleteForm">
+                                                    <button type="submit" class="btn btn-danger">
+                                                        Đồng ý xóa
+                                                    </button>
+                                                </form>
+                                                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -98,3 +144,20 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var deleteModal = document.getElementById('deleteModal');
+        deleteModal.addEventListener('show.bs.modal', function(event) {
+            var button = event.relatedTarget; // nút vừa click
+            var userId = button.getAttribute('data-user-id');
+            var userName = button.getAttribute('data-user-name');
+
+            // set tên user trong modal
+            document.getElementById('deleteUserName').textContent = userName;
+
+            // set action cho form
+            var deleteForm = document.getElementById('deleteForm');
+            deleteForm.action = '/admin/user/delete/' + userId + '?page=@Model.CurrentPage';
+        });
+    });
+</script>
