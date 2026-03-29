@@ -12,27 +12,27 @@ namespace GameStore.Services
             db = _db;
         }
 
-        public bool AddOrUpdate(int userId, string gameId, int rating, string comment)
+        public string AddOrUpdate(int userId, string gameId, int rating, string comment)
         {
-            // ❌ chưa mua game -> cấm
             bool bought = db.ChiTietGiaoDiches
                 .Any(x => x.GiaoDich.MaNguoiDung == userId && x.MaGame == gameId);
 
-            if (!bought) return false;
+            if (!bought) return "not_bought";
 
             var existing = db.DanhGias
                 .FirstOrDefault(x => x.MaNguoiDung == userId && x.MaGame == gameId);
 
             if (existing != null)
             {
-                // 🔁 update
                 existing.MucDiem = rating;
                 existing.NhanXet = comment;
                 existing.NgayDanhGia = DateTime.UtcNow;
+
+                db.SaveChanges();
+                return "updated";
             }
             else
             {
-                // ➕ create
                 db.DanhGias.Add(new DanhGia
                 {
                     MaDG = Guid.NewGuid().ToString(),
@@ -42,9 +42,10 @@ namespace GameStore.Services
                     NhanXet = comment,
                     NgayDanhGia = DateTime.UtcNow
                 });
-            }
 
-            return db.SaveChanges() > 0;
+                db.SaveChanges();
+                return "created";
+            }
         }
 
         public DanhGia? GetUserReview(int userId, string gameId)

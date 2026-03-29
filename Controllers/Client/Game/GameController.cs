@@ -19,7 +19,7 @@ namespace GameStore.Controllers.Client.Game
 
         public IActionResult Detail(string id, string returnUrl)
         {
-            ViewBag.ReturnUrl = returnUrl;
+            ViewBag.ReturnUrl = returnUrl ?? Request.Headers["Referer"].ToString();
 
             var game = gameService.findById(id);
             ViewBag.HideSubBar = true;
@@ -71,9 +71,22 @@ namespace GameStore.Controllers.Client.Game
 
             var result = reviewService.AddOrUpdate(userId, gameId, rating, comment);
 
-            if (!result)
+            switch (result)
             {
-                TempData["Error"] = "Bạn phải mua game trước khi đánh giá!";
+                case "created":
+                    TempData["ToastMessage"] = "Đánh giá thành công ⭐";
+                    TempData["ToastType"] = "success";
+                    break;
+
+                case "updated":
+                    TempData["ToastMessage"] = "Cập nhật đánh giá thành công 🔁";
+                    TempData["ToastType"] = "success";
+                    break;
+
+                case "not_bought":
+                    TempData["ToastMessage"] = "Bạn phải mua game trước khi đánh giá!";
+                    TempData["ToastType"] = "error";
+                    break;
             }
 
             return Redirect(Request.Headers["Referer"].ToString());

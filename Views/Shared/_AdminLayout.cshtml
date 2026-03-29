@@ -165,6 +165,58 @@
     <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 
     @RenderSection("Scripts", required: false)
+
+    <!-- TOAST -->
+    <!-- TOAST -->
+    <div id="toastBox"
+         style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
+    <script>
+        function showToast(message, type = "success") {
+
+            const toast = document.createElement("div");
+
+            toast.style.minWidth = "250px";
+            toast.style.marginBottom = "10px";
+            toast.style.padding = "12px 16px";
+            toast.style.borderRadius = "8px";
+            toast.style.color = "white";
+            toast.style.fontWeight = "500";
+            toast.style.boxShadow = "0 5px 15px rgba(0,0,0,0.3)";
+            toast.style.opacity = "0";
+            toast.style.transform = "translateX(100%)";
+            toast.style.transition = "all 0.4s ease";
+
+            // màu theo type
+            if (type === "success") toast.style.background = "#28a745";
+            else if (type === "error") toast.style.background = "#dc3545";
+            else toast.style.background = "#007bff";
+
+            toast.innerText = message;
+
+            document.getElementById("toastBox").appendChild(toast);
+
+            // animation vào
+            setTimeout(() => {
+                toast.style.opacity = "1";
+                toast.style.transform = "translateX(0)";
+            }, 100);
+
+            // tự biến mất sau 3s
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                toast.style.transform = "translateX(100%)";
+
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+    </script>
+    @if (TempData["ToastMessage"] != null)
+    {
+        <script>
+            showToast("@Html.Raw(TempData["ToastMessage"])", "@TempData["ToastType"]");
+        </script>
+    }
 </body>
 
 </html>
