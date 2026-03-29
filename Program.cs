@@ -5,6 +5,7 @@ using GameStore.Models;
 using GameStore.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Resend;
 using StackExchange.Redis;
 using System.Security.Claims;
 using VNPAY.Extensions;
@@ -28,6 +29,13 @@ public class Program
             config.HashSecret = vnpayConfig["HashSecret"]!;
             config.CallbackUrl = vnpayConfig["CallbackUrl"]!;
         });
+
+        builder.Services.AddHttpClient();
+        builder.Services.Configure<ResendClientOptions>(options =>
+        {
+            options.ApiToken = builder.Configuration["Resend:ApiKey"];
+        });
+        builder.Services.AddTransient<ResendClient>();
 
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
