@@ -36,12 +36,25 @@ public class Program
             options.AccessDeniedPath = "/auth/access-denied";
 
             options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
-            options.SlidingExpiration = true;
+            options.SlidingExpiration = true; // hoặc false nếu muốn hết 15p là out luôn
 
-            options.Events.OnRedirectToLogin = context =>
+            options.Events = new CookieAuthenticationEvents
             {
-                context.Response.Redirect("/auth/login");
-                return Task.CompletedTask;
+                OnRedirectToLogin = context =>
+                {
+                    // Nếu đang ở trang auth thì không cần báo
+                    if (context.Request.Path.StartsWithSegments("/auth"))
+                    {
+                        context.Response.Redirect("/auth/login");
+                    }
+                    else
+                    {
+                        // 🔥 HẾT SESSION → báo
+                        context.Response.Redirect("/auth/login?expired=true");
+                    }
+
+                    return Task.CompletedTask;
+                }
             };
         });
 
@@ -157,7 +170,7 @@ public class Program
             await next();
         });
 
-        app.MapHub<GameStore.Hubs.GameHub>("/gameHub");
+        app.MapHub<GameStore.Hubs.GameHub>("/gameHub"); 
         app.MapHub<GameStore.Hubs.AiChatHub>("/aiChatHub");
         app.MapHub<GameStore.Hubs.ChatHub>("/chatHub");
 

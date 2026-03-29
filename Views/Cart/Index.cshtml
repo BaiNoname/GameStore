@@ -13,13 +13,6 @@
 
     <h2 class="mb-4">🛒 Your Shopping Cart</h2>
 
-    @if (TempData["Msg"] != null)
-    {
-        <div class="alert alert-warning">
-            @TempData["Msg"]
-        </div>
-    }
-
     @if (Model == null || !Model.ChiTietGioHangs.Any())
     {
         <div class="alert alert-info">
@@ -64,6 +57,7 @@
                             <a asp-controller="Cart"
                                asp-action="Remove"
                                asp-route-gameId="@item.MaGame"
+                               asp-route-returnUrl="@ViewBag.ReturnUrl"
                                class="btn btn-danger btn-sm">
                                 ❌ Remove
                             </a>
@@ -79,12 +73,13 @@
 
             <div>
                 @{
-                    var returnUrl = TempData["ReturnUrl"]?.ToString() ?? "/home";
+                    var returnUrl = ViewBag.ReturnUrl ?? TempData["ReturnUrl"]?.ToString() ?? "/home";
                 }
 
                 <a href="@returnUrl" class="btn btn-secondary">
                     ← Back
                 </a>
+
             </div>
             <h4>
                 Total:
@@ -95,19 +90,70 @@
 
             <div class="d-flex gap-2">
 
-                <a asp-controller="Cart"
-                   asp-action="Clear"
-                   class="btn btn-outline-danger"
-                   onclick="return confirm('Are you sure to clear cart?')">
+                <button class="btn btn-outline-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#clearCartModal">
                     🧹 Clear Cart
-                </a>
- 
-                <form method="get" action="/checkout" class="d-inline">
-                    <input type="hidden" name="method" value="balance" />
-                    <button type="submit" class="btn btn-success btn-lg">
-                        💳 Pay with Balance
-                    </button>
-                </form>
+                </button>
+                <div class="modal fade" id="clearCartModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark text-light">
+
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Xác nhận</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                Bạn có chắc muốn xóa toàn bộ giỏ hàng không? 🧹
+                            </div>
+
+                            <div class="modal-footer border-secondary">
+                                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+
+                                <a asp-controller="Cart"
+                                   asp-action="Clear"
+                                   class="btn btn-danger">
+                                    Đồng ý
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-success btn-lg"
+                        data-bs-toggle="modal"
+                        data-bs-target="#checkoutModal">
+                    💳 Pay with Balance
+                </button>
+                <div class="modal fade" id="checkoutModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content bg-dark text-light">
+
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title">Xác nhận thanh toán</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                Bạn có chắc muốn thanh toán bằng số dư không? 💳
+                            </div>
+
+                            <div class="modal-footer border-secondary">
+                                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+
+                                <form method="get" action="/checkout">
+                                    <input type="hidden" name="method" value="balance" />
+                                    <button type="submit" class="btn btn-success">
+                                        Đồng ý thanh toán
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
 
                 <a asp-controller="Vnpay"
                    asp-action="Pay"

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Client
 {
-    [Route("api/vnpay")]
+    [Route("vnpay")]
     public class VnpayController : Controller
     {
         private readonly VnpayService vnpayService;

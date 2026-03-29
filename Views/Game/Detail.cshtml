@@ -73,17 +73,22 @@
                         </p>
                     </div>
 
+                    @{
+                        var currentUrl = Context.Request.Path + Context.Request.QueryString;
+                    }
+
                     <div class="detail-card__actions">
 
                         @* ===== ĐÃ MUA ===== *@
                         @if (owned.Contains(Model.MaGame))
                         {
                             <button class="btn btn-secondary rounded-pill px-4"
-                                    onclick="alert('Bạn đã mua game này rồi!')">
+                                    onclick="showToast('Bạn đã mua game này rồi!', 'error')">
                                 Owned
                             </button>
 
-                            <a href="/home" class="btn btn-danger rounded-pill px-4">
+                            <a href="@(ViewBag.ReturnUrl ?? "/home")"
+                               class="btn btn-danger rounded-pill px-4">
                                 Back
                             </a>
                         }
@@ -92,13 +97,16 @@
                         else if (cart.Contains(Model.MaGame))
                         {
                             <a asp-controller="Cart"
-                               asp-action="Index"
-                               asp-route-focus="@Model.MaGame"
+                               asp-action="Add"
+                               asp-route-gameId="@Model.MaGame"
+                               asp-route-returnUrl="@currentUrl"
+                               asp-route-mode="buy"
                                class="btn btn-primary rounded-pill px-4">
                                 Buy now
                             </a>
 
-                            <a href="/home" class="btn btn-danger rounded-pill px-4">
+                            <a href="@(ViewBag.ReturnUrl ?? "/home")"
+                               class="btn btn-danger rounded-pill px-4">
                                 Back
                             </a>
                         }
@@ -106,20 +114,23 @@
                         @* ===== CHƯA CÓ GÌ ===== *@
                         else
                         {
+                            <!-- BUY NOW -->
                             <a asp-controller="Cart"
                                asp-action="Add"
                                asp-route-gameId="@Model.MaGame"
-                               asp-route-returnUrl="/cart"
+                               asp-route-returnUrl="@currentUrl"
+                               asp-route-mode="buy"
                                class="btn btn-primary rounded-pill px-4">
                                 Buy now
                             </a>
 
+                            <!-- ADD -->
                             <a asp-controller="Cart"
                                asp-action="Add"
                                asp-route-gameId="@Model.MaGame"
-                               asp-route-returnUrl="@Context.Request.Path"
+                               asp-route-returnUrl="@currentUrl"
                                class="btn btn-warning rounded-pill px-4">
-                                Add in cart
+                                Add to cart
                             </a>
 
                             <a href="@(ViewBag.ReturnUrl ?? "/home")"
