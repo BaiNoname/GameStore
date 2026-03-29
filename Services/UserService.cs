@@ -8,6 +8,7 @@ namespace GameStore.Services
         public NguoiDung findById(int id);
         public bool Create(NguoiDung user);
         public bool Update(NguoiDung user);
-        public bool Delete(int id);
+        public bool Delete(int id, int currentUserId);
+        public bool IsEmailExists(string email);
     }
 }

@@ -29,8 +29,14 @@
             </a>
 
         </div>
-        <div class="text-danger">
-            @TempData["Msg"]
+        <div>
+            @if (TempData["Msg"] != null)
+            {
+                var msgType = TempData["MsgType"]?.ToString() ?? "info";
+                <div class="alert alert-@msgType mt-2 fw-bold text-danger">
+                    @TempData["Msg"]
+                </div>
+            }
         </div>
 
         <div class="table-responsive">
@@ -50,7 +56,38 @@
                             <td>@theLoai.TenLoaiGame</td>
                             <td>
                                 <a class="btn btn-sm btn-warning" asp-controller="category" asp-action="edit" asp-route-id="@theLoai.MaTheLoai">Edit</a>
-                                <a class="btn btn-sm btn-danger" asp-controller="category" asp-action="delete" asp-route-id="@theLoai.MaTheLoai" onclick="return confirm(`Are you Sure`)">Delete</a>
+                                <button class="btn btn-danger btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal"
+                                        data-category-id="@theLoai.MaTheLoai"
+                                        data-category-name="@theLoai.TenLoaiGame">
+                                    Delete
+                                </button>
+                                <div class="modal fade" id="deleteModal" tabindex="-1">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content bg-dark text-light">
+
+                                            <div class="modal-header border-secondary">
+                                                <h5 class="modal-title">Xác nhận xóa thể loại</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                Bạn có chắc muốn xóa thể loại <strong id="deleteCategoryName"></strong> không? 🛑
+                                            </div>
+
+                                            <div class="modal-footer border-secondary">
+                                                <form method="get" id="deleteForm">
+                                                    <button type="submit" class="btn btn-danger">
+                                                        Đồng ý xóa
+                                                    </button>
+                                                </form>
+                                                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -92,3 +129,19 @@
         </div>
     </div>
 </div>
+<script>
+    var deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var categoryId = button.getAttribute('data-category-id');
+        var categoryName = button.getAttribute('data-category-name');
+
+        var modalTitle = deleteModal.querySelector('.modal-title');
+        var modalBodyName = deleteModal.querySelector('#deleteCategoryName');
+
+        modalBodyName.textContent = categoryName;
+
+        var form = deleteModal.querySelector('#deleteForm');
+        form.action = '/admin/category/delete/' + categoryId;
+    });
+</script>
