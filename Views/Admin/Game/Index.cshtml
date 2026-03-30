@@ -69,8 +69,41 @@
                             <td>@String.Format("{0:N0} VNĐ", game.Gia)</td>
                             <td>@game.SoLuotTai</td>
                             <td>
-                                <a class="btn btn-sm btn-warning" asp-controller="game" asp-action="edit" asp-route-id="@game.MaGame">Edit</a>
-                                <a class="btn btn-sm btn-danger" asp-controller="game" asp-action="delete" asp-route-id="@game.MaGame" onclick="return confirm(`Are you Sure`)">Delete</a>
+                                <a class="btn btn-sm btn-warning" asp-controller="game" asp-action="edit" asp-route-id="@game.MaGame" asp-route-page="@Model.CurrentPage">Edit</a>
+                                <!-- Delete Button trong table -->
+                                <button class="btn btn-sm btn-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal"
+                                        data-game-id="@game.MaGame"
+                                        data-game-name="@game.TenGame">
+                                    Delete
+                                </button>
+                                <div class="modal fade" id="deleteModal" tabindex="-1">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content bg-dark text-light">
+
+                                            <div class="modal-header border-secondary">
+                                                <h5 class="modal-title">Xác nhận xóa game</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                Bạn có chắc muốn xóa game <strong id="deleteGameName"></strong> không? 🛑
+                                            </div>
+
+                                            <div class="modal-footer border-secondary">
+                                                <form method="get" id="deleteForm">
+                                                    <input type="hidden" name="page" value="@Model.CurrentPage" />
+                                                    <button type="submit" class="btn btn-danger">
+                                                        Đồng ý xóa
+                                                    </button>
+                                                </form>
+                                                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -124,5 +157,19 @@
         if (el) {
             el.innerText = newCount;
         }
+    });
+</script>
+<script>
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const gameId = button.getAttribute('data-game-id');
+        const gameName = button.getAttribute('data-game-name');
+
+        const modalTitle = deleteModal.querySelector('#deleteGameName');
+        modalTitle.textContent = gameName;
+
+        const form = deleteModal.querySelector('#deleteForm');
+        form.action = `/admin/game/delete/${gameId}?page=@Model.CurrentPage`;
     });
 </script>

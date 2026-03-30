@@ -16,28 +16,37 @@ namespace GameStore.Services
             mailHelper = _mailHelper;
         }
 
-        public bool Register(NguoiDung user)
+        public bool Register(NguoiDung user, out string message)
         {
-            // ===== VALIDATION =====
+            message = "";
+
             if (string.IsNullOrWhiteSpace(user.Email) ||
                 string.IsNullOrWhiteSpace(user.MatKhau) ||
                 string.IsNullOrWhiteSpace(user.TenNguoiDung))
+            {
+                message = "Vui lòng nhập đầy đủ thông tin";
                 return false;
+            }
 
-            // email format
             if (!Regex.IsMatch(user.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                message = "Email không hợp lệ";
                 return false;
+            }
 
-            // password yếu
             if (user.MatKhau.Length < 5)
+            {
+                message = "Mật khẩu phải >= 5 ký tự";
                 return false;
+            }
 
-            // normalize email
             user.Email = user.Email.Trim().ToLower();
 
             if (db.NguoiDungs.Any(x => x.Email == user.Email))
+            {
+                message = "Email đã tồn tại";
                 return false;
-
+            }
 
             user.MatKhau = BCrypt.Net.BCrypt.HashPassword(user.MatKhau);
             user.NgayDangKy = DateOnly.FromDateTime(DateTime.Now);
@@ -48,6 +57,7 @@ namespace GameStore.Services
             db.NguoiDungs.Add(user);
             db.SaveChanges();
 
+            message = "Đăng ký thành công 🎉";
             return true;
         }
 
@@ -172,10 +182,11 @@ namespace GameStore.Services
 
             db.SaveChanges();
 
-            // gửi mail
+            var subject = "Reset Password - GameStore";
+
             var body = $"<h3>Mã reset của bạn là: <b>{code}</b></h3><p>Hết hạn sau 5 phút</p>";
 
-            bool sent = mailHelper.SendEmail(email, "Reset Password - GameStore", body);
+            bool sent = Task.Run(() => mailHelper.SendEmail(email, subject, body)).Result;
 
             if (!sent)
             {

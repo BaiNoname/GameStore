@@ -67,7 +67,8 @@ namespace GameStore.Controllers.Auth
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 principal
             );
-            TempData["Success"] = "Đăng nhập thành công!";
+            TempData["ToastMessage"] = "Đăng nhập thành công!";
+            TempData["ToastType"] = "success";
 
             if (user.Quyen.Equals("Admin", StringComparison.OrdinalIgnoreCase))
                 return Redirect("/admin");
@@ -93,40 +94,34 @@ namespace GameStore.Controllers.Auth
         {
             ViewBag.HideSubBar = true;
 
-            if (string.IsNullOrWhiteSpace(user.Email) ||
-            string.IsNullOrWhiteSpace(user.TenNguoiDung) ||
-            string.IsNullOrWhiteSpace(user.MatKhau))
-            {
-                ViewBag.Error = "Vui lòng nhập đầy đủ thông tin";
-                return View(user);
-            }
-
             if (user.MatKhau != confirmPassword)
             {
                 ViewBag.Error = "Mật khẩu xác nhận không đúng";
-                return View("Register", user);
+                return View(user);
             }
 
-            bool success = authService.Register(user);
+            bool success = authService.Register(user, out string message);
 
             if (!success)
             {
-                ViewBag.Error = "Email đã tồn tại";
-                return View("Register", user);
+                ViewBag.Error = message;
+                return View(user);
             }
 
-            TempData["Register Success"] = "Đăng ký thành công! Vui lòng đăng nhập.";
+            TempData["Register Success"] = message;
             return RedirectToAction("Login");
         }
 
-        // /auth/logout
         [HttpGet("logout")]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme);
 
-            return RedirectToAction("Index", "Home");
+            TempData["ToastMessage"] = "Đã đăng xuất tài khoản";
+            TempData["ToastType"] = "success";
+
+            return RedirectToAction("Login");
         }
 
         [HttpGet("forgot")]
