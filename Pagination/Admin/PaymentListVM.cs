@@ -9,7 +9,7 @@ namespace GameStore.Pagination.Admin
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
 
-        public string? Keyword { get; set; } // email
-        public string? Status { get; set; }  // Success / Failed
+        public string? Keyword { get; set; } 
+        public string? Status { get; set; }  
     }
 }

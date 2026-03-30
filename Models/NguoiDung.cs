@@ -10,7 +10,7 @@
         public string Quyen { get; set; } = null!;
         public decimal SoDu { get; set; }
 
-        // 🔥 reset password
+        //  reset password
         public string? ResetCode { get; set; }
         public DateTime? ResetCodeExpiry { get; set; }
         public bool IsVerified { get; set; } = false;

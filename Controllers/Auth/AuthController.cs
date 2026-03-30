@@ -162,7 +162,7 @@ namespace GameStore.Controllers.Auth
         {
             var email = HttpContext.Session.GetString("ResetEmail");
 
-            Console.WriteLine("EMAIL SESSION: " + email); // debug
+            Console.WriteLine("EMAIL SESSION: " + email);
 
             if (string.IsNullOrEmpty(email))
             {
@@ -204,7 +204,10 @@ namespace GameStore.Controllers.Auth
             {
                 HttpContext.Session.Remove("ResetEmail"); // 🔥 xoá sau khi xong
 
-                TempData["Success"] = "Đổi mật khẩu thành công!";
+                //TempData["Success"] = "Đổi mật khẩu thành công!";
+
+                TempData["ToastMessage"] = "Đổi mật khẩu thành công!";
+                TempData["ToastType"] = "success";
                 return RedirectToAction("Login");
             }
 
