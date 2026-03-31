@@ -155,10 +155,12 @@
                     </div>
                 </div>
 
-                <a asp-controller="Vnpay"
-                   asp-action="Pay"
-                   class="btn btn-outline-primary btn-lg">
-                    🟦 Pay with VNPay
+                <a asp-controller="Cart"
+                   asp-action="Checkout"
+                   asp-route-method="momo"
+                   class="btn btn-outline-pink btn-lg"
+                   style="border-color:#ae2070;color:#ae2070;">
+                    🟣 Pay with MoMo
                 </a>
             </div>
 
@@ -167,17 +169,19 @@
         <!-- Top-up card -->
         <div class="card mt-4 bg-dark text-light p-3" style="max-width:420px;">
             <h5>Top up your wallet (Top-up)</h5>
-            <p class="small text-muted">Quét mã hoặc thanh toán qua VNPay để nạp tiền vào tài khoản của bạn.</p>
+            <p class="small text-muted">Thanh toán qua MoMo để nạp tiền vào tài khoản của bạn.</p>
 
-            <form method="get" action="/api/vnpay/topup" class="row g-2">
+            <form method="get" action="/api/momo/topup" class="row g-2">
                 <div class="col-8">
-                    <input type="number" step="1000" min="1000" name="amount" class="form-control" placeholder="Số tiền (VND)" required />
+                    <input type="number" step="1000" min="5000" name="amount"
+                           class="form-control" placeholder="Số tiền (VND)" required />
                 </div>
                 <div class="col-4">
-                    <button type="submit" class="btn btn-warning w-100">Nạp VNPay</button>
+                    <input type="hidden" name="userId" value="@(int.Parse(User.FindFirst("UserId").Value))" />
+                    <button type="submit" class="btn btn-danger w-100">Nạp MoMo</button>
                 </div>
                 <div class="col-12">
-                    <small class="text-muted">Lưu ý: hệ thống sẽ chuyển bạn đến trang VNPay để hoàn tất nạp tiền.</small>
+                    <small class="text-muted">Tối thiểu 5.000 VND. Hệ thống sẽ chuyển bạn đến MoMo để hoàn tất.</small>
                 </div>
             </form>
         </div>

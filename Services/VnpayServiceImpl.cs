@@ -1,71 +1,64 @@
 ﻿using GameStore.Models;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System.Security.Cryptography;
-using System.Text;
+using VNPAY;
+using VNPAY.Models;
+using VNPAY.Models.Enums;
+using VNPAY.Models.Exceptions;
+
 
 namespace GameStore.Services
 {
     public class VnpayServiceImpl : VnpayService
     {
+        private readonly IVnpayClient _vnpayClient;
         private readonly GameStoreContext _db;
         private readonly ILogger<VnpayServiceImpl> _logger;
-        private readonly string _tmnCode;
-        private readonly string _hashSecret;
-        private readonly string _baseUrl;
-        private readonly string _callbackUrl;
-        private readonly string _version;
-        private readonly string _orderType;
+        private readonly IHubContext<GameStore.Hubs.GameHub> _hub;
 
-        public VnpayServiceImpl(GameStoreContext db, IConfiguration configuration, ILogger<VnpayServiceImpl> logger)
+        private const string ORDER_PREFIX = "ORDER_";
+        private const string TOPUP_PREFIX = "TOPUP_";
+
+        public VnpayServiceImpl(
+            IVnpayClient vnpayClient,
+            GameStoreContext db,
+            ILogger<VnpayServiceImpl> logger,
+            IHubContext<GameStore.Hubs.GameHub> hub)
         {
+            _vnpayClient = vnpayClient;
             _db = db;
             _logger = logger;
-
-            var section = configuration.GetSection("VNPAY");
-
-            _tmnCode = section["TmnCode"]!;
-            _hashSecret = section["HashSecret"]!;
-            _baseUrl = section["BaseUrl"]!;
-            _callbackUrl = section["CallbackUrl"]!;
-            _version = section["Version"] ?? "2.1.0";
-            _orderType = section["OrderType"] ?? "other";
+            _hub = hub;
         }
 
-        public string CreatePaymentUrlForOrder(int userId, decimal amount, string returnUrl)
-            => CreateVnpayUrl(userId, amount, "VNPAY", returnUrl);
-
-        public string CreateTopupUrl(int userId, decimal amount, string returnUrl)
-            => CreateVnpayUrl(userId, amount, "Topup", returnUrl);
-
-        private string CreateVnpayUrl(int userId, decimal amount, string phuongThuc, string returnUrl)
+        // ═══════════════════════════════════════════════════════════════
+        // TẠO URL THANH TOÁN ĐƠN HÀNG
+        // ═══════════════════════════════════════════════════════════════
+        public string CreatePaymentUrlForOrder(int userId, decimal amount, string baseUrl)
         {
             var maGD = Guid.NewGuid().ToString();
 
-            // 🔥 lấy cart trước (để snapshot)
+            var giaoDich = new GiaoDich
+            {
+                MaGD = maGD,
+                MaNguoiDung = userId,
+                NgayMua = DateTime.UtcNow,
+                ThanhTien = amount,
+                TrangThai = "Pending",
+                PhuongThuc = "VNPay",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // Snapshot giỏ hàng → ChiTietGiaoDich
             var cart = _db.GioHangs
                 .Include(g => g.ChiTietGioHangs)
                 .FirstOrDefault(g => g.MaNguoiDung == userId);
 
-            var gd = new GiaoDich
-            {
-                MaGD = maGD,
-                MaNguoiDung = userId,
-                NgayMua = DateTime.Now,
-                TrangThai = "Pending",
-                PhuongThuc = phuongThuc,
-                ThanhTien = amount
-            };
-
-            _db.GiaoDiches.Add(gd);
-
-            // 🔥 snapshot cart → lưu vào ChiTietGiaoDich
-            if (phuongThuc == "VNPAY" && cart != null)
+            if (cart != null)
             {
                 foreach (var item in cart.ChiTietGioHangs)
                 {
-                    _db.ChiTietGiaoDiches.Add(new ChiTietGiaoDich
+                    giaoDich.ChiTietGiaoDiches.Add(new ChiTietGiaoDich
                     {
                         MaGD = maGD,
                         MaGame = item.MaGame,
@@ -74,167 +67,238 @@ namespace GameStore.Services
                 }
             }
 
+            _db.GiaoDiches.Add(giaoDich);
             _db.SaveChanges();
 
-            var vnpParams = new SortedDictionary<string, string?>
+            var paymentUrlInfo = _vnpayClient.CreatePaymentUrl(new VnpayPaymentRequest
             {
-                { "vnp_Version", _version },
-                { "vnp_Command", "pay" },
-                { "vnp_TmnCode", _tmnCode },
-                { "vnp_Amount", ((long)(amount * 100)).ToString() },
-                { "vnp_CurrCode", "VND" },
-                { "vnp_TxnRef", maGD },
-                { "vnp_OrderInfo", $"Payment {maGD}" },
-                { "vnp_OrderType", _orderType },
-                { "vnp_Locale", "vn" },
-                { "vnp_ReturnUrl", returnUrl ?? _callbackUrl },
-                { "vnp_IpAddr", "127.0.0.1" },
-                { "vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss") }
-            };
+                Money = (double)amount,
+                Description = $"{ORDER_PREFIX}{maGD}",
+                BankCode = BankCode.ANY,
+                Language = DisplayLanguage.Vietnamese
+            });
 
-            var queryBuilder = new StringBuilder();
-            var rawHashBuilder = new StringBuilder();
+            // DEBUG — xoá sau khi xong
+            Console.WriteLine($"[DEBUG] Payment URL: {paymentUrlInfo.Url}");
 
-            foreach (var kv in vnpParams)
-            {
-                if (kv.Value == null) continue;
 
-                // ✅ query: encode
-                if (queryBuilder.Length > 0) queryBuilder.Append('&');
-                queryBuilder.Append(kv.Key)
-                    .Append('=')
-                    .Append(Uri.EscapeDataString(kv.Value));
-
-                // ❌ HASH: KHÔNG encode
-                if (rawHashBuilder.Length > 0) rawHashBuilder.Append('&');
-                rawHashBuilder.Append(kv.Key)
-                    .Append('=')
-                    .Append(kv.Value);
-            }
-
-            var secureHash = HmacSha512(_hashSecret, rawHashBuilder.ToString());
-
-            queryBuilder.Append("&vnp_SecureHash=").Append(secureHash);
-            queryBuilder.Append("&vnp_SecureHashType=SHA512");
-
-            return $"{_baseUrl}?{queryBuilder}";
+            return paymentUrlInfo.Url;
         }
 
-        public bool HandleVnpayResult(HttpRequest request, out string message)
+        // ═══════════════════════════════════════════════════════════════
+        // TẠO URL NẠP TIỀN (TOP-UP)
+        // ═══════════════════════════════════════════════════════════════
+        public string CreatePaymentUrlForTopup(int userId, decimal amount, string baseUrl)
         {
-            message = "";
+            var maGD = Guid.NewGuid().ToString();
 
-            var query = request.Query.ToDictionary(k => k.Key, v => v.Value.ToString());
-
-            query.TryGetValue("vnp_SecureHash", out var secureHash);
-
-            var sorted = new SortedDictionary<string, string>();
-            foreach (var kv in query)
+            var giaoDich = new GiaoDich
             {
-                if (kv.Key == "vnp_SecureHash" || kv.Key == "vnp_SecureHashType") continue;
-                sorted[kv.Key] = kv.Value;
+                MaGD = maGD,
+                MaNguoiDung = userId,
+                NgayMua = DateTime.UtcNow,
+                ThanhTien = amount,
+                TrangThai = "Pending",
+                PhuongThuc = "VNPay-Topup",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.GiaoDiches.Add(giaoDich);
+            _db.SaveChanges();
+
+            var paymentUrlInfo = _vnpayClient.CreatePaymentUrl(new VnpayPaymentRequest
+            {
+                Money = (double)amount,
+                Description = $"{TOPUP_PREFIX}{maGD}",
+                BankCode = BankCode.ANY,
+                Language = DisplayLanguage.Vietnamese
+            });
+
+            // DEBUG — xoá sau khi xong
+            Console.WriteLine($"[DEBUG] Payment URL: {paymentUrlInfo.Url}");
+
+
+            return paymentUrlInfo.Url;
+        }
+        // ═══════════════════════════════════════════════════════════════
+        // Đổi tham số từ IQueryCollection → HttpRequest
+        // (theo đúng cách thư viện phanxuanquang thiết kế)
+        // ═══════════════════════════════════════════════════════════════
+        public async Task<(bool isSuccess, string maGD, string loaiGD, string message)> HandleCallbackAsync(HttpRequest request)
+        {
+            bool paymentOk;
+            string description;
+            long vnpayTransactionId = 0;
+
+            try
+            {
+                // GetPaymentResult tự verify chữ ký bên trong.
+                // Nếu chữ ký sai hoặc thanh toán thất bại → ném VnpayException.
+                // Nếu không ném → thanh toán hợp lệ và thành công.
+                var result = _vnpayClient.GetPaymentResult(request);
+
+                paymentOk = true;
+                description = result.Description ?? request.Query["vnp_OrderInfo"].ToString() ?? "";
+                vnpayTransactionId = result.VnpayTransactionId;
+
+                _logger.LogInformation("VNPay success: PaymentId={id}, TransactionId={tid}",
+                    result.PaymentId, result.VnpayTransactionId);
+            }
+            catch (VnpayException ex)
+            {
+                // Chữ ký sai, thanh toán thất bại hoặc bị hủy
+                _logger.LogWarning("VNPay failed: ResponseCode={rc}, TransactionStatus={ts}, Message={msg}",
+                    ex.PaymentResponseCode, ex.TransactionStatusCode, ex.Message);
+
+                paymentOk = false;
+                description = request.Query["vnp_OrderInfo"].ToString() ?? "";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "VNPay HandleCallbackAsync exception. Query={query}",
+                    request.QueryString.Value);
+                return (false, "", "", $"Lỗi hệ thống: {ex.Message}");
             }
 
-            var raw = string.Join("&", sorted.Select(kv =>
-                $"{kv.Key}={Uri.EscapeDataString(kv.Value)}"));
+            // ── Parse description để lấy maGD + loại GD ───────────────────────
+            string maGD;
+            string loaiGD;
 
-            var computed = HmacSha512(_hashSecret, raw);
-
-            if (secureHash != computed)
+            if (description.StartsWith(ORDER_PREFIX))
             {
-                message = "Invalid signature";
-                return false;
+                maGD = description[ORDER_PREFIX.Length..];
+                loaiGD = "Order";
             }
-
-            var txnRef = sorted["vnp_TxnRef"];
-            var responseCode = sorted["vnp_ResponseCode"];
-            var amount = long.Parse(sorted["vnp_Amount"]) / 100;
-
-            var gd = _db.GiaoDiches
-                .Include(x => x.ChiTietGiaoDiches)
-                .FirstOrDefault(x => x.MaGD == txnRef);
-
-            if (gd == null)
+            else if (description.StartsWith(TOPUP_PREFIX))
             {
-                message = "Not found";
-                return false;
-            }
-
-            // chống double call
-            if (gd.TrangThai == "Success")
-            {
-                message = "Already processed";
-                return true;
-            }
-
-            if (gd.ThanhTien != amount)
-            {
-                message = "Amount mismatch";
-                return false;
-            }
-
-            if (responseCode != "00")
-            {
-                gd.TrangThai = "Failed";
-                _db.SaveChanges();
-                message = "Failed";
-                return false;
-            }
-
-            // ===== SUCCESS =====
-            gd.TrangThai = "Success";
-
-            if (gd.PhuongThuc == "Topup")
-            {
-                var user = _db.NguoiDungs.Find(gd.MaNguoiDung);
-                if (user != null)
-                    user.SoDu += gd.ThanhTien;
+                maGD = description[TOPUP_PREFIX.Length..];
+                loaiGD = "Topup";
             }
             else
             {
-                foreach (var item in gd.ChiTietGiaoDiches)
-                {
-                    var game = _db.Games.Find(item.MaGame);
-                    if (game != null)
-                    {
-                        game.SoLuotTai += 1;
-                    }
+                _logger.LogWarning("VNPay callback: unknown description: {desc}", description);
+                return (false, "", "", "Không xác định được loại giao dịch");
+            }
 
-                    // 🔥 FIX duplicate library
-                    var exists = _db.ThuVienGames
-                        .Any(x => x.MaNguoiDung == gd.MaNguoiDung && x.MaGame == item.MaGame);
+            // ── Tìm GiaoDich ──────────────────────────────────────────────────
+            var giaoDich = await _db.GiaoDiches
+                .FirstOrDefaultAsync(g => g.MaGD == maGD);
+
+            if (giaoDich == null)
+            {
+                _logger.LogWarning("VNPay callback: GiaoDich not found: {maGD}", maGD);
+                return (false, maGD, loaiGD, "Không tìm thấy giao dịch");
+            }
+
+            // ── Idempotent check ───────────────────────────────────────────────
+            if (giaoDich.TrangThai != "Pending")
+            {
+                _logger.LogInformation("Already processed {maGD} → {status}", maGD, giaoDich.TrangThai);
+                return (giaoDich.TrangThai == "Success", maGD, loaiGD, "Giao dịch đã xử lý trước đó");
+            }
+
+            // ── Lưu mã GD của VNPay ───────────────────────────────────────────
+            giaoDich.VnpTransactionNo = vnpayTransactionId.ToString();
+
+            if (!paymentOk)
+            {
+                giaoDich.TrangThai = "Failed";
+                await _db.SaveChangesAsync();
+                return (false, maGD, loaiGD, "Thanh toán không thành công từ VNPay");
+            }
+
+            // ── Xử lý nghiệp vụ ───────────────────────────────────────────────
+            if (loaiGD == "Order")
+                await ProcessOrderSuccessAsync(giaoDich);
+            else
+                await ProcessTopupSuccessAsync(giaoDich);
+
+            return (true, maGD, loaiGD, "Thanh toán thành công");
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // Xử lý mua game thành công
+        // ═══════════════════════════════════════════════════════════════
+        private async Task ProcessOrderSuccessAsync(GiaoDich giaoDich)
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                var userId = giaoDich.MaNguoiDung;
+
+                var chiTiets = await _db.ChiTietGiaoDiches
+                    .Where(ct => ct.MaGD == giaoDich.MaGD)
+                    .ToListAsync();
+
+                foreach (var ct in chiTiets)
+                {
+                    var exists = await _db.ThuVienGames
+                        .AnyAsync(x => x.MaNguoiDung == userId && x.MaGame == ct.MaGame);
 
                     if (!exists)
                     {
                         _db.ThuVienGames.Add(new ThuVienGame
                         {
-                            MaNguoiDung = gd.MaNguoiDung,
-                            MaGame = item.MaGame,
-                            NgayMua = DateTime.Now
+                            MaNguoiDung = userId,
+                            MaGame = ct.MaGame,
+                            NgayMua = DateTime.UtcNow,
+                            DaTai = false
                         });
+                    }
+
+                    var game = await _db.Games.FindAsync(ct.MaGame);
+                    if (game != null)
+                    {
+                        game.SoLuotTai += 1;
+                        await _hub.Clients.All.SendAsync("UpdateDownload", game.MaGame, game.SoLuotTai);
                     }
                 }
 
-                // clear cart
-                var cart = _db.GioHangs
-                    .Include(x => x.ChiTietGioHangs)
-                    .FirstOrDefault(x => x.MaNguoiDung == gd.MaNguoiDung);
+                // Xóa giỏ hàng
+                var cart = await _db.GioHangs
+                    .Include(g => g.ChiTietGioHangs)
+                    .FirstOrDefaultAsync(g => g.MaNguoiDung == userId);
 
                 if (cart != null)
                     _db.ChiTietGioHangs.RemoveRange(cart.ChiTietGioHangs);
+
+                giaoDich.TrangThai = "Success";
+                await _db.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                _logger.LogInformation("Order success: maGD={maGD}", giaoDich.MaGD);
             }
-
-            _db.SaveChanges();
-
-            message = "OK";
-            return true;
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
         }
 
-        private static string HmacSha512(string key, string input)
+        // ═══════════════════════════════════════════════════════════════
+        // Xử lý nạp tiền thành công
+        // ═══════════════════════════════════════════════════════════════
+        private async Task ProcessTopupSuccessAsync(GiaoDich giaoDich)
         {
-            using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(key));
-            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(input));
-            return BitConverter.ToString(hash).Replace("-", "").ToLower();
+            await using var tx = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                var user = await _db.NguoiDungs.FindAsync(giaoDich.MaNguoiDung);
+                if (user == null) throw new Exception("User not found");
+
+                user.SoDu += giaoDich.ThanhTien;
+                giaoDich.TrangThai = "Success";
+
+                await _db.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                _logger.LogInformation("Topup success: maGD={maGD}, amount={amount}", giaoDich.MaGD, giaoDich.ThanhTien);
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
         }
     }
 }
