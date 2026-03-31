@@ -14,5 +14,7 @@ namespace GameStore.Services
         public void CreatePendingMomo(int userId, string maGD, decimal amount);
         public Task CompleteMomo(string maGD);
         public Task FailMomo(string maGD);
+
+        Task CompleteTopup(int userId, decimal amount);
     }
 }

@@ -23,15 +23,56 @@ namespace GameStore.Controllers.Client.Cart
 
         [HttpGet("")]
         [HttpGet("index")]
-        public IActionResult Index(string returnUrl)
+        public async Task<IActionResult> Index(string returnUrl)
         {
-            // 🔥 HANDLE MOMO RESULT
+            // 🔥 MoMo redirect về /cart với params
+            if (Request.Query.ContainsKey("resultCode") && Request.Query.ContainsKey("orderId"))
+            {
+                var resultCode = Request.Query["resultCode"].ToString();
+                var orderId = Request.Query["orderId"].ToString();
+
+                if (resultCode == "0")
+                {
+                    if (orderId.StartsWith("TOPUP_"))
+                    {
+                        // TOPUP_{userId}_{timestamp} → lấy userId
+                        var parts = orderId.Split('_');
+                        var amount = decimal.Parse(Request.Query["amount"].ToString());
+
+                        if (parts.Length >= 2 && int.TryParse(parts[1], out int topupUserId))
+                        {
+                            await paymentService.CompleteTopup(topupUserId, amount);
+                            TempData["ToastMessage"] = $"Nạp tiền thành công! +{amount:N0} VND 💰";
+                            TempData["ToastType"] = "success";
+                        }
+                    }
+                    else if (orderId.StartsWith("ORDER_"))
+                    {
+                        var maGD = orderId["ORDER_".Length..];
+                        try { await paymentService.CompleteMomo(maGD); } catch { }
+                        TempData["ToastMessage"] = "Thanh toán MoMo thành công 🎉";
+                        TempData["ToastType"] = "success";
+                    }
+                }
+                else
+                {
+                    if (orderId.StartsWith("ORDER_"))
+                    {
+                        var maGD = orderId["ORDER_".Length..];
+                        try { await paymentService.FailMomo(maGD); } catch { }
+                    }
+                    TempData["ToastMessage"] = "Thanh toán thất bại!";
+                    TempData["ToastType"] = "error";
+                }
+
+                return RedirectToAction("Index");
+            }
+
             if (Request.Query["success"] == "momo")
             {
                 TempData["ToastMessage"] = "Thanh toán MoMo thành công 🎉";
                 TempData["ToastType"] = "success";
             }
-
             if (Request.Query["error"] == "momo")
             {
                 TempData["ToastMessage"] = "Thanh toán MoMo thất bại!";
@@ -39,11 +80,9 @@ namespace GameStore.Controllers.Client.Cart
             }
 
             var cart = cartService.GetCart(GetUserId());
-
             ViewBag.HideSubBar = true;
             ViewBag.ReturnUrl = returnUrl;
             TempData["ReturnUrl"] = returnUrl;
-
             return View(cart);
         }
 
