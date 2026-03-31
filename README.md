@@ -66,4 +66,15 @@ INSERT INTO game (magame, tengame, mota, matheloai, gia, ngayramat, hinh, soluot
 
 dung redis load category ,realtime soluottai
 
+
+lệnh xoá bảng :
+TRUNCATE TABLE 
+    public.chitietgiohang,
+    public.giohang,
+    public.chitietgiaodich,
+    public.giaodich,
+	public.danhgia,
+    public.thuviengame
+RESTART IDENTITY;
+
 dùng upstash để làm redis online
