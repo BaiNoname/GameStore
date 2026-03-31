@@ -23,11 +23,17 @@ public class Program
 
         var vnpayConfig = builder.Configuration.GetSection("VNPAY");
 
+        // DEBUG — xoá sau khi xác nhận xong
+        Console.WriteLine($"[DEBUG] TmnCode={vnpayConfig["TmnCode"]}");
+        Console.WriteLine($"[DEBUG] HashSecret={vnpayConfig["HashSecret"]}");
+
         builder.Services.AddVnpayClient(config =>
         {
             config.TmnCode = vnpayConfig["TmnCode"]!;
             config.HashSecret = vnpayConfig["HashSecret"]!;
             config.CallbackUrl = vnpayConfig["CallbackUrl"]!;
+            config.BaseUrl = vnpayConfig["BaseUrl"]!;
+
         });
 
         builder.Services.AddHttpClient();
@@ -127,6 +133,7 @@ public class Program
 
         // Register Vnpay service implementation
         builder.Services.AddScoped<VnpayService, VnpayServiceImpl>();
+        builder.Services.AddScoped<IMomoService, MomoServiceImpl>();
 
         builder.Services.AddScoped<MailHelper>();
 

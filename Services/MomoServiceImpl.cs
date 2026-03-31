@@ -1,0 +1,119 @@
+﻿using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+
+namespace GameStore.Services;
+
+public class MomoServiceImpl : IMomoService
+{
+    private readonly string _partnerCode;
+    private readonly string _accessKey;
+    private readonly string _secretKey;
+    private readonly string _endpoint;
+    private readonly string _redirectUrl;
+    private readonly string _ipnUrl;
+    private readonly HttpClient _httpClient;
+
+    public MomoServiceImpl(IConfiguration config, HttpClient httpClient)
+    {
+        var momo = config.GetSection("MoMo");
+        _partnerCode = momo["PartnerCode"]!;
+        _accessKey = momo["AccessKey"]!;
+        _secretKey = momo["SecretKey"]!;
+        _endpoint = momo["Endpoint"]!;
+        _redirectUrl = momo["RedirectUrl"]!;
+        _ipnUrl = momo["IpnUrl"]!;
+        _httpClient = httpClient;
+    }
+
+    public async Task<string> CreatePaymentUrlForOrder(int userId, string maGD, decimal amount, string baseUrl)
+    {
+        return await CreatePaymentUrl($"ORDER_{maGD}", $"Thanh toan don hang {maGD}", amount);
+    }
+
+    public async Task<string> CreatePaymentUrlForTopup(int userId, decimal amount, string baseUrl)
+    {
+        var requestId = $"TOPUP_{userId}_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+        return await CreatePaymentUrl(requestId, $"Nap tien tai khoan user {userId}", amount);
+    }
+
+    private async Task<string> CreatePaymentUrl(string orderId, string orderInfo, decimal amount)
+    {
+        var requestId = $"{orderId}_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+        var requestType = "payWithMethod";
+        var extraData = "";
+        var amountStr = ((long)amount).ToString();
+
+        var rawSignature =
+            $"accessKey={_accessKey}" +
+            $"&amount={amountStr}" +
+            $"&extraData={extraData}" +
+            $"&ipnUrl={_ipnUrl}" +
+            $"&orderId={orderId}" +
+            $"&orderInfo={orderInfo}" +
+            $"&partnerCode={_partnerCode}" +
+            $"&redirectUrl={_redirectUrl}" +
+            $"&requestId={requestId}" +
+            $"&requestType={requestType}";
+
+        var signature = ComputeHmacSha256(rawSignature, _secretKey);
+
+        var body = new
+        {
+            partnerCode = _partnerCode,
+            accessKey = _accessKey,
+            requestId,
+            amount = amountStr,
+            orderId,
+            orderInfo,
+            redirectUrl = _redirectUrl,
+            ipnUrl = _ipnUrl,
+            extraData,
+            requestType,
+            signature,
+            lang = "vi"
+        };
+
+        var json = JsonSerializer.Serialize(body);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync(_endpoint, content);
+        var resStr = await response.Content.ReadAsStringAsync();
+        var resJson = JsonDocument.Parse(resStr).RootElement;
+
+        if (resJson.GetProperty("resultCode").GetInt32() != 0)
+            throw new Exception($"MoMo error: {resJson.GetProperty("message").GetString()}");
+
+        return resJson.GetProperty("payUrl").GetString()!;
+    }
+
+    public bool VerifyCallback(IQueryCollection query)
+    {
+        var rawSignature =
+            $"accessKey={_accessKey}" +
+            $"&amount={query["amount"]}" +
+            $"&extraData={query["extraData"]}" +
+            $"&message={query["message"]}" +
+            $"&orderId={query["orderId"]}" +
+            $"&orderInfo={query["orderInfo"]}" +
+            $"&orderType={query["orderType"]}" +
+            $"&partnerCode={query["partnerCode"]}" +
+            $"&payType={query["payType"]}" +
+            $"&requestId={query["requestId"]}" +
+            $"&responseTime={query["responseTime"]}" +
+            $"&resultCode={query["resultCode"]}" +
+            $"&transId={query["transId"]}";
+
+        var expected = ComputeHmacSha256(rawSignature, _secretKey);
+        return expected == query["signature"].ToString();
+    }
+
+    private static string ComputeHmacSha256(string data, string key)
+    {
+        var keyBytes = Encoding.UTF8.GetBytes(key);
+        var dataBytes = Encoding.UTF8.GetBytes(data);
+        using var hmac = new HMACSHA256(keyBytes);
+        return Convert.ToHexString(hmac.ComputeHash(dataBytes)).ToLower();
+    }
+}

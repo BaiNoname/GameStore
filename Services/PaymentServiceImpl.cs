@@ -220,5 +220,112 @@ namespace GameStore.Services
             }
         }
 
+        public void CreatePendingMomo(int userId, string maGD, decimal amount)
+        {
+            var cart = db.GioHangs
+                .Include(x => x.ChiTietGioHangs)
+                .FirstOrDefault(x => x.MaNguoiDung == userId);
+
+            if (cart == null || !cart.ChiTietGioHangs.Any())
+                throw new Exception("Cart empty");
+
+            var giaoDich = new GiaoDich
+            {
+                MaGD = maGD,
+                MaNguoiDung = userId,
+                NgayMua = DateTime.UtcNow,
+                TrangThai = "Pending",
+                PhuongThuc = "MoMo",
+                ThanhTien = amount
+            };
+
+            db.GiaoDiches.Add(giaoDich);
+
+            foreach (var item in cart.ChiTietGioHangs)
+            {
+                db.ChiTietGiaoDiches.Add(new ChiTietGiaoDich
+                {
+                    MaGD = maGD,
+                    MaGame = item.MaGame,
+                    DonGia = item.DonGiaHienTai
+                });
+            }
+
+            db.SaveChanges();
+        }
+
+        public async Task CompleteMomo(string maGD)
+        {
+            using var transaction = db.Database.BeginTransaction();
+
+            try
+            {
+                var gd = db.GiaoDiches
+                    .Include(x => x.ChiTietGiaoDiches)
+                    .FirstOrDefault(x => x.MaGD == maGD);
+
+                if (gd == null)
+                    throw new Exception("Transaction not found: " + maGD);
+
+                var userId = gd.MaNguoiDung;
+
+                foreach (var item in gd.ChiTietGiaoDiches)
+                {
+                    var exists = db.ThuVienGames
+                        .Any(x => x.MaNguoiDung == userId && x.MaGame == item.MaGame);
+
+                    if (!exists)
+                    {
+                        db.ThuVienGames.Add(new ThuVienGame
+                        {
+                            MaNguoiDung = userId,
+                            MaGame = item.MaGame,
+                            NgayMua = DateTime.UtcNow,
+                            DaTai = false
+                        });
+                    }
+
+                    var game = db.Games.Find(item.MaGame);
+                    if (game != null)
+                    {
+                        game.SoLuotTai++;
+                        await hub.Clients.All.SendAsync("UpdateDownload", game.MaGame, game.SoLuotTai);
+                    }
+                }
+
+                var cart = db.GioHangs
+                    .Include(x => x.ChiTietGioHangs)
+                    .FirstOrDefault(x => x.MaNguoiDung == userId);
+
+                if (cart != null)
+                {
+                    db.ChiTietGioHangs.RemoveRange(cart.ChiTietGioHangs);
+                }
+
+                gd.TrangThai = "Success";
+
+                db.SaveChanges();
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                logger.LogError(ex, "CompleteMomo error");
+                throw;
+            }
+        }
+
+        public Task FailMomo(string maGD)
+        {
+            var gd = db.GiaoDiches.FirstOrDefault(x => x.MaGD == maGD);
+            if (gd != null)
+            {
+                gd.TrangThai = "Failed";
+                db.SaveChanges();
+            }
+
+            return Task.CompletedTask;
+        }
+
     }
 }
