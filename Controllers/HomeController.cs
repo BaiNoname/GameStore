@@ -107,8 +107,8 @@ public class HomeController : Controller
         {
             var userId = int.Parse(User.FindFirst("UserId").Value);
 
-            ownedGameIds = gameService.GetDb().ChiTietGiaoDiches
-                .Where(x => x.GiaoDich.MaNguoiDung == userId)
+            ownedGameIds = gameService.GetDb().ThuVienGames
+                .Where(x => x.MaNguoiDung == userId)
                 .Select(x => x.MaGame)
                 .ToList();
 

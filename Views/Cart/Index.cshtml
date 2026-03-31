@@ -166,25 +166,26 @@
 
         </div>
 
-        <!-- Top-up card -->
-        <div class="card mt-4 bg-dark text-light p-3" style="max-width:420px;">
-            <h5>Top up your wallet (Top-up)</h5>
-            <p class="small text-muted">Thanh toán qua MoMo để nạp tiền vào tài khoản của bạn.</p>
-
-            <form method="get" action="/api/momo/topup" class="row g-2">
-                <div class="col-8">
-                    <input type="number" step="1000" min="5000" name="amount"
-                           class="form-control" placeholder="Số tiền (VND)" required />
-                </div>
-                <div class="col-4">
-                    <input type="hidden" name="userId" value="@(int.Parse(User.FindFirst("UserId").Value))" />
-                    <button type="submit" class="btn btn-danger w-100">Nạp MoMo</button>
-                </div>
-                <div class="col-12">
-                    <small class="text-muted">Tối thiểu 5.000 VND. Hệ thống sẽ chuyển bạn đến MoMo để hoàn tất.</small>
-                </div>
-            </form>
-        </div>
     }
+
+    <!-- Top-up card -->
+    <div class="card mt-4 bg-dark text-light p-3" style="max-width:420px;">
+        <h5>Top up your wallet (Top-up)</h5>
+        <p class="small text-muted">Thanh toán qua MoMo để nạp tiền vào tài khoản của bạn.</p>
+
+        <form method="get" action="/api/momo/topup" class="row g-2">
+            <div class="col-8">
+                <input type="number" step="1000" min="5000" name="amount"
+                       class="form-control" placeholder="Số tiền (VND)" required />
+            </div>
+            <div class="col-4">
+                <input type="hidden" name="userId" value="@(int.Parse(User.FindFirst("UserId").Value))" />
+                <button type="submit" class="btn btn-danger w-100">Nạp MoMo</button>
+            </div>
+            <div class="col-12">
+                <small class="text-muted">Tối thiểu 5.000 VND. Hệ thống sẽ chuyển bạn đến MoMo để hoàn tất.</small>
+            </div>
+        </form>
+    </div>
 
 </div>

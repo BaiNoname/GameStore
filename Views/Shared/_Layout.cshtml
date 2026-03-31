@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor HttpContextAccessor
+@inject GameStore.Models.GameStoreContext _db
 
 @{
     var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");
@@ -75,7 +76,7 @@
                                 </button>
 
                                 <ul class="dropdown-menu dropdown-menu-end">
-
+                                   
                                     <li>
                                         <a class="dropdown-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Library" ? "active" : "")"
                                            asp-controller="Library"
@@ -92,6 +93,17 @@
                                         </a>
                                     </li>
 
+                                    <li><hr class="dropdown-divider"></li>
+
+                                    @{
+                                        var uid = int.Parse(User.FindFirst("UserId").Value);
+                                        var currentUser = _db.NguoiDungs.Find(uid);
+                                    }
+                                    <li>
+                                        <span class="dropdown-item-text text-warning fw-bold">
+                                            My Balance: 💰 @((currentUser?.SoDu ?? 0).ToString("N0")) VND
+                                        </span>
+                                    </li>
                                     <li><hr class="dropdown-divider"></li>
 
                                     <li>

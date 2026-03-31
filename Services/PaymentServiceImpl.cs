@@ -327,5 +327,17 @@ namespace GameStore.Services
             return Task.CompletedTask;
         }
 
+        public async Task CompleteTopup(int userId, decimal amount)
+        {
+            var user = db.NguoiDungs.Find(userId);
+            if (user == null) throw new Exception("User not found");
+
+            user.SoDu += amount;
+            await db.SaveChangesAsync();
+
+            logger.LogInformation("Topup success: UserId={UserId}, Amount={Amount}, NewBalance={Balance}",
+                userId, amount, user.SoDu);
+        }
+
     }
 }

@@ -51,31 +51,31 @@ public class MomoController : Controller
     {
         try
         {
-            if (!_momoService.VerifyCallback(Request.Query))
-                return Redirect($"{Request.Scheme}://{Request.Host}/cart?error=momo");
-
             var resultCode = Request.Query["resultCode"].ToString();
             var orderId = Request.Query["orderId"].ToString();
 
-            // 🔥 FIX PREFIX ORDER_
+            Console.WriteLine($"[MOMO CB] resultCode={resultCode}, orderId={orderId}");
+
+            // Strip prefix "ORDER_"
             if (orderId.StartsWith("ORDER_"))
-                orderId = orderId.Replace("ORDER_", "");
+                orderId = orderId["ORDER_".Length..];
 
             if (string.IsNullOrEmpty(orderId))
-                return Redirect($"{Request.Scheme}://{Request.Host}/cart?error=momo");
+                return Redirect("/cart?error=momo");
 
             if (resultCode == "0")
             {
                 await _paymentService.CompleteMomo(orderId);
-                return Redirect($"{Request.Scheme}://{Request.Host}/cart?success=momo");
+                return Redirect("/cart?success=momo");
             }
 
             await _paymentService.FailMomo(orderId);
-            return Redirect($"{Request.Scheme}://{Request.Host}/cart?error=momo");
+            return Redirect("/cart?error=momo");
         }
         catch (Exception ex)
         {
-            return Content("ERROR: " + ex.Message);
+            Console.WriteLine("[MOMO CB] Exception: " + ex.Message);
+            return Redirect("/cart?error=momo");
         }
     }
 

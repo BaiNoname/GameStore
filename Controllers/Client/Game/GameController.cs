@@ -35,8 +35,8 @@ namespace GameStore.Controllers.Client.Game
                 var userId = int.Parse(User.FindFirst("UserId").Value);
 
                 // 🎮 game đã mua
-                ownedGameIds = gameService.GetDb().ChiTietGiaoDiches
-                    .Where(x => x.GiaoDich.MaNguoiDung == userId)
+                ownedGameIds = gameService.GetDb().ThuVienGames
+                    .Where(x => x.MaNguoiDung == userId)
                     .Select(x => x.MaGame)
                     .ToList();
 
