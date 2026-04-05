@@ -68,9 +68,12 @@
                         <td>
                             @if (item.DaTai)
                             {
-                                <button class="btn btn-success btn-sm">
+                                <a asp-controller="Library"
+                                   asp-action="Download"
+                                   asp-route-id="@item.MaGame"
+                                   class="btn btn-success btn-sm">
                                     🎮 Download
-                                </button>
+                                </a>
                             }
                             else
                             {
