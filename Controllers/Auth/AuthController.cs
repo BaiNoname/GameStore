@@ -172,6 +172,8 @@ namespace GameStore.Controllers.Auth
 
             if (authService.VerifyResetCode(email, code, out string message))
             {
+                TempData["ToastMessage"] = "Xác nhận mã thành công 🎉";
+                TempData["ToastType"] = "success";
                 return RedirectToAction("ResetPassword");
             }
 

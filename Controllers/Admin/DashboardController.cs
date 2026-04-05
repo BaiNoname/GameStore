@@ -51,7 +51,7 @@ namespace GameStore.Controllers.Admin
                 .ToList() 
                 .Select(x => new RevenueByDay
                 {
-                    Date = x.Date.ToString("dd/MM"), // ✅ xử lý ở RAM
+                    Date = x.Date.ToString("dd/MM"),
                     Revenue = x.Revenue
                 })
                 .ToList();

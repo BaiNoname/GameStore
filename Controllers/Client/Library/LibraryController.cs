@@ -34,18 +34,22 @@ namespace GameStore.Controllers.Client.Library
         {
             int userId = int.Parse(User.FindFirst("UserId").Value);
 
-            var game = db.ThuVienGames
+            var item = db.ThuVienGames
+                .Include(x => x.Game)
                 .FirstOrDefault(x => x.MaNguoiDung == userId && x.MaGame == id);
 
-            if (game == null)
+            if (item == null)
                 return NotFound();
 
-            // 🔥 đánh dấu đã tải
-            game.DaTai = true;
+            if (!item.DaTai)
+            {
+                item.DaTai = true;
+            }
+
+
             db.SaveChanges();
 
-            // 👉 redirect về link game (giả lập)
-            return Redirect("/files/" + id + ".zip");
+            return Redirect(item.Game.LinkGame);
         }
     }
 }

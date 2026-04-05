@@ -56,14 +56,12 @@ public class Program
             {
                 OnRedirectToLogin = context =>
                 {
-                    // Nếu đang ở trang auth thì không cần báo
                     if (context.Request.Path.StartsWithSegments("/auth"))
                     {
                         context.Response.Redirect("/auth/login");
                     }
                     else
                     {
-                        // 🔥 HẾT SESSION → báo
                         context.Response.Redirect("/auth/login?expired=true");
                     }
 
