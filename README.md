@@ -66,4 +66,27 @@ INSERT INTO game (magame, tengame, mota, matheloai, gia, ngayramat, hinh, soluot
 
 dung redis load category ,realtime soluottai
 
+
+lệnh xoá bảng :
+TRUNCATE TABLE 
+    public.chitietgiohang,
+    public.giohang,
+    public.chitietgiaodich,
+    public.giaodich,
+	public.danhgia,
+    public.thuviengame
+RESTART IDENTITY;
+
 dùng upstash để làm redis online
+
+thông tin thẻ test momo:
+1	NGUYEN VAN A	9704 0000 0000 0018	03/07	OTP	Thành công
+2	NGUYEN VAN A	9704 0000 0000 0026	03/07	OTP	Thẻ bị khóa
+3	NGUYEN VAN A	9704 0000 0000 0034	03/07	OTP	Nguồn tiền không đủ
+4	NGUYEN VAN A	9704 0000 0000 0042	03/07	OTP	Hạn mức thẻ
+
+
+
+Game down zip test demo:
+https://drive.google.com/file/d/1OJDAHh7zbwJKS6K5YIzuYRBjVyUHzU8e/view?usp=sharing
+
