@@ -16,89 +16,59 @@ public class HomeController : Controller
         categoryService = _categoryService;
     }
 
-
     [Route("~/")]
     [Route("index")]
     [Route("")]
-    public IActionResult Index(string search, string category, string type, int page = 1)
+    public IActionResult Index(string search, string category, int page = 1)
     {
-        int pageSize = 5;
-
-        List<Game> games;
-        int totalGames = 0;
+        int pageSize = 8;
 
         // =========================
-        // 🔥 CASE NEW / HOT
+        // 🔥 ALL GAME (DUY NHẤT có pagination)
         // =========================
-        if (type == "new")
+        var games = gameService.FilterGames(search, category, page, pageSize);
+        int totalGames = gameService.CountGames(search, category);
+
+        // =========================
+        // 🎯 TITLE
+        // =========================
+        if (!string.IsNullOrEmpty(search))
         {
-            var all = gameService.GetNewGames();
-            totalGames = all.Count;
-
-            games = all
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            ViewBag.CategoryName = "🆕 New Games";
+            ViewBag.CategoryName = "Search: " + search;
         }
-        else if (type == "hot")
+        else if (!string.IsNullOrEmpty(category))
         {
-            var all = gameService.GetHotGames();
-            totalGames = all.Count;
+            var cate = categoryService.findAll()
+                        .FirstOrDefault(c => c.MaTheLoai == category);
 
-            games = all
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            ViewBag.CategoryName = "🔥 Hot Games";
+            ViewBag.CategoryName = cate?.TenLoaiGame ?? "Category";
         }
         else
         {
-            // 🔥 DATA (đã có cache + pagination)
-            games = gameService.FilterGames(search, category, page, pageSize);
-
-            // 🔥 COUNT (phải query riêng)
-            var query = gameService.GetDb().Games.AsQueryable();
-
-            if (!string.IsNullOrEmpty(search))
-                query = query.Where(g => g.TenGame.ToLower().Contains(search.ToLower()));
-
-            if (!string.IsNullOrEmpty(category))
-                query = query.Where(g => g.MaTheLoai == category);
-
-            totalGames = gameService.CountGames(search, category);
-
-            // 🎯 Title
-            if (!string.IsNullOrEmpty(search))
-            {
-                ViewBag.CategoryName = "Search result: " + search;
-            }
-            else if (!string.IsNullOrEmpty(category))
-            {
-                var cate = categoryService.findAll()
-                            .FirstOrDefault(c => c.MaTheLoai == category);
-
-                ViewBag.CategoryName = cate?.TenLoaiGame;
-            }
-            else
-            {
-                ViewBag.CategoryName = "All Games";
-            }
+            ViewBag.CategoryName = "All Games";
         }
 
         // =========================
-        // 🔥 PAGINATION
+        // 🔥 PAGINATION (CHỈ ALL GAME)
         // =========================
         int totalPages = (int)Math.Ceiling((double)totalGames / pageSize);
 
         ViewBag.CurrentPage = page;
         ViewBag.TotalPages = totalPages;
+
+        // =========================
+        // 🎮 UI DATA (KHÔNG PAGINATE)
+        // =========================
+        ViewBag.HotTop = gameService.GetHotGames(3);                 // Top 3 → carousel
+        ViewBag.NewGames = gameService.GetNewGames(10).Take(10).ToList(); // Scroll
+
+        // =========================
+        // 📂 CATEGORY (CHO FILTER UI)
+        // =========================
         ViewBag.Categories = categoryService.findAll();
 
         // =========================
-        // 🔥 OWNED + CART
+        // 🛒 OWNED + CART
         // =========================
         List<string> ownedGameIds = new List<string>();
         List<string> cartGameIds = new List<string>();
@@ -137,6 +107,4 @@ public class HomeController : Controller
         ViewBag.HideSubBar = true;
         return View();
     }
-
-
 }
