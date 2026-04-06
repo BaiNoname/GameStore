@@ -9,8 +9,8 @@ namespace GameStore.Services
         Game? findById(string maGame);
         public List<Game> SearchGames(string keyword);
         public List<Game> FilterGames(string search, string category, int page, int pageSize);
-        public List<Game> GetNewGames();
-        public List<Game> GetHotGames();
+        public List<Game> GetNewGames(int count);
+        public List<Game> GetHotGames(int count);
         public bool Create(Game game);
         public bool Update(Game game);
         public bool Delete(string id);

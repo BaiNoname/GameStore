@@ -139,63 +139,31 @@
     @if (ViewBag.HideSubBar == null)
     {
         <!-- Sub Navbar -->
-        <section class="gs-subbar">
+        <section class="gs-subbar py-2">
             <div class="container-xxl">
-                <div class="gs-subbar-inner">
-                    <div class="d-flex align-items-center gap-3 flex-wrap">
-                        <div class="dropdown">
-                            <button class="btn gs-pill dropdown-toggle" data-bs-toggle="dropdown">
-                                Recommendations
-                            </button>
+                <div class="gs-subbar-inner d-flex align-items-center justify-content-between flex-wrap">
 
-                            <ul class="dropdown-menu gs-dd">
-
-                                <li>
-                                    <a class="dropdown-item" href="/home?type=new">
-                                        New Games
-                                    </a>
-                                </li>
-
-                                <li>
-                                    <a class="dropdown-item" href="/home?type=hot">
-                                        Hot Games
-                                    </a>
-                                </li>
-
-                            </ul>
-                        </div>
-
-                        <div class="dropdown">
-                            <button class="btn gs-pill dropdown-toggle" data-bs-toggle="dropdown">
-                                Categories
-                            </button>
-                            <ul class="dropdown-menu gs-dd">
-                                <li><a class="dropdown-item" href="/Home">All</a></li>
-                                @if (ViewBag.Categories != null)
-                                {
-                                    foreach (var c in ViewBag.Categories)
-                                    {
-                                        <li>
-                                            <a class="dropdown-item" href="/home?category=@c.MaTheLoai">
-                                                @c.TenLoaiGame
-                                            </a>
-                                        </li>
-                                    }
-                                }
-                            </ul>
-                        </div>
+                    <!-- Buttons -->
+                    <div class="d-flex gap-3">
+                        <a href="/Home/NEWS" class="btn btn-outline-light fw-bold">
+                            NEWS
+                        </a>
+                        <a href="/Home/Event" class="btn btn-outline-light fw-bold">
+                            EVENT GROUP 🔥
+                        </a>
                     </div>
 
-                    <form class="gs-search ms-auto" method="get" action="/home">
-                        <input class="form-control gs-search-input"
+                    <!-- Search form -->
+                    <form class="gs-search d-flex ms-auto align-items-center" method="get" action="/home">
+                        <input class="form-control gs-search-input me-2 flex-grow-1"
                                type="text"
                                name="search"
                                placeholder="Search game..." />
-
                         <button class="btn gs-search-btn" type="submit">
-                            Search
+                            Search the store
                         </button>
                     </form>
+
                 </div>
             </div>
         </section>
@@ -260,6 +228,9 @@
 
     @RenderSection("Scripts", required: false)
     <style>
+        .gs-search-btn {
+            white-space: nowrap;
+        }
         .ai-popup {
             position: fixed;
             bottom: 90px;

@@ -98,22 +98,23 @@ namespace GameStore.Services
         }
 
         // Game mới trong 1 tháng
-        public List<Game> GetNewGames()
+        public List<Game> GetNewGames(int count = 10)
         {
-            var oneMonthAgo = DateTime.UtcNow.AddMonths(-1);
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
 
             return db.Games
                 .Where(g => g.NgayRaMat >= DateOnly.FromDateTime(oneMonthAgo))
                 .OrderByDescending(g => g.NgayRaMat)
+                .Take(count)
                 .ToList();
         }
 
         // Game hot (lượt tải cao)
-        public List<Game> GetHotGames()
+        public List<Game> GetHotGames(int count = 3)
         {
             return db.Games
                 .OrderByDescending(g => g.SoLuotTai)
-                .Take(3)
+                .Take(count)
                 .ToList();
         }
 
