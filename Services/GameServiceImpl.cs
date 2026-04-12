@@ -110,7 +110,7 @@ namespace GameStore.Services
         }
 
         // Game hot (lượt tải cao)
-        public List<Game> GetHotGames(int count = 3)
+        public List<Game> GetHotGames(int count = 5)
         {
             return db.Games
                 .OrderByDescending(g => g.SoLuotTai)

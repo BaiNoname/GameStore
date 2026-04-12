@@ -59,7 +59,7 @@ public class HomeController : Controller
         // =========================
         // 🎮 UI DATA (KHÔNG PAGINATE)
         // =========================
-        ViewBag.HotTop = gameService.GetHotGames(3);                 // Top 3 → carousel
+        ViewBag.HotTop = gameService.GetHotGames(5);                 // Top 5 → carousel
         ViewBag.NewGames = gameService.GetNewGames(10).Take(10).ToList(); // Scroll
 
         // =========================
