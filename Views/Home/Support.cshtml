@@ -2,51 +2,194 @@
     ViewData["Title"] = "Support";
 }
 
-<div class="container py-5 text-light">
+<div class="gs-support-page">
+    <div class="container py-5">
 
-    <div class="text-center mb-5">
-        <h1 class="fw-bold">Support Center</h1>
-        <p class="text-secondary">Need help? We're here for you.</p>
-    </div>
+        <section class="gs-support-hero mb-5 text-center">
+            <div class="gs-kicker">Help Center</div>
+            <h1 class="gs-page-title fw-bold">Support Center</h1>
+            <p class="gs-page-subtitle">Need help? We're here for you.</p>
+        </section>
 
-    <div class="row g-4">
-
-        <div class="col-md-4">
-            <div class="card bg-dark text-light border-0 shadow h-100">
-                <div class="card-body text-center">
-                    <h4>❓ FAQ</h4>
-                    <p class="text-secondary">
+        <section class="row g-4">
+            <div class="col-md-4">
+                <div class="gs-support-card h-100">
+                    <div class="gs-support-icon">❓</div>
+                    <h4>FAQ</h4>
+                    <p>
                         Find answers to common questions about games and accounts.
                     </p>
-                    <button class="btn btn-outline-info">View FAQ</button>
+                    <button class="btn gs-btn-outline-info mt-3">View FAQ</button>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-4">
-            <div class="card bg-dark text-light border-0 shadow h-100">
-                <div class="card-body text-center">
-                    <h4>📧 Contact Us</h4>
-                    <p class="text-secondary">
+            <div class="col-md-4">
+                <div class="gs-support-card h-100">
+                    <div class="gs-support-icon">📧</div>
+                    <h4>Contact Us</h4>
+                    <p>
                         Send us a message if you need assistance.
                     </p>
-                    <button class="btn btn-outline-info">Contact Support</button>
+                    <button class="btn gs-btn-outline-info mt-3">Contact Support</button>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-4">
-            <div class="card bg-dark text-light border-0 shadow h-100">
-                <div class="card-body text-center">
-                    <h4>🔧 Technical Help</h4>
-                    <p class="text-secondary">
+            <div class="col-md-4">
+                <div class="gs-support-card h-100">
+                    <div class="gs-support-icon">🔧</div>
+                    <h4>Technical Help</h4>
+                    <p>
                         Having issues downloading or running a game?
                     </p>
-                    <button class="btn btn-outline-info">Get Help</button>
+                    <button class="btn gs-btn-outline-info mt-3">Get Help</button>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <section class="gs-support-banner mt-5">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <div class="gs-kicker">Need Fast Assistance</div>
+                    <h3 class="mb-3">We’re here to support your gaming experience</h3>
+                    <p class="mb-0 text-secondary">
+                        From account issues to technical troubleshooting, our support space is designed
+                        to help users find answers quickly and smoothly.
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="/" class="btn gs-btn-primary px-4 py-2 rounded-pill">
+                        Back to Store
+                    </a>
+                </div>
+            </div>
+        </section>
 
     </div>
-
 </div>
+
+<style>
+    :root {
+        --gs-text: #f3f7ff;
+        --gs-muted: #94a3b8;
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+    }
+
+    .gs-support-page {
+        min-height: 100vh;
+        color: var(--gs-text);
+        background: transparent;
+    }
+
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: #7dd3fc;
+        margin-bottom: 8px;
+    }
+
+    .gs-page-title {
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        color: #fff;
+        letter-spacing: -0.02em;
+        margin-bottom: 10px;
+    }
+
+    .gs-page-subtitle {
+        color: var(--gs-muted);
+        font-size: 1.05rem;
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    .gs-support-card {
+        padding: 30px 24px;
+        border-radius: 26px;
+        text-align: center;
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.92), rgba(9, 18, 33, 0.92));
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+        transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+    }
+
+        .gs-support-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 28px 55px rgba(0,0,0,0.34);
+            border-color: rgba(125, 211, 252, 0.20);
+        }
+
+    .gs-support-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 18px;
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .gs-support-card h4 {
+        color: #fff;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .gs-support-card p {
+        color: #cbd5e1;
+        line-height: 1.75;
+        margin-bottom: 0;
+    }
+
+    .gs-btn-outline-info {
+        min-height: 46px;
+        border-radius: 999px;
+        padding: 0 20px;
+        font-weight: 700;
+        color: #7dd3fc;
+        border: 1px solid rgba(125, 211, 252, 0.35);
+        background: transparent;
+    }
+
+        .gs-btn-outline-info:hover {
+            color: #fff;
+            background: rgba(125, 211, 252, 0.12);
+            border-color: rgba(125, 211, 252, 0.45);
+        }
+
+    .gs-support-banner {
+        padding: 28px;
+        border-radius: 28px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(37, 99, 235, 0.16), rgba(6, 182, 212, 0.12));
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 45px rgba(0,0,0,0.22);
+    }
+
+        .gs-support-banner h3 {
+            color: #fff;
+            font-weight: 800;
+        }
+
+    .gs-btn-primary {
+        background: var(--gs-primary);
+        border: none;
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 14px 28px rgba(37, 99, 235, 0.25);
+    }
+
+        .gs-btn-primary:hover {
+            color: #fff;
+        }
+
+    @@media (max-width: 575.98px) {
+        .gs-support-card,
+        .gs-support-banner {
+            padding: 20px 18px;
+        }
+    }
+</style>

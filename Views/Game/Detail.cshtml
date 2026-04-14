@@ -14,214 +14,542 @@
     var myReview = ViewBag.MyReview as DanhGia;
 }
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/game-detail.css" />
-}
+<div class="gs-detail-page">
+    <div class="container py-4 py-lg-5">
 
-<div class="container py-4">
-    <div class="detail-card">
-        <div class="row g-0">
+        <div class="gs-detail-shell">
+            <div class="row g-0 align-items-stretch">
 
-            <div class="col-12 col-lg-7">
-                <div class="detail-card__image-wrap">
-                    <img src="~/images/@Model.Hinh" alt="@Model.TenGame" class="detail-card__image" />
+                <!-- IMAGE -->
+                <div class="col-12 col-lg-7">
+                    <div class="gs-detail-media">
+                        <img src="~/images/@Model.Hinh" alt="@Model.TenGame" class="gs-detail-image" />
+                        <div class="gs-detail-media-overlay"></div>
+
+                        <div class="gs-detail-floating">
+                            <span class="gs-floating-chip">@Model.MaTheLoai</span>
+                            <span class="gs-floating-chip">Mã: @Model.MaGame</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTENT -->
+                <div class="col-12 col-lg-5">
+                    <div class="gs-detail-content">
+
+                        <div class="gs-detail-top">
+                            <div class="gs-kicker">Game Detail</div>
+                            <h1 class="gs-detail-title">@Model.TenGame</h1>
+                            <div class="gs-detail-price">
+                                @String.Format("{0:N0}", Model.Gia) VNĐ
+                            </div>
+                        </div>
+
+                        <div class="gs-detail-info-grid">
+                            <div class="gs-info-card">
+                                <span class="label">Mã game</span>
+                                <span class="value">@Model.MaGame</span>
+                            </div>
+
+                            <div class="gs-info-card">
+                                <span class="label">Thể loại</span>
+                                <span class="value">@Model.MaTheLoai</span>
+                            </div>
+
+                            <div class="gs-info-card">
+                                <span class="label">Ngày ra mắt</span>
+                                <span class="value">
+                                    @(Model.NgayRaMat.HasValue? Model.NgayRaMat.Value.ToString("dd/MM/yyyy") : "Chưa cập nhật")
+                                </span>
+                            </div>
+
+                            <div class="gs-info-card">
+                                <span class="label">Lượt mua</span>
+                                <span class="value">
+                                    👁 <span id="download-count">@Model.SoLuotTai</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="gs-detail-description">
+                            <h5>Mô tả game</h5>
+                            <p>
+                                @(string.IsNullOrWhiteSpace(Model.MoTa) ? "Chưa có mô tả cho game này." : Model.MoTa)
+                            </p>
+                        </div>
+
+                        @{
+                            var currentUrl = Context.Request.Path + Context.Request.QueryString;
+                        }
+
+                        <div class="gs-detail-actions">
+
+                            @if (owned.Contains(Model.MaGame))
+                            {
+                                <button type="button"
+                                        class="btn gs-btn-muted gs-action-btn"
+                                        onclick="showToast('Bạn đã mua game này rồi!', 'error')">
+                                    Owned
+                                </button>
+
+                                <a href="@(ViewBag.ReturnUrl ?? "/home")"
+                                   class="btn gs-btn-danger gs-action-btn">
+                                    Back
+                                </a>
+                            }
+                            else if (cart.Contains(Model.MaGame))
+                            {
+                                <a asp-controller="Cart"
+                                   asp-action="Add"
+                                   asp-route-gameId="@Model.MaGame"
+                                   asp-route-returnUrl="@currentUrl"
+                                   asp-route-mode="buy"
+                                   class="btn gs-btn-primary gs-action-btn">
+                                    Buy now
+                                </a>
+
+                                <a href="@(ViewBag.ReturnUrl ?? "/home")"
+                                   class="btn gs-btn-danger gs-action-btn">
+                                    Back
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Cart"
+                                   asp-action="Add"
+                                   asp-route-gameId="@Model.MaGame"
+                                   asp-route-returnUrl="@currentUrl"
+                                   asp-route-mode="buy"
+                                   class="btn gs-btn-primary gs-action-btn">
+                                    Buy now
+                                </a>
+
+                                <a asp-controller="Cart"
+                                   asp-action="Add"
+                                   asp-route-gameId="@Model.MaGame"
+                                   asp-route-returnUrl="@currentUrl"
+                                   class="btn gs-btn-warning gs-action-btn">
+                                    Add to cart
+                                </a>
+
+                                <a href="@(ViewBag.ReturnUrl ?? "/home")"
+                                   class="btn gs-btn-danger gs-action-btn">
+                                    Back
+                                </a>
+                            }
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- REVIEWS -->
+        <div class="gs-review-section mt-5">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+                <div>
+                    <div class="gs-kicker">Community Feedback</div>
+                    <h3 class="gs-review-title mb-0">⭐ Player Reviews</h3>
                 </div>
             </div>
 
-            <div class="col-12 col-lg-5">
-                <div class="detail-card__content">
+            @if (owned.Contains(Model.MaGame))
+            {
+                <div class="gs-review-form-card mb-4">
+                    <div class="gs-review-form-card-body">
+                        <h5 class="mb-3">Write a Review</h5>
 
-                    <div class="detail-card__top">
-                        <span class="detail-card__genre">@Model.MaTheLoai</span>
-                        <span class="detail-card__code">Mã: @Model.MaGame</span>
+                        <form method="post" asp-action="SubmitReview" asp-controller="Game">
+                            <input type="hidden" name="gameId" value="@Model.MaGame" />
+
+                            <div class="mb-3">
+                                <label class="form-label">Rating</label>
+                                <select name="rating" class="form-select gs-form-input">
+
+                                    @for (int i = 5; i >= 1; i--)
+                                    {
+                                        @if (myReview?.MucDiem == i)
+                                        {
+                                            <option value="@i" selected>⭐ @i</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@i">⭐ @i</option>
+                                        }
+                                    }
+
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Your Review</label>
+                                <textarea name="comment"
+                                      class="form-control gs-form-input"
+                                      rows="4">@myReview?.NhanXet</textarea>
+                            </div>
+
+                            <button class="btn gs-btn-success px-4">
+                                @(myReview == null ? "Submit Review" : "Update Review")
+                            </button>
+                        </form>
                     </div>
+                </div>
+            }
 
-                    <h1 class="detail-card__title">@Model.TenGame</h1>
+            @foreach (var r in ViewBag.Reviews as List<DanhGia>)
+            {
+                <div class="gs-review-card mb-3">
+                    <div class="gs-review-card-body">
 
-                    <div class="detail-card__price">
-                        @String.Format("{0:N0}", Model.Gia) VNĐ
-                    </div>
+                        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                            <div>
+                                <strong class="gs-review-user">@r.NguoiDung.TenNguoiDung</strong>
+                                <p class="gs-review-date mb-0">
+                                    @r.NgayDanhGia.ToString("dd/MM/yyyy HH:mm")
+                                </p>
+                            </div>
 
-                    <div class="detail-card__info">
-                        <div class="detail-card__info-item">
-                            <span class="label">Mã game</span>
-                            <span class="value">@Model.MaGame</span>
-                        </div>
-
-                        <div class="detail-card__info-item">
-                            <span class="label">Thể loại</span>
-                            <span class="value">@Model.MaTheLoai</span>
-                        </div>
-
-                        <div class="detail-card__info-item">
-                            <span class="label">Ngày ra mắt</span>
-                            <span class="value">
-                                @(Model.NgayRaMat.HasValue? Model.NgayRaMat.Value.ToString() : "Chưa cập nhật")
+                            <span class="gs-review-stars">
+                                @for (int i = 0; i < r.MucDiem; i++)
+                                {
+                                    <span>⭐</span>
+                                }
                             </span>
                         </div>
 
-                        <div class="detail-card__info-item">
-                            <span class="label">Lượt mua</span>
-                            <span id="download-count">@Model.SoLuotTai</span>
-                        </div>
-                    </div>
-
-                    <div class="detail-card__description">
-                        <h5>Mô tả game</h5>
-                        <p>
-                            @(string.IsNullOrWhiteSpace(Model.MoTa) ? "Chưa có mô tả cho game này." : Model.MoTa)
-                        </p>
-                    </div>
-
-                    @{
-                        var currentUrl = Context.Request.Path + Context.Request.QueryString;
-                    }
-
-                    <div class="detail-card__actions">
-
-                        @* ===== ĐÃ MUA ===== *@
-                        @if (owned.Contains(Model.MaGame))
-                        {
-                            <button class="btn btn-secondary rounded-pill px-4"
-                                    onclick="showToast('Bạn đã mua game này rồi!', 'error')">
-                                Owned
-                            </button>
-
-                            <a href="@(ViewBag.ReturnUrl ?? "/home")"
-                               class="btn btn-danger rounded-pill px-4">
-                                Back
-                            </a>
-                        }
-
-                        @* ===== ĐÃ CÓ TRONG GIỎ ===== *@
-                        else if (cart.Contains(Model.MaGame))
-                        {
-                            <a asp-controller="Cart"
-                               asp-action="Add"
-                               asp-route-gameId="@Model.MaGame"
-                               asp-route-returnUrl="@currentUrl"
-                               asp-route-mode="buy"
-                               class="btn btn-primary rounded-pill px-4">
-                                Buy now
-                            </a>
-
-                            <a href="@(ViewBag.ReturnUrl ?? "/home")"
-                               class="btn btn-danger rounded-pill px-4">
-                                Back
-                            </a>
-                        }
-
-                        @* ===== CHƯA CÓ GÌ ===== *@
-                        else
-                        {
-                            <!-- BUY NOW -->
-                            <a asp-controller="Cart"
-                               asp-action="Add"
-                               asp-route-gameId="@Model.MaGame"
-                               asp-route-returnUrl="@currentUrl"
-                               asp-route-mode="buy"
-                               class="btn btn-primary rounded-pill px-4">
-                                Buy now
-                            </a>
-
-                            <!-- ADD -->
-                            <a asp-controller="Cart"
-                               asp-action="Add"
-                               asp-route-gameId="@Model.MaGame"
-                               asp-route-returnUrl="@currentUrl"
-                               class="btn btn-warning rounded-pill px-4">
-                                Add to cart
-                            </a>
-
-                            <a href="@(ViewBag.ReturnUrl ?? "/home")"
-                               class="btn btn-danger rounded-pill px-4">
-                                Back
-                            </a>
-                        }
+                        <p class="gs-review-text mb-0 mt-3">@r.NhanXet</p>
 
                     </div>
-
                 </div>
-            </div>
-
+            }
         </div>
+
     </div>
 </div>
-<div class="container mt-5">
 
-    <h3 class="text-light mb-4">⭐ Player Reviews</h3>
-
-    <!-- Form viết đánh giá -->
-    @if (owned.Contains(Model.MaGame))
-    {
-        <div class="card bg-dark text-light mb-4 border-secondary">
-            <div class="card-body">
-
-                <h5 class="mb-3">Write a Review</h5>
-
-                <form method="post" asp-action="SubmitReview" asp-controller="Game">
-
-                    <input type="hidden" name="gameId" value="@Model.MaGame" />
-
-                    <div class="mb-3">
-                        <label class="form-label">Rating</label>
-                        <select name="rating" class="form-select bg-dark text-light border-secondary">
-
-                            @for (int i = 5; i >= 1; i--)
-                            {
-                                <option value="@i" selected="@(myReview?.MucDiem == i)">
-                                    ⭐ @i
-                                </option>
-                            }
-
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Your Review</label>
-                        <textarea name="comment"
-                              class="form-control bg-dark text-light border-secondary"
-                              rows="3">@myReview?.NhanXet</textarea>
-                    </div>
-
-                    <button class="btn btn-success">
-                        @(myReview == null ? "Submit Review" : "Update Review")
-                    </button>
-
-                </form>
-
-            </div>
-        </div>
+<style>
+    :root {
+        --gs-text: #f3f7ff;
+        --gs-muted: #94a3b8;
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+        --gs-warning: linear-gradient(135deg, #f59e0b, #f97316);
+        --gs-danger: linear-gradient(135deg, #ef4444, #dc2626);
+        --gs-success: linear-gradient(135deg, #22c55e, #16a34a);
     }
 
-
-    <!-- Danh sách review -->
-    @foreach (var r in ViewBag.Reviews as List<DanhGia>)
-    {
-        <div class="card bg-dark text-light mb-3 border-secondary">
-            <div class="card-body">
-
-                <div class="d-flex justify-content-between">
-                    <strong>@r.NguoiDung.TenNguoiDung</strong>
-                    <span class="text-warning">
-                        @for (int i = 0; i < r.MucDiem; i++)
-                        {
-                            <span>⭐</span>
-                        }
-                    </span>
-                </div>
-
-                <p class="text-secondary small">
-                    @r.NgayDanhGia.ToString("dd/MM/yyyy HH:mm")
-                </p>
-
-                <p>@r.NhanXet</p>
-
-            </div>
-        </div>
+    .gs-detail-page {
+        min-height: 100vh;
+        color: var(--gs-text);
+        background: transparent;
     }
 
-</div>
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: #7dd3fc;
+        margin-bottom: 8px;
+    }
+
+    .gs-detail-shell {
+        overflow: hidden;
+        border-radius: 30px;
+        border: 1px solid var(--gs-line);
+        background: linear-gradient(180deg, rgba(13, 23, 40, 0.96), rgba(8, 17, 30, 0.96));
+        box-shadow: 0 25px 55px rgba(0,0,0,0.32);
+    }
+
+    .gs-detail-media {
+        position: relative;
+        height: 100%;
+        min-height: 420px;
+        overflow: hidden;
+        background: #0b1220;
+    }
+
+    .gs-detail-image {
+        width: 100%;
+        height: 100%;
+        min-height: 420px;
+        object-fit: cover;
+        display: block;
+        transition: transform .5s ease;
+    }
+
+    .gs-detail-shell:hover .gs-detail-image {
+        transform: scale(1.04);
+    }
+
+    .gs-detail-media-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(2,6,23,0.08) 0%, rgba(2,6,23,0.18) 45%, rgba(2,6,23,0.80) 100%);
+    }
+
+    .gs-detail-floating {
+        position: absolute;
+        top: 18px;
+        left: 18px;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .gs-floating-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.72);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.12);
+        backdrop-filter: blur(10px);
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .gs-detail-content {
+        height: 100%;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .gs-detail-title {
+        font-size: clamp(2rem, 3vw, 2.8rem);
+        font-weight: 800;
+        line-height: 1.1;
+        color: #fff;
+        margin-bottom: 14px;
+    }
+
+    .gs-detail-price {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #fbbf24;
+        margin-bottom: 22px;
+    }
+
+    .gs-detail-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .gs-info-card {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 16px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+    }
+
+        .gs-info-card .label {
+            font-size: .84rem;
+            color: var(--gs-muted);
+        }
+
+        .gs-info-card .value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            word-break: break-word;
+        }
+
+    .gs-detail-description {
+        padding: 20px;
+        border-radius: 22px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        margin-bottom: 24px;
+    }
+
+        .gs-detail-description h5 {
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .gs-detail-description p {
+            margin-bottom: 0;
+            color: #dbe6f7;
+            line-height: 1.75;
+            white-space: pre-line;
+        }
+
+    .gs-detail-actions {
+        margin-top: auto;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .gs-action-btn {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-weight: 700;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .gs-btn-primary {
+        background: var(--gs-primary);
+        border: none;
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(37, 99, 235, 0.25);
+    }
+
+        .gs-btn-primary:hover {
+            color: #fff;
+        }
+
+    .gs-btn-warning {
+        background: var(--gs-warning);
+        border: none;
+        color: #fff;
+    }
+
+        .gs-btn-warning:hover {
+            color: #fff;
+        }
+
+    .gs-btn-danger {
+        background: var(--gs-danger);
+        border: none;
+        color: #fff;
+    }
+
+        .gs-btn-danger:hover {
+            color: #fff;
+        }
+
+    .gs-btn-success {
+        background: var(--gs-success);
+        border: none;
+        color: #fff;
+        font-weight: 700;
+        border-radius: 999px;
+    }
+
+        .gs-btn-success:hover {
+            color: #fff;
+        }
+
+    .gs-btn-muted {
+        background: rgba(148, 163, 184, 0.18);
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+        .gs-btn-muted:hover {
+            color: #fff;
+        }
+
+    .gs-review-section {
+        margin-bottom: 20px;
+    }
+
+    .gs-review-title {
+        color: #fff;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .gs-review-form-card,
+    .gs-review-card {
+        border-radius: 24px;
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.92), rgba(9, 18, 33, 0.92));
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 18px 35px rgba(0,0,0,0.22);
+    }
+
+    .gs-review-form-card-body,
+    .gs-review-card-body {
+        padding: 24px;
+        color: #fff;
+    }
+
+    .gs-form-input,
+    .gs-form-input:focus {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #fff;
+        box-shadow: none;
+    }
+
+        .gs-form-input option {
+            background: #0f172a;
+            color: #fff;
+        }
+
+    .gs-review-user {
+        font-size: 1.02rem;
+        color: #fff;
+    }
+
+    .gs-review-date {
+        color: var(--gs-muted);
+        font-size: .88rem;
+    }
+
+    .gs-review-stars {
+        color: #fbbf24;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .gs-review-text {
+        color: #dbe6f7;
+        line-height: 1.7;
+        white-space: pre-line;
+    }
+
+    @@media (max-width: 991.98px) {
+        .gs-detail-content {
+            padding: 24px;
+        }
+
+        .gs-detail-actions {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .gs-detail-media,
+        .gs-detail-image {
+            min-height: 280px;
+        }
+
+        .gs-detail-content {
+            padding: 18px;
+        }
+
+        .gs-detail-info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .gs-detail-actions {
+            grid-template-columns: 1fr;
+        }
+
+        .gs-review-form-card-body,
+        .gs-review-card-body {
+            padding: 18px;
+        }
+    }
+</style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
 <script>

@@ -12,70 +12,118 @@
 }
 
 <main class="gs-page">
-    <div class="container-xxl">
+    <div class="container-xxl py-4 py-lg-5">
 
-        <!-- ================= HERO CAROUSEL (HOT TOP 3) ================= -->
-        <h4 class="text-light mb-3">🔥 Hot Games</h4>
-        <div id="heroCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
-            <div class="carousel-inner rounded-4 overflow-hidden">
+        <!-- ================= HERO ================= -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div>
+                <div class="gs-kicker">Featured Collection</div>
+                <h2 class="gs-block-title mb-0">🔥 Hot Games</h2>
+            </div>
+        </div>
+
+        <div id="heroCarousel" class="carousel slide mb-5 gs-hero-wrap" data-bs-ride="carousel">
+            <div class="carousel-inner rounded-5 overflow-hidden shadow-lg">
 
                 @for (int i = 0; i < hotGames.Count; i++)
                 {
                     var g = hotGames[i];
                     <div class="carousel-item @(i == 0 ? "active" : "")">
-
                         <div class="hero-slide">
                             <a asp-controller="Game" asp-action="Detail" asp-route-id="@g.MaGame">
-                                <img src="~/images/@g.Hinh" class="w-100 hero-img" />
+                                <img src="~/images/@g.Hinh" class="w-100 hero-img" alt="@g.TenGame" />
                             </a>
 
-                            <div class="hero-overlay">
-                                <h2>@g.TenGame</h2>
-                                <p>@g.MaTheLoai</p>
+                            <div class="hero-backdrop"></div>
 
-                                <div class="d-flex gap-2 align-items-center">
-                                    <span class="text-warning fw-bold">
+                            <div class="hero-overlay">
+                                <span class="hero-tag">Top Seller</span>
+                                <h2>@g.TenGame</h2>
+                                <p class="hero-category">@g.MaTheLoai</p>
+
+                                <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
+                                    <span class="hero-price">
                                         @String.Format("{0:N0} VNĐ", g.Gia)
                                     </span>
-
                                 </div>
-                                <br />
-                                <div class="mb-2 large text-secondary">
+
+                                <div class="mt-2 text-light-emphasis">
                                     👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> lượt mua
+                                </div>
+
+                                <div class="d-flex gap-2 flex-wrap mt-4">
+                                    <a asp-controller="Game"
+                                       asp-action="Detail"
+                                       asp-route-id="@g.MaGame"
+                                       class="btn gs-btn-primary rounded-pill px-4">
+                                        Xem chi tiết
+                                    </a>
+
+                                    @if (owned.Contains(g.MaGame))
+                                    {
+                                        <button class="btn gs-btn-muted rounded-pill px-4"
+                                                onclick="showToast('Bạn đã sở hữu game này rồi 🎮', 'error')">
+                                            Owned
+                                        </button>
+                                    }
+                                    else if (cart.Contains(g.MaGame))
+                                    {
+                                        <a asp-controller="Cart"
+                                           asp-action="Index"
+                                           asp-route-gameId="@g.MaGame"
+                                           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
+                                           class="btn gs-btn-warning rounded-pill px-4">
+                                            In Cart
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Cart"
+                                           asp-action="Add"
+                                           asp-route-gameId="@g.MaGame"
+                                           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
+                                           asp-route-mode="add"
+                                           class="btn gs-btn-glass rounded-pill px-4">
+                                            Add to cart
+                                        </a>
+                                    }
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 }
 
             </div>
 
-            <button class="carousel-control-prev" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon"></span>
             </button>
 
-            <button class="carousel-control-next" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
                 <span class="carousel-control-next-icon"></span>
             </button>
         </div>
 
-        <!-- ================= NEW GAMES SCROLL ================= -->
-        <h4 class="text-light mb-3">🆕 New Games</h4>
+        <!-- ================= NEW GAMES ================= -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div>
+                <div class="gs-kicker">Just Arrived</div>
+                <h2 class="gs-block-title mb-0">🆕 New Games</h2>
+            </div>
+        </div>
 
         <div class="hot-scroll mb-5">
             @foreach (var g in newGames)
             {
                 <a class="hot-item" asp-controller="Game" asp-action="Detail" asp-route-id="@g.MaGame">
-                    <img src="~/images/@g.Hinh" />
+                    <div class="hot-thumb-wrap">
+                        <img src="~/images/@g.Hinh" alt="@g.TenGame" />
+                        <span class="hot-badge">NEW</span>
+                    </div>
                     <div class="hot-info">
-                        <span>@g.TenGame</span>
-                        <br />
-                        <small class="text-warning">
-                            @String.Format("{0:N0}", g.Gia) VNĐ
-                        </small>
-                        <br />
-                        <div class="mb-2 small text-secondary">
+                        <div class="hot-name">@g.TenGame</div>
+                        <small class="hot-price">@String.Format("{0:N0}", g.Gia) VNĐ</small>
+                        <div class="small text-secondary mt-1">
                             👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> lượt mua
                         </div>
                     </div>
@@ -83,149 +131,134 @@
             }
         </div>
 
-        <!-- ================= CATEGORY FILTER ================= -->
-
-
-        <!-- ================= ALL GAMES ================= -->
-        <h3 class="gs-section-title">
-            @(ViewBag.CategoryName ?? "All Games")
-        </h3>
-
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-
-            <div class="dropdown">
-                <button id="categoryBtn" class="btn gs-pill dropdown-toggle" data-bs-toggle="dropdown">
-                    Categories
-                </button>
-                <ul class="dropdown-menu gs-dd">
-                    <li>
-                        <a class="dropdown-item" href="/Home?category=" data-name="All Games">All</a>
-                    </li>
-                    @if (ViewBag.Categories != null)
-                    {
-                        foreach (var c in ViewBag.Categories)
-                        {
-                            <li>
-                                <a class="dropdown-item" href="/home?category=@c.MaTheLoai" data-name="@c.TenLoaiGame">
-                                    @c.TenLoaiGame
-                                </a>
-                            </li>
-                        }
-                    }
-                </ul>
+        <!-- ================= FILTER ================= -->
+        <div class="gs-panel mb-4">
+            <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3">
+                <div>
+                    <div class="gs-kicker">Store Catalog</div>
+                    <h3 class="gs-section-title mb-0">
+                        @(ViewBag.CategoryName ?? "All Games")
+                    </h3>
+                </div>
             </div>
 
-            <!-- Search form -->
-            <form class="gs-search d-flex ms-auto align-items-center" method="get" action="/home">
-                <input class="form-control gs-search-input me-2 flex-grow-1"
-                       type="text"
-                       name="search"
-                       placeholder="Search game..." />
-                <button class="btn gs-search-btn" type="submit">
-                    Search
-                </button>
-            </form>
-        </div>
-        <br />
-        <div class="row g-4">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div class="dropdown">
+                    <button id="categoryBtn" class="btn gs-pill dropdown-toggle" data-bs-toggle="dropdown">
+                        Categories
+                    </button>
+                    <ul class="dropdown-menu gs-dd">
+                        <li>
+                            <a class="dropdown-item" href="/Home?category=" data-name="All Games">All</a>
+                        </li>
+                        @if (ViewBag.Categories != null)
+                        {
+                            foreach (var c in ViewBag.Categories)
+                            {
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="/home?category=@c.MaTheLoai"
+                                       data-name="@c.TenLoaiGame">
+                                        @c.TenLoaiGame
+                                    </a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
 
+                <form class="gs-search d-flex ms-auto align-items-center" method="get" action="/home">
+                    <input class="form-control gs-search-input me-2 flex-grow-1"
+                           type="text"
+                           name="search"
+                           value="@Context.Request.Query["search"]"
+                           placeholder="Search game..." />
+                    <button class="btn gs-search-btn" type="submit">
+                        Search
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= ALL GAMES ================= -->
+        <div class="row g-4">
             @foreach (var game in Model)
             {
                 <div class="col-12 col-sm-6 col-lg-3">
+                    <article id="game-@game.MaGame" class="gs-card h-100 overflow-hidden">
+                        <div class="gs-media">
+                            <img src="~/images/@game.Hinh"
+                                 alt="@game.TenGame"
+                                 class="img-fluid w-100 gs-img">
+                            <div class="gs-media-overlay"></div>
+                            <span class="gs-card-badge">@game.MaTheLoai</span>
+                        </div>
 
-                    <!-- ===== GIỮ NGUYÊN CARD CỦA BẠN ===== -->
-                    <article id="game-@game.MaGame" class="gs-card h-100 shadow rounded-4 overflow-hidden">
-                        <div class="row g-0 h-100">
+                        <div class="gs-card-body p-3 d-flex flex-column">
+                            <h6 class="fw-bold mb-2 game-title text-light">
+                                @game.TenGame
+                            </h6>
 
-                            <div class="col-12">
-                                <div class="gs-media">
-                                    <img src="~/images/@game.Hinh"
-                                         alt="@game.TenGame"
-                                         class="img-fluid w-100 gs-img">
-                                </div>
+                            <div class="mb-2 small text-secondary">
+                                👁 <span id="download-@game.MaGame">@game.SoLuotTai</span> lượt mua
                             </div>
 
-                            <div class="col-12">
-                                <div class="gs-card-body d-flex flex-column h-100 p-3">
-
-                                    <span class="badge bg-secondary bg-opacity-75 mb-2 align-self-start">
-                                        @game.MaTheLoai
-                                    </span>
-
-                                    <h6 class="fw-bold mb-2 game-title text-light">
-                                        @game.TenGame
-                                    </h6>
-
-                                    <div class="mb-2 small text-secondary">
-                                        👁 <span id="download-@game.MaGame">@game.SoLuotTai</span> lượt mua
-                                    </div>
-
-                                    <div class="mt-auto pt-2">
-
-                                        <div class="mb-2">
-                                            <span class="gs-price text-warning fw-bold">
-                                                @String.Format("{0:N0} VNĐ", game.Gia)
-                                            </span>
-                                        </div>
-
-                                        <div class="d-flex gap-2 flex-wrap">
-
-                                            @if (owned.Contains(game.MaGame))
-                                            {
-                                                <button class="btn btn-secondary rounded-pill px-3"
-                                                        onclick="showToast('Bạn đã sở hữu game này rồi 🎮', 'error')">
-                                                    Owned
-                                                </button>
-                                            }
-                                            else if (cart.Contains(game.MaGame))
-                                            {
-                                                <a asp-controller="Cart"
-                                                   asp-action="Index"
-                                                   asp-route-gameId="@game.MaGame"
-                                                   asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
-                                                   class="btn btn-warning rounded-pill px-3">
-                                                    In Cart
-                                                </a>
-                                            }
-                                            else
-                                            {
-                                                <a asp-controller="Cart"
-                                                   asp-action="Add"
-                                                   asp-route-gameId="@game.MaGame"
-                                                   asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
-                                                   asp-route-mode="add"
-                                                   class="btn btn-info rounded-pill px-3">
-                                                    Add to cart
-                                                </a>
-                                            }
-
-                                            <a asp-controller="Game"
-                                               asp-action="Detail"
-                                               asp-route-id="@game.MaGame"
-                                               asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
-                                               class="btn btn-warning rounded-pill px-3">
-                                                Detail
-                                            </a>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
+                            <div class="mb-3">
+                                <span class="gs-price">
+                                    @String.Format("{0:N0} VNĐ", game.Gia)
+                                </span>
                             </div>
 
+                            <div class="mt-auto">
+                                <div class="gs-action-wrap">
+                                    @if (owned.Contains(game.MaGame))
+                                    {
+                                        <button type="button"
+                                                class="btn gs-btn-muted gs-action-btn"
+                                                onclick="showToast('Bạn đã sở hữu game này rồi 🎮', 'error')">
+                                            Owned
+                                        </button>
+                                    }
+                                    else if (cart.Contains(game.MaGame))
+                                    {
+                                        <a asp-controller="Cart"
+                                           asp-action="Index"
+                                           asp-route-gameId="@game.MaGame"
+                                           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
+                                           class="btn gs-btn-warning gs-action-btn">
+                                            In Cart
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Cart"
+                                           asp-action="Add"
+                                           asp-route-gameId="@game.MaGame"
+                                           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
+                                           asp-route-mode="add"
+                                           class="btn gs-btn-primary gs-action-btn">
+                                            Add to cart
+                                        </a>
+                                    }
+
+                                    <a asp-controller="Game"
+                                       asp-action="Detail"
+                                       asp-route-id="@game.MaGame"
+                                       asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
+                                       class="btn gs-btn-outline gs-action-btn">
+                                        Detail
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </article>
-
                 </div>
             }
-
         </div>
 
         <!-- ================= PAGINATION ================= -->
-        <nav class="mt-4">
-            <ul class="pagination justify-content-center">
-
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center gs-pagination">
                 <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
                     <a class="page-link"
                        href="/home?page=@(ViewBag.CurrentPage - 1)&search=@Context.Request.Query["search"]&category=@Context.Request.Query["category"]">
@@ -249,143 +282,487 @@
                         Next
                     </a>
                 </li>
-
             </ul>
         </nav>
 
     </div>
 </main>
-<!-- ================= CSS ================= -->
+
 <style>
-    .gs-search-input::placeholder {
-        color: #aaa; /* hoặc màu sáng/contrast với background */
-        opacity: 1; /* đảm bảo hiện */
+    :root {
+        --gs-bg: #07111f;
+        --gs-bg-2: #0c1729;
+        --gs-card: rgba(14, 25, 43, 0.88);
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-text: #f3f7ff;
+        --gs-muted: #94a3b8;
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+        --gs-warning: #f59e0b;
     }
-    .gs-search-btn {
-        white-space: nowrap;
-    }
+
     .gs-page {
-        background: #0f172a;
         min-height: 100vh;
-        padding-bottom: 40px;
+        color: var(--gs-text);
+        background: transparent;
+    }
+
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: #7dd3fc;
+        margin-bottom: 6px;
+    }
+
+    .gs-block-title,
+    .gs-section-title {
+        color: #fff;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .gs-block-title {
+        font-size: clamp(1.5rem, 2vw, 2rem);
     }
 
     .gs-section-title {
-        font-size: 26px;
-        font-weight: bold;
-        color: #fff;
-        margin-bottom: 20px;
+        font-size: clamp(1.4rem, 1.8vw, 1.8rem);
+    }
+
+    .gs-hero-wrap .carousel-inner {
+        border: 1px solid var(--gs-line);
+        background: rgba(255,255,255,0.02);
     }
 
     .hero-slide {
         position: relative;
-        height: 320px;
+        min-height: 500px;
+        display: flex;
+        align-items: end;
     }
 
     .hero-img {
+        position: absolute;
+        inset: 0;
         height: 100%;
         object-fit: cover;
-        filter: brightness(0.6);
+        filter: brightness(0.45) saturate(1.08);
+        transform: scale(1.02);
+    }
+
+    .hero-backdrop {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, rgba(3, 7, 18, 0.90) 0%, rgba(3, 7, 18, 0.58) 42%, rgba(3,7,18,0.18) 100%), linear-gradient(180deg, rgba(15, 23, 42, 0.08) 0%, rgba(15, 23, 42, 0.82) 100%);
     }
 
     .hero-overlay {
-        position: absolute;
-        bottom: 20px;
-        left: 30px;
-        color: white;
-        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-        padding: 15px;
-        border-radius: 10px;
+        position: relative;
+        z-index: 2;
+        max-width: 620px;
+        padding: 48px;
+    }
+
+    .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+        margin-bottom: 16px;
+    }
+
+    .hero-overlay h2 {
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        font-weight: 800;
+        line-height: 1.08;
+        margin-bottom: 10px;
+    }
+
+    .hero-category {
+        color: #cbd5e1;
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+
+    .hero-price {
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: #fbbf24;
+    }
+
+    .gs-panel {
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.75), rgba(9, 18, 33, 0.86));
+        border: 1px solid var(--gs-line);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+    }
+
+    .gs-pill {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.10);
+        color: #e2e8f0;
+        border-radius: 999px;
+        padding: 11px 18px;
+        font-weight: 600;
+    }
+
+        .gs-pill:hover,
+        .gs-pill:focus {
+            color: #fff;
+            background: rgba(255,255,255,0.10);
+        }
+
+    .gs-dd {
+        background: #0f1b31;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: 10px;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+    }
+
+        .gs-dd .dropdown-item {
+            color: #dbe6f7;
+            border-radius: 12px;
+            padding: 10px 14px;
+        }
+
+            .gs-dd .dropdown-item:hover {
+                background: rgba(255,255,255,0.06);
+                color: #fff;
+            }
+
+    .gs-search {
+        min-width: min(100%, 420px);
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 999px;
+        padding: 6px;
+    }
+
+    .gs-search-input,
+    .gs-search-input:focus {
+        background: transparent;
+        border: none;
+        color: #fff;
+        box-shadow: none;
+        padding-left: 14px;
+    }
+
+        .gs-search-input::placeholder {
+            color: #94a3b8;
+            opacity: 1;
+        }
+
+    .gs-search-btn {
+        border-radius: 999px;
+        white-space: nowrap;
+        padding: 10px 18px;
+        background: var(--gs-primary);
+        border: none;
+        color: #fff;
+        font-weight: 700;
     }
 
     .gs-card {
-        background: #1b2838;
-        transition: 0.25s;
+        position: relative;
+        background: linear-gradient(180deg, rgba(15, 24, 42, 0.98), rgba(9, 17, 30, 0.98));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+        box-shadow: 0 14px 30px rgba(0,0,0,0.25);
+        display: flex;
+        flex-direction: column;
     }
 
         .gs-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transform: translateY(-8px);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.35);
+            border-color: rgba(125, 211, 252, 0.22);
         }
 
     .gs-media {
-        height: 160px;
+        position: relative;
+        height: 220px;
         overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .gs-media-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(2,6,23,0.02) 0%, rgba(2,6,23,0.12) 50%, rgba(2,6,23,0.72) 100%);
     }
 
     .gs-img {
         height: 100%;
         object-fit: cover;
-        transition: 0.3s;
+        transition: transform 0.5s ease;
     }
 
     .gs-card:hover .gs-img {
-        transform: scale(1.05);
+        transform: scale(1.08);
+    }
+
+    .gs-card-badge {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        z-index: 2;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(255,255,255,0.12);
+        backdrop-filter: blur(10px);
+    }
+
+    .gs-card-body {
+        flex: 1;
+        min-height: 220px;
     }
 
     .game-title {
-        min-height: 40px;
+        min-height: 48px;
+        font-size: 1.02rem;
+        line-height: 1.45;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
 
-    .gs-card-body {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        background: linear-gradient(180deg, #0f1b2a, #0b1622);
+    .gs-price {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #fbbf24;
     }
 
-    .hot-scroll {
-        display: flex;
-        gap: 12px;
-        overflow-x: auto;
+    .gs-action-wrap {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
     }
 
-    .hot-item {
-        min-width: 180px;
-        background: #1b2838;
-        border-radius: 12px;
-        overflow: hidden;
-        transition: 0.2s;
-        cursor: pointer;
+    .gs-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        border-radius: 999px;
+        font-weight: 700;
+        text-align: center;
+        white-space: nowrap;
     }
 
-        .hot-item:hover {
-            transform: translateY(-5px) scale(1.05);
-        }
-
-        .hot-item img {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-        }
-
-    .hot-info {
-        padding: 8px;
-        font-size: 13px;
+    .gs-btn-primary {
+        background: var(--gs-primary);
+        border: none;
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(37, 99, 235, 0.25);
     }
 
-    .pagination .page-link {
-        background: #1b2838;
-        color: #c7d5e0;
-        border: 1px solid #2a475e;
-    }
-
-        .pagination .page-link:hover {
-            background: #2a475e;
+        .gs-btn-primary:hover {
             color: #fff;
         }
 
-    .pagination .page-item.active .page-link {
-        background: #0d6efd;
+    .gs-btn-warning {
+        background: linear-gradient(135deg, #f59e0b, #f97316);
         color: #fff;
+        border: none;
+    }
+
+        .gs-btn-warning:hover {
+            color: #fff;
+        }
+
+    .gs-btn-muted {
+        background: rgba(148, 163, 184, 0.18);
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+        .gs-btn-muted:hover {
+            color: #fff;
+        }
+
+    .gs-btn-outline {
+        background: rgba(255,255,255,0.03);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.14);
+    }
+
+        .gs-btn-outline:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.08);
+        }
+
+    .gs-btn-glass {
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.14);
+        color: #fff;
+        backdrop-filter: blur(12px);
+    }
+
+        .gs-btn-glass:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.14);
+        }
+
+    .hot-scroll {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(220px, 220px);
+        gap: 16px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        scrollbar-width: thin;
+    }
+
+        .hot-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .hot-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.18);
+            border-radius: 999px;
+        }
+
+    .hot-item {
+        background: linear-gradient(180deg, rgba(16, 27, 45, 0.96), rgba(10, 19, 33, 0.96));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 22px;
+        overflow: hidden;
+        transition: 0.28s ease;
+        cursor: pointer;
+        color: #fff;
+        box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+    }
+
+        .hot-item:hover {
+            transform: translateY(-6px);
+            color: #fff;
+            box-shadow: 0 20px 38px rgba(0,0,0,0.32);
+        }
+
+    .hot-thumb-wrap {
+        position: relative;
+    }
+
+        .hot-thumb-wrap img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+        }
+
+    .hot-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: linear-gradient(135deg, #06b6d4, #3b82f6);
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .hot-info {
+        padding: 14px;
+    }
+
+    .hot-name {
+        font-size: 0.96rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        line-height: 1.4;
+        min-height: 42px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .hot-price {
+        color: #fbbf24;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    .gs-pagination .page-link {
+        background: rgba(255,255,255,0.04);
+        color: #dbe6f7;
+        border: 1px solid rgba(255,255,255,0.08);
+        margin: 0 4px;
+        border-radius: 14px !important;
+        min-width: 44px;
+        text-align: center;
+        box-shadow: none;
+    }
+
+        .gs-pagination .page-link:hover {
+            background: rgba(255,255,255,0.10);
+            color: #fff;
+        }
+
+    .gs-pagination .page-item.active .page-link {
+        background: var(--gs-primary);
+        border-color: transparent;
+        color: #fff;
+    }
+
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 6%;
+    }
+
+    @@media (max-width: 991.98px) {
+        .hero-slide {
+            min-height: 420px;
+        }
+
+        .hero-overlay {
+            padding: 28px;
+        }
+
+        .gs-search {
+            width: 100%;
+            min-width: 100%;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .hero-slide {
+            min-height: 360px;
+        }
+
+        .hero-overlay {
+            padding: 22px;
+        }
+
+        .hot-scroll {
+            grid-auto-columns: minmax(190px, 190px);
+        }
+
+        .gs-panel {
+            padding: 18px;
+        }
+
+        .gs-action-wrap {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
-<!-- ================= SIGNALR ================= -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
 <script>
@@ -400,9 +777,7 @@
     connection.on("UpdateDownload", function (gameId, count) {
         console.log("RECEIVED:", gameId, count);
 
-        const el = document.getElementById("download-" + gameId);
-        if (el) {
-            el.innerText = count;
-        }
+        const elements = document.querySelectorAll(`[id='download-${gameId}']`);
+        elements.forEach(el => el.innerText = count);
     });
 </script>

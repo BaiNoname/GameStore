@@ -11,91 +11,302 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
+        :root {
+            --gs-text: #f3f7ff;
+            --gs-muted: #94a3b8;
+            --gs-line: rgba(255,255,255,0.08);
+            --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+        }
+
         body {
-            background: #1b2838;
+            min-height: 100vh;
+            margin: 0;
             color: white;
+            background: radial-gradient(circle at top left, rgba(124, 58, 237, 0.18), transparent 25%), radial-gradient(circle at top right, rgba(37, 99, 235, 0.14), transparent 25%), linear-gradient(180deg, #050b16 0%, #07111f 45%, #091626 100%);
         }
 
-        .login-box {
-            background: #2a475e;
-            padding: 40px;
-            border-radius: 10px;
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px 0;
         }
 
-        .form-control {
-            background: #1b2838;
-            border: 1px solid #66c0f4;
-            color: white;
+        .auth-shell {
+            width: 100%;
+            max-width: 1120px;
+            overflow: hidden;
+            border-radius: 32px;
+            border: 1px solid var(--gs-line);
+            background: linear-gradient(180deg, rgba(13, 23, 40, 0.96), rgba(8, 17, 30, 0.96));
+            box-shadow: 0 28px 60px rgba(0,0,0,0.34);
         }
 
-            .form-control::placeholder {
-                color: #aaa;
+        .auth-left {
+            position: relative;
+            min-height: 620px;
+            background: linear-gradient(180deg, rgba(3,7,18,0.18), rgba(3,7,18,0.72)), url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+        }
+
+        .auth-left-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(8,15,28,0.12) 0%, rgba(8,15,28,0.82) 100%);
+        }
+
+        .auth-left-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: end;
+            padding: 34px;
+        }
+
+        .auth-kicker {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-left-title {
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 1.08;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .auth-left-desc {
+            color: #d7e2f2;
+            font-size: 1rem;
+            line-height: 1.7;
+            max-width: 520px;
+            margin-bottom: 0;
+        }
+
+        .auth-right {
+            padding: 40px 34px;
+            display: flex;
+            align-items: center;
+            min-height: 620px;
+        }
+
+        .auth-form-wrap {
+            width: 100%;
+            max-width: 430px;
+            margin: 0 auto;
+        }
+
+        .auth-mini {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: #7dd3fc;
+            margin-bottom: 8px;
+        }
+
+        .auth-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .auth-subtitle {
+            color: var(--gs-muted);
+            margin-bottom: 26px;
+        }
+
+        .alert {
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .form-label {
+            color: #dbe6f7;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .auth-input,
+        .auth-input:focus {
+            min-height: 50px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #fff;
+            box-shadow: none;
+        }
+
+            .auth-input::placeholder {
+                color: #94a3b8;
+                opacity: 1;
             }
 
-        .btn-steam {
-            background: #66c0f4;
+        .btn-auth-primary,
+        .btn-auth-outline {
+            min-height: 50px;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        .btn-auth-primary {
+            background: var(--gs-primary);
             border: none;
-            font-weight: bold;
+            color: #fff;
+            box-shadow: 0 14px 28px rgba(37, 99, 235, 0.25);
+        }
+
+            .btn-auth-primary:hover {
+                color: #fff;
+            }
+
+        .btn-auth-outline {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.14);
+            color: #fff;
+        }
+
+            .btn-auth-outline:hover {
+                color: #fff;
+                background: rgba(255,255,255,0.06);
+            }
+
+        .auth-link {
+            color: #7dd3fc;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+            .auth-link:hover {
+                color: #bae6fd;
+            }
+
+        .auth-divider {
+            border-color: rgba(255,255,255,0.08);
+            margin: 24px 0;
+        }
+
+        @@media (max-width: 991.98px) {
+            .auth-left {
+                min-height: 320px;
+            }
+
+            .auth-right {
+                min-height: auto;
+                padding: 28px 20px;
+            }
+
+            .auth-left-content {
+                padding: 24px;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .auth-title {
+                font-size: 1.7rem;
+            }
+
+            .auth-left-title {
+                font-size: 1.9rem;
+            }
         }
     </style>
 </head>
 
 <body>
+    <div class="container auth-page">
+        <div class="row g-0 auth-shell">
 
-    <div class="container vh-100 d-flex justify-content-center align-items-center">
-
-        <div class="login-box col-md-4">
-
-            <h2 class="text-center mb-4">Sign in to GameStore</h2>
-            @if (TempData["Register Success"] != null)
-            {
-                <div class="alert alert-success text-center">
-                    @TempData["Register Success"]
+            <div class="col-lg-6">
+                <div class="auth-left">
+                    <div class="auth-left-overlay"></div>
+                    <div class="auth-left-content">
+                        <div class="auth-kicker">GameStore Access</div>
+                        <h1 class="auth-left-title">Sign in and continue your gaming journey</h1>
+                        <p class="auth-left-desc">
+                            Truy cập thư viện game, theo dõi đơn hàng, quản lý tài khoản và tiếp tục trải nghiệm mua game với giao diện hiện đại.
+                        </p>
+                    </div>
                 </div>
-            }
-            @if (ViewBag.Error != null)
-            {
-                <div class="alert alert-danger">
-                    @ViewBag.Error
-                </div>
-            }
-            <form method="post" asp-controller="Auth" asp-action="Login">
-
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input name="email" class="form-control" placeholder="Enter email" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Password</label>
-                    <input name="password" type="password" class="form-control" placeholder="Enter password" required>
-                </div>
-
-                <div class="d-grid mb-3">
-                    <button type="submit" class="btn btn-steam">Sign In</button>
-                </div>
-
-            </form>
-
-            <div class="text-center">
-                <a asp-controller="Auth" asp-action="ForgotPassword" class="text-info">
-                    Forgot password?
-                </a>
             </div>
 
-            <hr>
+            <div class="col-lg-6">
+                <div class="auth-right">
+                    <div class="auth-form-wrap">
 
-            <div class="text-center">
-                <p>No have account Steam?</p>
-                <a asp-controller="Auth" asp-action="Register" class="btn btn-outline-light w-100">
-                    Create an Account
-                </a>
+                        <div class="auth-mini">Welcome Back</div>
+                        <h2 class="auth-title">Sign in to GameStore</h2>
+                        <p class="auth-subtitle">Đăng nhập để truy cập giỏ hàng, thư viện và tài khoản của bạn.</p>
+
+                        @if (TempData["Register Success"] != null)
+                        {
+                            <div class="alert alert-success text-center">
+                                @TempData["Register Success"]
+                            </div>
+                        }
+
+                        @if (TempData["Reset Success"] != null)
+                        {
+                            <div class="alert alert-success text-center">
+                                @TempData["Reset Success"]
+                            </div>
+                        }
+
+                        @if (ViewBag.Error != null)
+                        {
+                            <div class="alert alert-danger">
+                                @ViewBag.Error
+                            </div>
+                        }
+
+                        <form method="post" asp-controller="Auth" asp-action="Login">
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input name="email" class="form-control auth-input" placeholder="Enter email" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                <input name="password" type="password" class="form-control auth-input" placeholder="Enter password" required>
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-auth-primary">Sign In</button>
+                            </div>
+                        </form>
+
+                        <div class="text-center">
+                            <a asp-controller="Auth" asp-action="ForgotPassword" class="auth-link">
+                                Forgot password?
+                            </a>
+                        </div>
+
+                        <hr class="auth-divider">
+
+                        <div class="text-center">
+                            <p class="text-secondary mb-3">No have account Steam?</p>
+                            <a asp-controller="Auth" asp-action="Register" class="btn btn-auth-outline w-100">
+                                Create an Account
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
             </div>
-
 
         </div>
-
     </div>
-
 </body>
 </html>

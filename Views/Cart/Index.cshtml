@@ -1,191 +1,557 @@
 ﻿@model GameStore.Models.GioHang
 
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Giỏ hàng";
     var total = Model.ChiTietGioHangs.Sum(x => x.DonGiaHienTai);
-
 }
 
+<div class="gs-cart-page">
+    <div class="container py-4 py-lg-5">
 
-<div class="container mt-5">
-
-    <h2 class="mb-4">🛒 Your Shopping Cart</h2>
-
-    @if (Model == null || !Model.ChiTietGioHangs.Any())
-    {
-        <div class="alert alert-info">
-            Your shopping cart is empty. 😢
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+            <div>
+                <div class="gs-kicker">Checkout Center</div>
+                <h2 class="gs-cart-title mb-0">🛒 Your Shopping Cart</h2>
+            </div>
         </div>
 
-        <a asp-controller="Home"
-           asp-action="Index"
-           class="btn btn-primary">
-            ← Back Home
-        </a>
-    }
-    else
-    {
-        <table class="table table-dark table-hover align-middle">
-            <thead>
-                <tr>
-                    <th>Game</th>
-                    <th>Price</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
+        @if (Model == null || !Model.ChiTietGioHangs.Any())
+        {
+            <div class="gs-empty-card">
+                <div class="gs-empty-icon">🛒</div>
+                <h4 class="mb-2">Your shopping cart is empty</h4>
+                <p class="text-secondary mb-4">Chưa có game nào trong giỏ hàng của bạn. Hãy quay lại store để tiếp tục mua sắm.</p>
 
-            <tbody>
-                @foreach (var item in Model.ChiTietGioHangs)
-                {
-                    <tr>
-                        <td class="d-flex align-items-center gap-3">
-                            <img asp-append-version="true"
-                                 src="@Url.Content("~/images/" + item.Game.Hinh)"
-                                 width="80"
-                                 style="border-radius:8px;">
-                            <span>@item.Game.TenGame</span>
-                        </td>
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn gs-btn-primary px-4 py-2 rounded-pill">
+                    ← Back Home
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                <!-- LEFT: CART LIST -->
+                <div class="col-12 col-xl-8">
+                    <div class="gs-cart-shell">
+                        <div class="gs-cart-header d-none d-md-grid">
+                            <div>Game</div>
+                            <div>Price</div>
+                            <div class="text-end">Action</div>
+                        </div>
 
-                        <td class="text-warning">
-                            @item.DonGiaHienTai.ToString("N0") VND
-                        </td>
+                        <div class="gs-cart-list">
+                            @foreach (var item in Model.ChiTietGioHangs)
+                            {
+                                <div class="gs-cart-item">
+                                    <div class="gs-cart-game">
+                                        <div class="gs-cart-thumb">
+                                            <img asp-append-version="true"
+                                                 src="@Url.Content("~/images/" + item.Game.Hinh)"
+                                                 alt="@item.Game.TenGame">
+                                        </div>
 
-                        <td>
+                                        <div class="gs-cart-game-info">
+                                            <div class="gs-cart-game-name">@item.Game.TenGame</div>
+                                            <div class="gs-cart-sub">Game in your cart</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="gs-cart-price">
+                                        @item.DonGiaHienTai.ToString("N0") VND
+                                    </div>
+
+                                    <div class="gs-cart-action">
+                                        <a asp-controller="Cart"
+                                           asp-action="Remove"
+                                           asp-route-gameId="@item.MaGame"
+                                           asp-route-returnUrl="@ViewBag.ReturnUrl"
+                                           class="btn gs-btn-danger gs-action-btn-sm">
+                                            ❌ Remove
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: SUMMARY -->
+                <div class="col-12 col-xl-4">
+                    <div class="gs-summary-card">
+
+                        <div class="gs-summary-top">
+                            <div class="gs-kicker">Order Summary</div>
+                            <h4 class="mb-0">Thanh toán</h4>
+                        </div>
+
+                        <div class="gs-summary-row">
+                            <span>Số sản phẩm</span>
+                            <strong>@Model.ChiTietGioHangs.Count</strong>
+                        </div>
+
+                        <div class="gs-summary-row">
+                            <span>Tổng tiền</span>
+                            <strong class="gs-total-price">@total.ToString("N0") VND</strong>
+                        </div>
+
+                        <hr class="gs-divider" />
+
+                        <div class="d-grid gap-3">
+                            <button class="btn gs-btn-outline-danger gs-summary-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#clearCartModal">
+                                🧹 Clear Cart
+                            </button>
+
+                            <button class="btn gs-btn-success gs-summary-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#checkoutModal">
+                                💳 Pay with Balance
+                            </button>
 
                             <a asp-controller="Cart"
-                               asp-action="Remove"
-                               asp-route-gameId="@item.MaGame"
-                               asp-route-returnUrl="@ViewBag.ReturnUrl"
-                               class="btn btn-danger btn-sm">
-                                ❌ Remove
+                               asp-action="Checkout"
+                               asp-route-method="momo"
+                               class="btn gs-btn-momo gs-summary-btn">
+                                🟣 Pay with MoMo
                             </a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
 
+                            @{
+                                var returnUrl = ViewBag.ReturnUrl ?? TempData["ReturnUrl"]?.ToString() ?? "/home";
+                            }
 
-
-        <div class="d-flex justify-content-between align-items-center mt-4">
-
-            <div>
-                @{
-                    var returnUrl = ViewBag.ReturnUrl ?? TempData["ReturnUrl"]?.ToString() ?? "/home";
-                }
-
-                <a href="@returnUrl" class="btn btn-secondary">
-                    ← Back
-                </a>
-
-            </div>
-            <h4>
-                Total:
-                <span class="text-warning">
-                    @total.ToString("N0") VND
-                </span>
-            </h4>
-
-            <div class="d-flex gap-2">
-
-                <button class="btn btn-outline-danger"
-                        data-bs-toggle="modal"
-                        data-bs-target="#clearCartModal">
-                    🧹 Clear Cart
-                </button>
-                <div class="modal fade" id="clearCartModal" tabindex="-1">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content bg-dark text-light">
-
-                            <div class="modal-header border-secondary">
-                                <h5 class="modal-title">Xác nhận</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-
-                            <div class="modal-body">
-                                Bạn có chắc muốn xóa toàn bộ giỏ hàng không? 🧹
-                            </div>
-
-                            <div class="modal-footer border-secondary">
-                                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-
-                                <a asp-controller="Cart"
-                                   asp-action="Clear"
-                                   class="btn btn-danger">
-                                    Đồng ý
-                                </a>
-                            </div>
-
+                            <a href="@returnUrl" class="btn gs-btn-muted gs-summary-btn">
+                                ← Back
+                            </a>
                         </div>
                     </div>
+
+                    
                 </div>
-
-                <button class="btn btn-success btn-lg"
-                        data-bs-toggle="modal"
-                        data-bs-target="#checkoutModal">
-                    💳 Pay with Balance
-                </button>
-                <div class="modal fade" id="checkoutModal" tabindex="-1">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content bg-dark text-light">
-
-                            <div class="modal-header border-secondary">
-                                <h5 class="modal-title">Xác nhận thanh toán</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-
-                            <div class="modal-body">
-                                Bạn có chắc muốn thanh toán bằng số dư không? 💳
-                            </div>
-
-                            <div class="modal-footer border-secondary">
-                                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-
-                                <form method="get" action="/checkout">
-                                    <input type="hidden" name="method" value="balance" />
-                                    <button type="submit" class="btn btn-success">
-                                        Đồng ý thanh toán
-                                    </button>
-                                </form>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <a asp-controller="Cart"
-                   asp-action="Checkout"
-                   asp-route-method="momo"
-                   class="btn btn-outline-pink btn-lg"
-                   style="border-color:#ae2070;color:#ae2070;">
-                    🟣 Pay with MoMo
-                </a>
             </div>
 
+            <!-- CLEAR CART MODAL -->
+            <div class="modal fade" id="clearCartModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content gs-modal-content">
+
+                        <div class="modal-header gs-modal-header">
+                            <h5 class="modal-title">Xác nhận</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body gs-modal-body">
+                            Bạn có chắc muốn xóa toàn bộ giỏ hàng không? 🧹
+                        </div>
+
+                        <div class="modal-footer gs-modal-footer">
+                            <button class="btn gs-btn-muted px-4" data-bs-dismiss="modal">Hủy</button>
+
+                            <a asp-controller="Cart"
+                               asp-action="Clear"
+                               class="btn gs-btn-danger px-4">
+                                Đồng ý
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHECKOUT MODAL -->
+            <div class="modal fade" id="checkoutModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content gs-modal-content">
+
+                        <div class="modal-header gs-modal-header">
+                            <h5 class="modal-title">Xác nhận thanh toán</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body gs-modal-body">
+                            Bạn có chắc muốn thanh toán bằng số dư không? 💳
+                        </div>
+
+                        <div class="modal-footer gs-modal-footer">
+                            <button class="btn gs-btn-muted px-4" data-bs-dismiss="modal">Hủy</button>
+
+                            <form method="get" action="/checkout">
+                                <input type="hidden" name="method" value="balance" />
+                                <button type="submit" class="btn gs-btn-success px-4">
+                                    Đồng ý thanh toán
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- TOP UP -->
+        <div class="gs-topup-card mt-4">
+            <div class="gs-kicker">Wallet</div>
+            <h5 class="mb-2">Top up your wallet</h5>
+            <p class="small text-secondary mb-3">
+                Thanh toán qua MoMo để nạp tiền vào tài khoản của bạn.
+            </p>
+
+            <form method="get" action="/api/momo/topup" class="row g-2">
+                <div class="col-12">
+                    <input type="number"
+                           step="1000"
+                           min="5000"
+                           name="amount"
+                           class="form-control gs-form-input"
+                           placeholder="Số tiền (VND)"
+                           required />
+                </div>
+
+                <div class="col-12">
+                    <input type="hidden" name="userId" value="@(int.Parse(User.FindFirst("UserId").Value))" />
+                    <button type="submit" class="btn gs-btn-momo w-100 gs-summary-btn">
+                        Nạp MoMo
+                    </button>
+                </div>
+
+                <div class="col-12">
+                    <small class="text-secondary">
+                        Tối thiểu 5.000 VND. Hệ thống sẽ chuyển bạn đến MoMo để hoàn tất.
+                    </small>
+                </div>
+            </form>
         </div>
 
+    </div>
+</div>
+
+<style>
+    :root {
+        --gs-text: #f3f7ff;
+        --gs-muted: #94a3b8;
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+        --gs-danger: linear-gradient(135deg, #ef4444, #dc2626);
+        --gs-success: linear-gradient(135deg, #22c55e, #16a34a);
+        --gs-warning: linear-gradient(135deg, #f59e0b, #f97316);
+        --gs-momo: linear-gradient(135deg, #c21875, #8b1e6d);
     }
 
-    <!-- Top-up card -->
-    <div class="card mt-4 bg-dark text-light p-3" style="max-width:420px;">
-        <h5>Top up your wallet (Top-up)</h5>
-        <p class="small text-muted">Thanh toán qua MoMo để nạp tiền vào tài khoản của bạn.</p>
+    .gs-cart-page {
+        min-height: 100vh;
+        color: var(--gs-text);
+        background: transparent;
+    }
 
-        <form method="get" action="/api/momo/topup" class="row g-2">
-            <div class="col-8">
-                <input type="number" step="1000" min="5000" name="amount"
-                       class="form-control" placeholder="Số tiền (VND)" required />
-            </div>
-            <div class="col-4">
-                <input type="hidden" name="userId" value="@(int.Parse(User.FindFirst("UserId").Value))" />
-                <button type="submit" class="btn btn-danger w-100">Nạp MoMo</button>
-            </div>
-            <div class="col-12">
-                <small class="text-muted">Tối thiểu 5.000 VND. Hệ thống sẽ chuyển bạn đến MoMo để hoàn tất.</small>
-            </div>
-        </form>
-    </div>
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: #7dd3fc;
+        margin-bottom: 8px;
+    }
 
-</div>
+    .gs-cart-title {
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.02em;
+    }
+
+    .gs-empty-card {
+        padding: 42px 28px;
+        border-radius: 28px;
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.92), rgba(9, 18, 33, 0.92));
+        border: 1px solid rgba(255,255,255,0.08);
+        text-align: center;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+    }
+
+    .gs-empty-icon {
+        font-size: 3rem;
+        margin-bottom: 12px;
+    }
+
+    .gs-cart-shell,
+    .gs-summary-card,
+    .gs-topup-card {
+        border-radius: 26px;
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.92), rgba(9, 18, 33, 0.92));
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+    }
+
+    .gs-cart-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1.8fr) 180px 160px;
+        gap: 20px;
+        padding: 18px 22px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        color: #cbd5e1;
+        font-weight: 700;
+        letter-spacing: .02em;
+    }
+
+    .gs-cart-list {
+        padding: 10px 14px 14px;
+    }
+
+    .gs-cart-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1.8fr) 180px 160px;
+        gap: 20px;
+        align-items: center;
+        padding: 16px 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+        .gs-cart-item:last-child {
+            border-bottom: none;
+        }
+
+    .gs-cart-game {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    .gs-cart-thumb {
+        width: 92px;
+        height: 92px;
+        border-radius: 18px;
+        overflow: hidden;
+        flex-shrink: 0;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: #0b1220;
+    }
+
+        .gs-cart-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+    .gs-cart-game-info {
+        min-width: 0;
+    }
+
+    .gs-cart-game-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
+    .gs-cart-sub {
+        color: var(--gs-muted);
+        font-size: .9rem;
+        margin-top: 4px;
+    }
+
+    .gs-cart-price {
+        color: #fbbf24;
+        font-size: 1.08rem;
+        font-weight: 800;
+    }
+
+    .gs-cart-action {
+        text-align: right;
+    }
+
+    .gs-summary-card,
+    .gs-topup-card {
+        padding: 24px;
+    }
+
+    .gs-summary-top h4 {
+        color: #fff;
+        font-weight: 800;
+    }
+
+    .gs-summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        margin-top: 18px;
+        color: #dbe6f7;
+    }
+
+    .gs-total-price {
+        color: #fbbf24;
+        font-size: 1.18rem;
+    }
+
+    .gs-divider {
+        border-color: rgba(255,255,255,0.08);
+        margin: 20px 0;
+    }
+
+    .gs-form-input,
+    .gs-form-input:focus {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #fff;
+        box-shadow: none;
+        border-radius: 16px;
+        min-height: 46px;
+    }
+
+        .gs-form-input::placeholder {
+            color: #94a3b8;
+            opacity: 1;
+        }
+
+    .gs-summary-btn,
+    .gs-action-btn-sm,
+    .gs-btn-primary,
+    .gs-btn-danger,
+    .gs-btn-success,
+    .gs-btn-muted,
+    .gs-btn-outline-danger,
+    .gs-btn-momo {
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-weight: 700;
+        text-align: center;
+        border: none;
+    }
+
+    .gs-action-btn-sm {
+        min-height: 40px;
+        padding: 0 16px;
+    }
+
+    .gs-btn-primary {
+        background: var(--gs-primary);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(37, 99, 235, 0.25);
+    }
+
+        .gs-btn-primary:hover {
+            color: #fff;
+        }
+
+    .gs-btn-danger {
+        background: var(--gs-danger);
+        color: #fff;
+    }
+
+        .gs-btn-danger:hover {
+            color: #fff;
+        }
+
+    .gs-btn-success {
+        background: var(--gs-success);
+        color: #fff;
+    }
+
+        .gs-btn-success:hover {
+            color: #fff;
+        }
+
+    .gs-btn-muted {
+        background: rgba(148, 163, 184, 0.18);
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+        .gs-btn-muted:hover {
+            color: #fff;
+        }
+
+    .gs-btn-outline-danger {
+        background: transparent;
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.45);
+    }
+
+        .gs-btn-outline-danger:hover {
+            color: #fff;
+            background: rgba(239, 68, 68, 0.16);
+        }
+
+    .gs-btn-momo {
+        background: var(--gs-momo);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(174, 32, 112, 0.24);
+    }
+
+        .gs-btn-momo:hover {
+            color: #fff;
+        }
+
+    .gs-modal-content {
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.98), rgba(9, 18, 33, 0.98));
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #fff;
+    }
+
+    .gs-modal-header,
+    .gs-modal-footer {
+        border-color: rgba(255,255,255,0.08);
+    }
+
+    .gs-modal-body {
+        color: #dbe6f7;
+    }
+
+    @@media (max-width: 991.98px) {
+        .gs-cart-item {
+            grid-template-columns: minmax(0, 1fr) 150px 130px;
+        }
+
+        .gs-cart-header {
+            grid-template-columns: minmax(0, 1fr) 150px 130px;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .gs-cart-header {
+            display: none !important;
+        }
+
+        .gs-cart-item {
+            grid-template-columns: 1fr;
+            gap: 14px;
+            padding: 18px 6px;
+        }
+
+        .gs-cart-price,
+        .gs-cart-action {
+            text-align: left;
+        }
+
+            .gs-cart-action .btn {
+                width: 100%;
+            }
+    }
+
+    @@media (max-width: 575.98px) {
+        .gs-summary-card,
+        .gs-topup-card,
+        .gs-empty-card {
+            padding: 18px;
+        }
+
+        .gs-cart-thumb {
+            width: 76px;
+            height: 76px;
+        }
+
+        .gs-cart-game-name {
+            font-size: .98rem;
+        }
+    }
+</style>
