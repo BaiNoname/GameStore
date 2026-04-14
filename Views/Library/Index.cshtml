@@ -5,96 +5,371 @@
     ViewData["Title"] = "My Library";
 }
 
-<div class="container mt-5">
+<div class="gs-library-page">
+    <div class="container py-4 py-lg-5">
 
-    <h2 class="mb-4 text-light">🎮 My Library</h2>
-
-    @if (Model == null || Model.Count == 0)
-    {
-        <div class="alert alert-info">
-            Bạn chưa sở hữu game nào 😢
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+            <div>
+                <div class="gs-kicker">Personal Collection</div>
+                <h2 class="gs-library-title mb-0">🎮 My Library</h2>
+            </div>
         </div>
 
-        <a asp-controller="Home"
-           asp-action="Index"
-           class="btn btn-primary">
-            ← Back to Store
-        </a>
-    }
-    else
-    {
-        <table class="table table-dark table-hover align-middle">
+        @if (Model == null || Model.Count == 0)
+        {
+            <div class="gs-empty-card">
+                <div class="gs-empty-icon">🎮</div>
+                <h4 class="mb-2">Bạn chưa sở hữu game nào</h4>
+                <p class="text-secondary mb-4">
+                    Thư viện của bạn đang trống. Hãy quay lại store để mua game và bắt đầu bộ sưu tập của mình.
+                </p>
 
-            <thead>
-                <tr>
-                    <th>Game</th>
-                    <th>Purchased</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn gs-btn-primary px-4 py-2 rounded-pill">
+                    ← Back to Store
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="gs-library-shell">
+                <div class="gs-library-header d-none d-md-grid">
+                    <div>Game</div>
+                    <div>Purchased</div>
+                    <div>Status</div>
+                    <div class="text-end">Action</div>
+                </div>
 
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <!-- GAME -->
-                        <td class="d-flex align-items-center gap-3">
-                            <img src="@Url.Content("~/images/" + item.Game.Hinh)"
-                                 width="100"
-                                 style="border-radius:8px;" />
+                <div class="gs-library-list">
+                    @foreach (var item in Model)
+                    {
+                        <div class="gs-library-item">
+                            <!-- GAME -->
+                            <div class="gs-library-game">
+                                <div class="gs-library-thumb">
+                                    <img src="@Url.Content("~/images/" + item.Game.Hinh)"
+                                         alt="@item.Game.TenGame" />
+                                </div>
 
-                            <span>@item.Game.TenGame</span>
-                        </td>
+                                <div class="gs-library-game-info">
+                                    <div class="gs-library-game-name">@item.Game.TenGame</div>
+                                    <div class="gs-library-sub">Owned game in your library</div>
+                                </div>
+                            </div>
 
-                        <!-- DATE -->
-                        <td>
-                            @item.NgayMua.ToString("dd/MM/yyyy")
-                        </td>
+                            <!-- DATE -->
+                            <div class="gs-library-date">
+                                @item.NgayMua.ToString("dd/MM/yyyy")
+                            </div>
 
-                        <!-- STATUS -->
-                        <td>
-                            @if (item.DaTai)
-                            {
-                                <span class="badge bg-success">Installed</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Not Installed</span>
-                            }
-                        </td>
+                            <!-- STATUS -->
+                            <div class="gs-library-status">
+                                @if (item.DaTai)
+                                {
+                                    <span class="gs-badge gs-badge-success">Installed</span>
+                                }
+                                else
+                                {
+                                    <span class="gs-badge gs-badge-muted">Not Installed</span>
+                                }
+                            </div>
 
-                        <!-- ACTION -->
-                        <td>
-                            @if (item.DaTai)
-                            {
-                                <a asp-controller="Library"
-                                   asp-action="Download"
-                                   asp-route-id="@item.MaGame"
-                                   class="btn btn-success btn-sm">
-                                    🎮 Download
-                                </a>
-                            }
-                            else
-                            {
-                                <a asp-controller="Library"
-                                   asp-action="Download"
-                                   asp-route-id="@item.MaGame"
-                                   class="btn btn-primary btn-sm">
-                                    ⬇ Download
-                                </a>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
+                            <!-- ACTION -->
+                            <div class="gs-library-action">
+                                @if (item.DaTai)
+                                {
+                                    <a asp-controller="Library"
+                                       asp-action="Download"
+                                       asp-route-id="@item.MaGame"
+                                       class="btn gs-btn-success gs-action-btn-sm">
+                                        🎮 Download
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Library"
+                                       asp-action="Download"
+                                       asp-route-id="@item.MaGame"
+                                       class="btn gs-btn-primary gs-action-btn-sm">
+                                        ⬇ Download
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
 
-        </table>
-        <a asp-controller="Home"
-           asp-action="Index"
-           class="btn btn-primary">
-            ← Back to Store
-        </a>
-    }
+            <div class="mt-4">
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn gs-btn-muted px-4 py-2 rounded-pill">
+                    ← Back to Store
+                </a>
+            </div>
+        }
 
+    </div>
 </div>
+
+<style>
+    :root {
+        --gs-text: #f3f7ff;
+        --gs-muted: #94a3b8;
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+        --gs-success: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+
+    .gs-library-page {
+        min-height: 100vh;
+        color: var(--gs-text);
+        background: transparent;
+    }
+
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: #7dd3fc;
+        margin-bottom: 8px;
+    }
+
+    .gs-library-title {
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.02em;
+    }
+
+    .gs-empty-card {
+        padding: 42px 28px;
+        border-radius: 28px;
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.92), rgba(9, 18, 33, 0.92));
+        border: 1px solid rgba(255,255,255,0.08);
+        text-align: center;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+    }
+
+    .gs-empty-icon {
+        font-size: 3rem;
+        margin-bottom: 12px;
+    }
+
+    .gs-library-shell {
+        border-radius: 26px;
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.92), rgba(9, 18, 33, 0.92));
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+        overflow: hidden;
+    }
+
+    .gs-library-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1.8fr) 170px 160px 150px;
+        gap: 20px;
+        padding: 18px 22px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        color: #cbd5e1;
+        font-weight: 700;
+        letter-spacing: .02em;
+    }
+
+    .gs-library-list {
+        padding: 10px 14px 14px;
+    }
+
+    .gs-library-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1.8fr) 170px 160px 150px;
+        gap: 20px;
+        align-items: center;
+        padding: 16px 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+        .gs-library-item:last-child {
+            border-bottom: none;
+        }
+
+    .gs-library-game {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    .gs-library-thumb {
+        width: 100px;
+        height: 100px;
+        border-radius: 18px;
+        overflow: hidden;
+        flex-shrink: 0;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: #0b1220;
+    }
+
+        .gs-library-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+    .gs-library-game-info {
+        min-width: 0;
+    }
+
+    .gs-library-game-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
+    .gs-library-sub {
+        color: var(--gs-muted);
+        font-size: .9rem;
+        margin-top: 4px;
+    }
+
+    .gs-library-date {
+        color: #dbe6f7;
+        font-weight: 600;
+    }
+
+    .gs-library-status {
+        display: flex;
+        align-items: center;
+    }
+
+    .gs-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 14px;
+        border-radius: 999px;
+        font-size: .88rem;
+        font-weight: 700;
+        border: 1px solid transparent;
+    }
+
+    .gs-badge-success {
+        color: #dcfce7;
+        background: rgba(34, 197, 94, 0.18);
+        border-color: rgba(34, 197, 94, 0.25);
+    }
+
+    .gs-badge-muted {
+        color: #e2e8f0;
+        background: rgba(148, 163, 184, 0.16);
+        border-color: rgba(148, 163, 184, 0.18);
+    }
+
+    .gs-library-action {
+        text-align: right;
+    }
+
+    .gs-action-btn-sm,
+    .gs-btn-primary,
+    .gs-btn-success,
+    .gs-btn-muted {
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-weight: 700;
+        text-align: center;
+        border: none;
+    }
+
+    .gs-action-btn-sm {
+        padding: 0 16px;
+    }
+
+    .gs-btn-primary {
+        background: var(--gs-primary);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(37, 99, 235, 0.25);
+    }
+
+        .gs-btn-primary:hover {
+            color: #fff;
+        }
+
+    .gs-btn-success {
+        background: var(--gs-success);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(34, 197, 94, 0.22);
+    }
+
+        .gs-btn-success:hover {
+            color: #fff;
+        }
+
+    .gs-btn-muted {
+        background: rgba(148, 163, 184, 0.18);
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+        .gs-btn-muted:hover {
+            color: #fff;
+        }
+
+    @@media (max-width: 991.98px) {
+        .gs-library-header {
+            grid-template-columns: minmax(0, 1fr) 140px 140px 130px;
+        }
+
+        .gs-library-item {
+            grid-template-columns: minmax(0, 1fr) 140px 140px 130px;
+        }
+
+        .gs-library-thumb {
+            width: 84px;
+            height: 84px;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .gs-library-header {
+            display: none !important;
+        }
+
+        .gs-library-item {
+            grid-template-columns: 1fr;
+            gap: 14px;
+            padding: 18px 6px;
+        }
+
+        .gs-library-date,
+        .gs-library-action {
+            text-align: left;
+        }
+
+            .gs-library-action .btn {
+                width: 100%;
+            }
+    }
+
+    @@media (max-width: 575.98px) {
+        .gs-empty-card {
+            padding: 28px 18px;
+        }
+
+        .gs-library-thumb {
+            width: 74px;
+            height: 74px;
+        }
+
+        .gs-library-game-name {
+            font-size: .98rem;
+        }
+    }
+</style>

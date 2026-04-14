@@ -206,7 +206,7 @@ namespace GameStore.Controllers.Auth
             {
                 HttpContext.Session.Remove("ResetEmail"); // 🔥 xoá sau khi xong
 
-                TempData["Success"] = "Đổi mật khẩu thành công!";
+                TempData["Reset Success"] = "Đổi mật khẩu thành công!";
                 return RedirectToAction("Login");
             }
 
