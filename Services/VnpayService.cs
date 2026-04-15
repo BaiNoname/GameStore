@@ -1,5 +1,4 @@
-﻿// Thêm dòng này vào đầu file interface
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 
 namespace GameStore.Services
 {

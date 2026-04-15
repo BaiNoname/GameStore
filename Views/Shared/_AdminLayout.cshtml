@@ -18,6 +18,211 @@
 
     @RenderSection("Styles", required: false)
 
+    <style>
+        /* ===== Responsive fix only - giữ nguyên logic ===== */
+
+        .app-topstrip {
+            min-height: 68px;
+        }
+
+            .app-topstrip .steam-logo-link img {
+                max-width: 100%;
+                height: auto;
+                display: block;
+            }
+
+        .left-sidebar .brand-logo {
+            min-height: 70px;
+            padding: 0 16px;
+        }
+
+        .body-wrapper-inner {
+            padding-top: 8px;
+        }
+
+            .body-wrapper-inner .container-fluid {
+                padding-left: 20px;
+                padding-right: 20px;
+                padding-bottom: 20px;
+            }
+
+        .app-header .navbar {
+            min-height: 70px;
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+
+        .admin-greeting {
+            display: inline-block;
+            max-width: 280px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+        }
+
+        .admin-avatar {
+            object-fit: cover;
+            display: block;
+        }
+
+        .dropdown-menu {
+            min-width: 180px;
+        }
+
+        #toastBox {
+            max-width: calc(100vw - 20px);
+        }
+
+            #toastBox > div {
+                max-width: min(360px, calc(100vw - 20px));
+                min-width: 250px;
+                word-break: break-word;
+            }
+
+        @@media (max-width: 1199.98px) {
+            .app-topstrip {
+                padding-left: 16px !important;
+                padding-right: 16px !important;
+            }
+
+            .body-wrapper-inner .container-fluid {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .admin-greeting {
+                max-width: 220px;
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .app-topstrip {
+                min-height: 60px;
+                padding-top: 12px !important;
+                padding-bottom: 12px !important;
+            }
+
+                .app-topstrip .steam-logo-link img {
+                    width: 132px !important;
+                }
+
+            .app-header .navbar {
+                min-height: 64px;
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .body-wrapper-inner .container-fluid {
+                padding-left: 14px;
+                padding-right: 14px;
+                padding-bottom: 16px;
+            }
+
+            .admin-greeting {
+                max-width: 170px;
+                font-size: 14px;
+            }
+
+            .navbar-nav.flex-row.ms-auto.align-items-center.gap-3 {
+                gap: 10px !important;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .app-topstrip {
+                min-height: 56px;
+                padding-top: 10px !important;
+                padding-bottom: 10px !important;
+            }
+
+                .app-topstrip .steam-logo-link img {
+                    width: 118px !important;
+                }
+
+            .app-header .navbar {
+                min-height: 60px;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .body-wrapper-inner .container-fluid {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .admin-greeting {
+                max-width: 120px;
+                font-size: 13px;
+            }
+
+            .dropdown-menu {
+                right: 0 !important;
+                left: auto !important;
+            }
+
+            #toastBox {
+                top: 12px !important;
+                right: 12px !important;
+            }
+
+                #toastBox > div {
+                    min-width: unset !important;
+                    width: min(320px, calc(100vw - 24px));
+                }
+        }
+
+        @@media (max-width: 575.98px) {
+            .app-topstrip {
+                justify-content: center !important;
+                text-align: center;
+            }
+
+                .app-topstrip .d-flex.align-items-center.justify-content-center.gap-5 {
+                    gap: 0 !important;
+                    margin-bottom: 0 !important;
+                }
+
+                .app-topstrip .steam-logo-link img {
+                    width: 108px !important;
+                }
+
+            .app-header .navbar {
+                min-height: 56px;
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+
+            .body-wrapper-inner {
+                padding-top: 4px;
+            }
+
+                .body-wrapper-inner .container-fluid {
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-bottom: 14px;
+                }
+
+            .admin-greeting {
+                max-width: 82px;
+                font-size: 12px;
+            }
+
+            .navbar-nav.flex-row.ms-auto.align-items-center.gap-3 {
+                gap: 8px !important;
+            }
+
+            .navbar-nav .nav-link {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+
+            .dropdown-menu {
+                min-width: 160px;
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -31,7 +236,7 @@
         <!-- Top strip -->
         <div class="app-topstrip bg-dark py-3 px-3 w-100 d-lg-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center justify-content-center gap-5 mb-2 mb-lg-0">
-                <a class="d-flex justify-content-center text-decoration-none" href="/">
+                <a class="d-flex justify-content-center text-decoration-none steam-logo-link" href="/">
                     <img src="https://store.fastly.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016" alt="Logo" width="150">
                 </a>
             </div>
@@ -114,7 +319,7 @@
 
                             <!-- 👋 Hi Admin -->
                             <li class="nav-item">
-                                <span class="fw-semibold text-dark">
+                                <span class="fw-semibold text-dark admin-greeting">
                                     👋 Hi Admin, @User.Identity.Name
                                 </span>
                             </li>
@@ -125,7 +330,7 @@
                                     <img src="~/assets/images/profile/user-1.jpg"
                                          width="35"
                                          height="35"
-                                         class="rounded-circle">
+                                         class="rounded-circle admin-avatar">
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-end">
@@ -169,7 +374,6 @@
     @RenderSection("Scripts", required: false)
 
     <!-- TOAST -->
-    <!-- TOAST -->
     <div id="toastBox"
          style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
 
@@ -189,7 +393,6 @@
             toast.style.transform = "translateX(100%)";
             toast.style.transition = "all 0.4s ease";
 
-            // màu theo type
             if (type === "success") toast.style.background = "#28a745";
             else if (type === "error") toast.style.background = "#dc3545";
             else toast.style.background = "#007bff";
@@ -198,13 +401,11 @@
 
             document.getElementById("toastBox").appendChild(toast);
 
-            // animation vào
             setTimeout(() => {
                 toast.style.opacity = "1";
                 toast.style.transform = "translateX(0)";
             }, 100);
 
-            // tự biến mất sau 3s
             setTimeout(() => {
                 toast.style.opacity = "0";
                 toast.style.transform = "translateX(100%)";

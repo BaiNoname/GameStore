@@ -11,9 +11,9 @@ namespace GameStore.Services
     {
         private GameStoreContext db;
         private readonly ILogger<PaymentServiceImpl> logger;
-        private readonly IHubContext<GameStore.Hubs.GameHub> hub;
+        private readonly IHubContext<Hubs.GameHub> hub;
 
-        public PaymentServiceImpl(GameStoreContext _db, ILogger<PaymentServiceImpl> _logger, IHubContext<GameStore.Hubs.GameHub> _hub)
+        public PaymentServiceImpl(GameStoreContext _db, ILogger<PaymentServiceImpl> _logger, IHubContext<Hubs.GameHub> _hub)
         {
             db = _db;
             logger = _logger;

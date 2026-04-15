@@ -4,15 +4,15 @@
     ViewData["Title"] = "Quản lý Category Game";
 }
 
-<div class="card">
+<div class="card admin-list-card">
     <div class="card-body">
         <h4 class="card-title">Danh sách thể loại game</h4>
         <p class="card-subtitle mb-3">Quản lý toàn bộ thể loại game trong hệ thống</p>
 
         <!-- Search + Add Button -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
 
-            <form method="get" action="/admin/category/index" class="d-flex" style="width:350px;">
+            <form method="get" action="/admin/category/index" class="d-flex flex-wrap admin-search-form">
                 <input type="text"
                        name="keyword"
                        value="@Model.Keyword"
@@ -29,18 +29,19 @@
             </a>
 
         </div>
+
         <div>
             @if (TempData["Msg"] != null)
             {
                 var msgType = TempData["MsgType"]?.ToString() ?? "info";
-                <div class="alert alert-@msgType mt-2 fw-bold text-danger">
+                <div class="alert alert-@msgType mt-2 fw-bold text-danger mb-3 admin-inline-alert">
                     @TempData["Msg"]
                 </div>
             }
         </div>
 
         <div class="table-responsive">
-            <table class="table table-striped align-middle">
+            <table class="table table-striped align-middle admin-category-table">
                 <thead>
                     <tr>
                         <th>Mã thể loại game</th>
@@ -53,49 +54,33 @@
                     {
                         <tr>
                             <td>@theLoai.MaTheLoai</td>
-                            <td>@theLoai.TenLoaiGame</td>
+                            <td class="text-break">@theLoai.TenLoaiGame</td>
                             <td>
-                                <a class="btn btn-sm btn-warning" asp-controller="category" asp-action="edit" asp-route-id="@theLoai.MaTheLoai">Edit</a>
-                                <button class="btn btn-danger btn-sm"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#deleteModal"
-                                        data-category-id="@theLoai.MaTheLoai"
-                                        data-category-name="@theLoai.TenLoaiGame">
-                                    Delete
-                                </button>
-                                <div class="modal fade" id="deleteModal" tabindex="-1">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content bg-dark text-light">
+                                <div class="d-flex gap-2 flex-wrap admin-action-group">
+                                    <a class="btn btn-sm btn-warning"
+                                       asp-controller="category"
+                                       asp-action="edit"
+                                       asp-route-id="@theLoai.MaTheLoai">
+                                        Edit
+                                    </a>
 
-                                            <div class="modal-header border-secondary">
-                                                <h5 class="modal-title">Xác nhận xóa thể loại</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                            </div>
-
-                                            <div class="modal-body">
-                                                Bạn có chắc muốn xóa thể loại <strong id="deleteCategoryName"></strong> không? 🛑
-                                            </div>
-
-                                            <div class="modal-footer border-secondary">
-                                                <form method="get" id="deleteForm">
-                                                    <button type="submit" class="btn btn-danger">
-                                                        Đồng ý xóa
-                                                    </button>
-                                                </form>
-                                                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                            </div>
-
-                                        </div>
-                                    </div>
+                                    <button class="btn btn-danger btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal"
+                                            data-category-id="@theLoai.MaTheLoai"
+                                            data-category-name="@theLoai.TenLoaiGame">
+                                        Delete
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
+
             <!-- Pagination UI only -->
             <nav>
-                <ul class="pagination justify-content-center mt-4">
+                <ul class="pagination justify-content-center mt-4 flex-wrap">
 
                     <!-- Previous -->
                     <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
@@ -129,6 +114,125 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Xác nhận xóa thể loại</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Bạn có chắc muốn xóa thể loại <strong id="deleteCategoryName"></strong> không? 🛑
+            </div>
+
+            <div class="modal-footer border-secondary flex-wrap">
+                <form method="get" id="deleteForm">
+                    <button type="submit" class="btn btn-danger">
+                        Đồng ý xóa
+                    </button>
+                </form>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-list-card .card-body {
+        padding: 1rem;
+    }
+
+    .admin-search-form {
+        width: 100%;
+        max-width: 350px;
+    }
+
+        .admin-search-form .form-control {
+            min-width: 0;
+            flex: 1 1 220px;
+        }
+
+    .admin-inline-alert {
+        width: 100%;
+        word-break: break-word;
+    }
+
+    .admin-category-table th,
+    .admin-category-table td {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+        .admin-category-table td.text-break {
+            white-space: normal;
+            word-break: break-word;
+            min-width: 220px;
+        }
+
+    .admin-action-group {
+        min-width: 120px;
+    }
+
+    @@media (max-width: 991.98px) {
+        .admin-list-toolbar {
+            align-items: stretch !important;
+        }
+
+        .admin-search-form {
+            max-width: 100%;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .admin-list-card .card-body {
+            padding: 0.9rem;
+        }
+
+        .admin-search-form {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+            .admin-search-form .form-control {
+                margin-right: 0 !important;
+                width: 100%;
+                flex: 1 1 auto;
+            }
+
+            .admin-search-form .btn,
+            .admin-list-toolbar > .btn {
+                width: 100%;
+            }
+
+        .admin-category-table {
+            min-width: 650px;
+        }
+
+        .pagination .page-link {
+            padding: 0.45rem 0.7rem;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .card-title {
+            font-size: 1.1rem;
+        }
+
+        .card-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .modal-footer form,
+        .modal-footer .btn {
+            width: 100%;
+        }
+    }
+</style>
+
 <script>
     var deleteModal = document.getElementById('deleteModal');
     deleteModal.addEventListener('show.bs.modal', function (event) {
