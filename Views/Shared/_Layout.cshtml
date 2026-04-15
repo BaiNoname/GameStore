@@ -444,6 +444,44 @@
                 height: 70vh;
             }
         }
+
+        .navbar-brand.brand-combo {
+            display: inline-flex;
+            align-items: center;
+            gap: 45px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        /* ICON */
+        .brand-icon {
+            height: 56px;
+            transform: scale(1.8);
+            transform-origin: right center; /* 🔥 đổi từ left → right */
+            display: block;
+        }
+
+        /* CHỮ */
+        .brand-wordmark {
+            height: 80px;
+            transform: scale(1.28);
+            transform-origin: left center;
+            display: block;
+            margin-left: -70px;
+        }
+
+        .insta-credit {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            text-decoration: none;
+        }
+
+            .insta-credit i {
+                font-size: 18px;
+                line-height: 1;
+            }
     </style>
 </head>
 <body>
@@ -452,9 +490,9 @@
         <div class="container-xxl">
             <nav class="navbar navbar-expand-md navbar-dark py-2">
 
-                <a class="navbar-brand" href="/">
-                    <img src="https://store.fastly.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016"
-                         width="176" height="44" alt="Steam Logo">
+                <a class="navbar-brand brand-combo" href="/">
+                    <img src="~/assets/images/logos/Artboard2.svg" class="brand-wordmark">
+                    <img src="~/assets/images/logos/Artboard1.svg" class="brand-icon">
                 </a>
 
                 <button class="navbar-toggler"
@@ -614,6 +652,11 @@
                             <a href="#" class="gs-footer-link">Refunds</a>
                             <span class="gs-footer-sep">|</span>
                             <a href="#" class="gs-footer-link">Cookies</a>
+                            <br />
+                            <a href="https://www.instagram.com/galtovin/" target="_blank" class="insta-credit">
+                                <span>📷</span>
+                                <span>Logo Design By Galtovin</span>
+                            </a>
                         </p>
                     </div>
 
