@@ -5,15 +5,14 @@
     ViewData["Title"] = "Quản lý User";
 }
 
-<div class="card">
+<div class="card admin-list-card">
     <div class="card-body">
         <h4 class="card-title">Danh sách Users</h4>
         <p class="card-subtitle mb-3">Quản lý toàn bộ Users trong hệ thống</p>
 
-        <!-- Search + Add Button -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
 
-            <form method="get" action="/admin/user/index" class="d-flex" style="width:350px;">
+            <form method="get" action="/admin/user/index" class="d-flex flex-wrap admin-search-form">
                 <input type="text"
                        name="keyword"
                        value="@Model.Keyword"
@@ -32,7 +31,7 @@
             @if (TempData["Msg"] != null)
             {
                 var msgType = TempData["MsgType"]?.ToString() ?? "info";
-                <div class="alert alert-@msgType mt-2 fw-bold text-danger">
+                <div class="alert alert-@msgType mt-2 fw-bold text-danger mb-0 admin-inline-alert">
                     @TempData["Msg"]
                 </div>
             }
@@ -40,7 +39,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table table-striped align-middle">
+            <table class="table table-striped align-middle admin-user-table">
                 <thead>
                     <tr>
                         <th>User ID</th>
@@ -58,61 +57,36 @@
                         <tr>
                             <td>@user.MaNguoiDung</td>
                             <td>@user.TenNguoiDung</td>
-                            <td>@user.Email</td>
+                            <td class="text-break">@user.Email</td>
                             <td>@user.NgayDangKy</td>
                             <td>@user.Quyen</td>
                             <td>@user.SoDu</td>
                             <td>
-                                <a class="btn btn-sm btn-warning"
-                                   asp-controller="User"
-                                   asp-action="Edit"
-                                   asp-route-id="@user.MaNguoiDung"
-                                   asp-route-page="@Model.CurrentPage">
-                                    Edit
-                                </a>
-                                <!-- Nút Delete -->
-                                <button class="btn btn-danger btn-sm"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#deleteModal"
-                                        data-user-id="@user.MaNguoiDung"
-                                        data-user-name="@user.TenNguoiDung">
-                                    Delete
-                                </button>
-                                <div class="modal fade" id="deleteModal" tabindex="-1">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content bg-dark text-light">
+                                <div class="d-flex gap-2 flex-wrap admin-action-group">
+                                    <a class="btn btn-sm btn-warning"
+                                       asp-controller="User"
+                                       asp-action="Edit"
+                                       asp-route-id="@user.MaNguoiDung"
+                                       asp-route-page="@Model.CurrentPage">
+                                        Edit
+                                    </a>
 
-                                            <div class="modal-header border-secondary">
-                                                <h5 class="modal-title">Xác nhận xóa user</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                            </div>
-
-                                            <div class="modal-body">
-                                                Bạn có chắc muốn xóa user <strong id="deleteUserName"></strong> không? 🛑
-                                            </div>
-
-                                            <div class="modal-footer border-secondary">
-                                                <form method="get" id="deleteForm">
-                                                    <button type="submit" class="btn btn-danger">
-                                                        Đồng ý xóa
-                                                    </button>
-                                                </form>
-                                                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                            </div>
-
-                                        </div>
-                                    </div>
+                                    <button class="btn btn-danger btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal"
+                                            data-user-id="@user.MaNguoiDung"
+                                            data-user-name="@user.TenNguoiDung">
+                                        Delete
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
-            <!-- Pagination UI only -->
-            <nav>
-                <ul class="pagination justify-content-center mt-4">
 
-                    <!-- Previous -->
+            <nav>
+                <ul class="pagination justify-content-center mt-4 flex-wrap">
                     <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
                         <a class="page-link"
                            href="?keyword=@Model.Keyword&page=@(Model.CurrentPage - 1)">
@@ -120,7 +94,6 @@
                         </a>
                     </li>
 
-                    <!-- Page numbers -->
                     @for (int i = 1; i <= Model.TotalPages; i++)
                     {
                         <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
@@ -131,31 +104,146 @@
                         </li>
                     }
 
-                    <!-- Next -->
                     <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
                         <a class="page-link"
                            href="?keyword=@Model.Keyword&page=@(Model.CurrentPage + 1)">
                             Next
                         </a>
                     </li>
-
                 </ul>
             </nav>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Xác nhận xóa user</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Bạn có chắc muốn xóa user <strong id="deleteUserName"></strong> không? 🛑
+            </div>
+
+            <div class="modal-footer border-secondary flex-wrap">
+                <form method="get" id="deleteForm">
+                    <button type="submit" class="btn btn-danger">
+                        Đồng ý xóa
+                    </button>
+                </form>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-list-card .card-body {
+        padding: 1rem;
+    }
+
+    .admin-search-form {
+        width: 100%;
+        max-width: 350px;
+    }
+
+        .admin-search-form .form-control {
+            min-width: 0;
+            flex: 1 1 220px;
+        }
+
+    .admin-inline-alert {
+        width: 100%;
+        word-break: break-word;
+    }
+
+    .admin-user-table th,
+    .admin-user-table td {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+        .admin-user-table td.text-break {
+            white-space: normal;
+            word-break: break-word;
+            min-width: 220px;
+        }
+
+    .admin-action-group {
+        min-width: 120px;
+    }
+
+    @@media (max-width: 991.98px) {
+        .admin-list-toolbar {
+            align-items: stretch !important;
+        }
+
+        .admin-search-form {
+            max-width: 100%;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .admin-list-card .card-body {
+            padding: 0.9rem;
+        }
+
+        .admin-search-form {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+            .admin-search-form .form-control {
+                margin-right: 0 !important;
+                width: 100%;
+                flex: 1 1 auto;
+            }
+
+            .admin-search-form .btn,
+            .admin-list-toolbar > .btn {
+                width: 100%;
+            }
+
+        .admin-user-table {
+            min-width: 900px;
+        }
+
+        .pagination .page-link {
+            padding: 0.45rem 0.7rem;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .card-title {
+            font-size: 1.1rem;
+        }
+
+        .card-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .modal-footer form,
+        .modal-footer .btn {
+            width: 100%;
+        }
+    }
+</style>
+
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         var deleteModal = document.getElementById('deleteModal');
-        deleteModal.addEventListener('show.bs.modal', function(event) {
-            var button = event.relatedTarget; // nút vừa click
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
             var userId = button.getAttribute('data-user-id');
             var userName = button.getAttribute('data-user-name');
 
-            // set tên user trong modal
             document.getElementById('deleteUserName').textContent = userName;
 
-            // set action cho form
             var deleteForm = document.getElementById('deleteForm');
             deleteForm.action = '/admin/user/delete/' + userId + '?page=@Model.CurrentPage';
         });

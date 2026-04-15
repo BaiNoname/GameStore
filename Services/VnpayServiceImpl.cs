@@ -14,7 +14,7 @@ namespace GameStore.Services
         private readonly IVnpayClient _vnpayClient;
         private readonly GameStoreContext _db;
         private readonly ILogger<VnpayServiceImpl> _logger;
-        private readonly IHubContext<GameStore.Hubs.GameHub> _hub;
+        private readonly IHubContext<Hubs.GameHub> _hub;
 
         private const string ORDER_PREFIX = "ORDER_";
         private const string TOPUP_PREFIX = "TOPUP_";
@@ -23,7 +23,7 @@ namespace GameStore.Services
             IVnpayClient vnpayClient,
             GameStoreContext db,
             ILogger<VnpayServiceImpl> logger,
-            IHubContext<GameStore.Hubs.GameHub> hub)
+            IHubContext<Hubs.GameHub> hub)
         {
             _vnpayClient = vnpayClient;
             _db = db;

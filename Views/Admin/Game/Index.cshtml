@@ -4,15 +4,15 @@
     ViewData["Title"] = "Quản lý Game";
 }
 
-<div class="card">
+<div class="card admin-list-card">
     <div class="card-body">
         <h4 class="card-title">Danh sách game</h4>
         <p class="card-subtitle mb-3">Quản lý toàn bộ game trong hệ thống</p>
 
         <!-- Search + Add Button -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
 
-            <form method="get" action="/admin/game/index" class="d-flex gap-2">
+            <form method="get" action="/admin/game/index" class="d-flex gap-2 flex-wrap admin-search-form admin-game-search-form">
 
                 <input type="text"
                        name="keyword"
@@ -40,11 +40,13 @@
             </a>
 
         </div>
-        <div class="p-2 text-success">
+
+        <div class="p-2 text-success admin-inline-msg">
             @TempData["Msg"]
         </div>
+
         <div class="table-responsive">
-            <table class="table table-striped align-middle">
+            <table class="table table-striped align-middle admin-game-table">
                 <thead>
                     <tr>
                         <th>Mã game</th>
@@ -61,57 +63,40 @@
                     {
                         <tr>
                             <td>@game.MaGame</td>
-                            <td>@game.TenGame</td>
-                            <td>@game.TheLoaiGame?.TenLoaiGame</td>
+                            <td class="text-break">@game.TenGame</td>
+                            <td class="text-break">@game.TheLoaiGame?.TenLoaiGame</td>
                             <td>
-                                <img src="/images/@game.Hinh" width="120" />
+                                <img src="/images/@game.Hinh" width="120" class="admin-game-thumb" />
                             </td>
                             <td>@String.Format("{0:N0} VNĐ", game.Gia)</td>
-                            <td>@game.SoLuotTai</td>
+                            <td id="game-@game.MaGame">@game.SoLuotTai</td>
                             <td>
-                                <a class="btn btn-sm btn-warning" asp-controller="game" asp-action="edit" asp-route-id="@game.MaGame" asp-route-page="@Model.CurrentPage">Edit</a>
-                                <!-- Delete Button trong table -->
-                                <button class="btn btn-sm btn-danger"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#deleteModal"
-                                        data-game-id="@game.MaGame"
-                                        data-game-name="@game.TenGame">
-                                    Delete
-                                </button>
-                                <div class="modal fade" id="deleteModal" tabindex="-1">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content bg-dark text-light">
+                                <div class="d-flex gap-2 flex-wrap admin-action-group">
+                                    <a class="btn btn-sm btn-warning"
+                                       asp-controller="game"
+                                       asp-action="edit"
+                                       asp-route-id="@game.MaGame"
+                                       asp-route-page="@Model.CurrentPage">
+                                        Edit
+                                    </a>
 
-                                            <div class="modal-header border-secondary">
-                                                <h5 class="modal-title">Xác nhận xóa game</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                            </div>
-
-                                            <div class="modal-body">
-                                                Bạn có chắc muốn xóa game <strong id="deleteGameName"></strong> không? 🛑
-                                            </div>
-
-                                            <div class="modal-footer border-secondary">
-                                                <form method="get" id="deleteForm">
-                                                    <input type="hidden" name="page" value="@Model.CurrentPage" />
-                                                    <button type="submit" class="btn btn-danger">
-                                                        Đồng ý xóa
-                                                    </button>
-                                                </form>
-                                                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                            </div>
-
-                                        </div>
-                                    </div>
+                                    <button class="btn btn-sm btn-danger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal"
+                                            data-game-id="@game.MaGame"
+                                            data-game-name="@game.TenGame">
+                                        Delete
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
+
             <!-- Pagination UI only -->
             <nav>
-                <ul class="pagination justify-content-center mt-4">
+                <ul class="pagination justify-content-center mt-4 flex-wrap">
 
                     <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
                         <a class="page-link"
@@ -142,6 +127,134 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Xác nhận xóa game</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Bạn có chắc muốn xóa game <strong id="deleteGameName"></strong> không? 🛑
+            </div>
+
+            <div class="modal-footer border-secondary flex-wrap">
+                <form method="get" id="deleteForm">
+                    <input type="hidden" name="page" value="@Model.CurrentPage" />
+                    <button type="submit" class="btn btn-danger">
+                        Đồng ý xóa
+                    </button>
+                </form>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-list-card .card-body {
+        padding: 1rem;
+    }
+
+    .admin-inline-msg {
+        word-break: break-word;
+    }
+
+    .admin-search-form {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .admin-game-search-form > input,
+    .admin-game-search-form > select {
+        min-width: 0;
+        flex: 1 1 220px;
+    }
+
+    .admin-game-table th,
+    .admin-game-table td {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+        .admin-game-table td.text-break {
+            white-space: normal;
+            word-break: break-word;
+            min-width: 180px;
+        }
+
+    .admin-game-thumb {
+        width: 120px;
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+        display: block;
+    }
+
+    .admin-action-group {
+        min-width: 130px;
+    }
+
+    @@media (max-width: 991.98px) {
+        .admin-list-toolbar {
+            align-items: stretch !important;
+        }
+
+        .admin-game-search-form {
+            max-width: 100%;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .admin-list-card .card-body {
+            padding: 0.9rem;
+        }
+
+        .admin-game-search-form {
+            flex-direction: column;
+        }
+
+            .admin-game-search-form > input,
+            .admin-game-search-form > select,
+            .admin-game-search-form > button,
+            .admin-list-toolbar > .btn {
+                width: 100%;
+                flex: 1 1 auto;
+            }
+
+        .admin-game-table {
+            min-width: 980px;
+        }
+
+        .admin-game-thumb {
+            width: 90px;
+        }
+
+        .pagination .page-link {
+            padding: 0.45rem 0.7rem;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .card-title {
+            font-size: 1.1rem;
+        }
+
+        .card-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .modal-footer form,
+        .modal-footer .btn {
+            width: 100%;
+        }
+    }
+</style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
 
 <script>
@@ -151,7 +264,6 @@
 
     connection.start();
 
-    // nhận update lượt tải
     connection.on("UpdateDownload", function (gameId, newCount) {
         let el = document.getElementById("game-" + gameId);
         if (el) {
@@ -159,6 +271,7 @@
         }
     });
 </script>
+
 <script>
     const deleteModal = document.getElementById('deleteModal');
     deleteModal.addEventListener('show.bs.modal', function (event) {
