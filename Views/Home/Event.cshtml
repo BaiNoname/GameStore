@@ -1,0 +1,574 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GameStore Event Group</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        :root {
+            --gs-bg: #07111f;
+            --gs-bg-2: #0b1728;
+            --gs-card: rgba(14, 25, 43, 0.88);
+            --gs-line: rgba(255,255,255,0.08);
+            --gs-text: #f3f7ff;
+            --gs-muted: #94a3b8;
+            --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+            --gs-accent: #7dd3fc;
+            --gs-live: #22c55e;
+            --gs-warning: #f59e0b;
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at top left, rgba(124, 58, 237, 0.18), transparent 24%), radial-gradient(circle at top right, rgba(37, 99, 235, 0.14), transparent 22%), linear-gradient(180deg, #050b16 0%, #07111f 40%, #091626 100%);
+            color: var(--gs-text);
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .gs-page {
+            padding: 48px 0 70px;
+        }
+
+        .gs-kicker {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.8px;
+            color: var(--gs-accent);
+            margin-bottom: 8px;
+        }
+
+        .gs-title {
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .gs-subtitle {
+            color: var(--gs-muted);
+            max-width: 760px;
+            margin-bottom: 0;
+        }
+
+        .gs-hero-event {
+            overflow: hidden;
+            border-radius: 32px;
+            border: 1px solid var(--gs-line);
+            box-shadow: 0 22px 48px rgba(0,0,0,0.28);
+            margin: 34px 0 36px;
+            position: relative;
+            min-height: 460px;
+            background: #0b1220;
+        }
+
+            .gs-hero-event img {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                filter: brightness(0.60);
+            }
+
+        .gs-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(3,7,18,0.92) 0%, rgba(3,7,18,0.58) 45%, rgba(3,7,18,0.22) 100%), linear-gradient(180deg, rgba(15,23,42,0.08) 0%, rgba(15,23,42,0.82) 100%);
+            display: flex;
+            align-items: end;
+            padding: 34px;
+        }
+
+        .gs-hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.9rem, 4vw, 3rem);
+            line-height: 1.1;
+            margin-bottom: 14px;
+            color: #fff;
+        }
+
+        .gs-hero-desc {
+            color: #dbe6f7;
+            line-height: 1.75;
+            max-width: 780px;
+            margin-bottom: 18px;
+        }
+
+        .gs-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(15,23,42,0.72);
+            color: #fff;
+        }
+
+            .gs-badge.live {
+                background: rgba(34,197,94,0.14);
+                color: #bbf7d0;
+                border-color: rgba(34,197,94,0.18);
+            }
+
+            .gs-badge.upcoming {
+                background: rgba(245,158,11,0.14);
+                color: #fde68a;
+                border-color: rgba(245,158,11,0.18);
+            }
+
+        .gs-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            color: #a9b7c9;
+            font-size: .95rem;
+            margin-bottom: 20px;
+        }
+
+        .gs-btn-primary,
+        .gs-btn-outline {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+            padding: 0 20px;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        .gs-btn-primary {
+            background: var(--gs-primary);
+            color: #fff;
+            border: none;
+            box-shadow: 0 14px 28px rgba(37, 99, 235, 0.25);
+        }
+
+            .gs-btn-primary:hover {
+                color: #fff;
+            }
+
+        .gs-btn-outline {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #fff;
+        }
+
+            .gs-btn-outline:hover {
+                color: #fff;
+                background: rgba(255,255,255,0.12);
+            }
+
+        .gs-pillbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 36px;
+        }
+
+        .gs-pill {
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.05);
+            color: #e2e8f0;
+            border-radius: 999px;
+            padding: 10px 18px;
+            font-weight: 600;
+            transition: .25s ease;
+        }
+
+            .gs-pill.active,
+            .gs-pill:hover {
+                background: var(--gs-primary);
+                color: #fff;
+                border-color: transparent;
+            }
+
+        .gs-section-title {
+            font-size: clamp(1.4rem, 2vw, 2rem);
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .gs-section-subtitle {
+            color: var(--gs-muted);
+            margin-bottom: 24px;
+        }
+
+        .gs-event-card,
+        .gs-schedule-card,
+        .gs-group-card,
+        .gs-cta-box {
+            background: linear-gradient(180deg, rgba(14,25,43,0.94), rgba(9,18,33,0.94));
+            border: 1px solid var(--gs-line);
+            border-radius: 28px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+            overflow: hidden;
+            transition: .25s ease;
+        }
+
+            .gs-event-card:hover,
+            .gs-group-card:hover {
+                transform: translateY(-6px);
+                box-shadow: 0 28px 50px rgba(0,0,0,0.32);
+            }
+
+            .gs-event-card img,
+            .gs-group-card img {
+                width: 100%;
+                height: 220px;
+                object-fit: cover;
+                display: block;
+            }
+
+        .gs-event-body,
+        .gs-group-body {
+            padding: 22px;
+        }
+
+        .gs-event-title,
+        .gs-group-title {
+            color: #fff;
+            font-weight: 800;
+            line-height: 1.45;
+            margin-bottom: 12px;
+            min-height: 52px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .gs-event-desc,
+        .gs-group-desc {
+            color: #cbd5e1;
+            line-height: 1.7;
+            margin-bottom: 16px;
+            min-height: 72px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .gs-mini-stat {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            color: #9fb1c7;
+            font-size: .95rem;
+            margin-bottom: 16px;
+        }
+
+        .gs-schedule-card {
+            padding: 24px;
+        }
+
+        .gs-schedule-item {
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            gap: 16px;
+            align-items: center;
+            padding: 18px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+            .gs-schedule-item:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+
+        .gs-schedule-time {
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .gs-schedule-name {
+            color: #fff;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .gs-schedule-meta {
+            color: #94a3b8;
+            font-size: .95rem;
+        }
+
+        .gs-cta-box {
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(124,58,237,0.16), rgba(37,99,235,0.16), rgba(6,182,212,0.10));
+        }
+
+            .gs-cta-box h3 {
+                color: #fff;
+                font-weight: 800;
+                margin-bottom: 10px;
+            }
+
+            .gs-cta-box p {
+                color: #dbe6f7;
+                line-height: 1.7;
+                margin-bottom: 0;
+            }
+
+        @@media (max-width: 991.98px) {
+            .gs-hero-event
+
+        {
+            min-height: 360px;
+        }
+
+        }
+
+        @@media (max-width: 767.98px) {
+            .gs-schedule-item
+
+        {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        }
+
+        @@media (max-width: 575.98px) {
+            .gs-page
+
+        {
+            padding: 30px 0 50px;
+        }
+
+        .gs-hero-overlay,
+        .gs-event-body,
+        .gs-group-body,
+        .gs-schedule-card,
+        .gs-cta-box {
+            padding: 18px;
+        }
+
+        }
+    </style>
+</head>
+<body>
+    <main class="gs-page">
+        <div class="container-xxl">
+            <div class="mb-4">
+                <div class="gs-kicker">Community Hub</div>
+                <h1 class="gs-title">Event Group</h1>
+                <p class="gs-subtitle">
+                    Nơi tập trung các sự kiện nổi bật, giải đấu cộng đồng, hoạt động nhóm và lịch trình sắp diễn ra trên GameStore.
+                </p>
+            </div>
+
+            <section class="gs-hero-event">
+                <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1600&q=80" alt="Featured Event">
+                <div class="gs-hero-overlay">
+                    <div>
+                        <span class="gs-badge live">LIVE NOW</span>
+                        <h2 class="gs-hero-title">Cyber Arcane Championship Finals — join the live tournament event</h2>
+                        <p class="gs-hero-desc">
+                            Trận chung kết giải đấu lớn nhất mùa với phần thưởng hấp dẫn, lịch phát sóng trực tiếp và nhiều nhiệm vụ cộng đồng đi kèm dành cho người tham gia.
+                        </p>
+                        <div class="gs-meta">
+                            <span>📅 16 Apr 2026</span>
+                            <span>⏰ 20:00 GMT+7</span>
+                            <span>👥 8,420 participants</span>
+                            <span>🏆 Prize Pool 50,000,000 VND</span>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="#" class="gs-btn-primary">Join Event</a>
+                            <a href="#" class="gs-btn-outline">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="gs-pillbar">
+                <a href="#" class="gs-pill active">All Events</a>
+                <a href="#" class="gs-pill">Live Now</a>
+                <a href="#" class="gs-pill">Upcoming</a>
+                <a href="#" class="gs-pill">Tournament</a>
+                <a href="#" class="gs-pill">Community</a>
+                <a href="#" class="gs-pill">Special Events</a>
+            </div>
+
+            <section class="mb-5">
+                <h3 class="gs-section-title">Featured Events</h3>
+                <p class="gs-section-subtitle">Các sự kiện nổi bật được đề xuất cho cộng đồng.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6 col-xl-4">
+                        <article class="gs-event-card h-100">
+                            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80" alt="">
+                            <div class="gs-event-body">
+                                <span class="gs-badge live">LIVE</span>
+                                <div class="gs-event-title">Weekend Arena Battle with exclusive ranked rewards</div>
+                                <div class="gs-event-desc">Tham gia chế độ chiến đấu cuối tuần để nhận thưởng giới hạn và điểm xếp hạng bonus.</div>
+                                <div class="gs-mini-stat">
+                                    <span>📅 16 Apr</span>
+                                    <span>👥 2,310 joined</span>
+                                </div>
+                                <a href="#" class="gs-btn-primary w-100">Join Now</a>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <article class="gs-event-card h-100">
+                            <img src="https://images.unsplash.com/photo-1511882150382-421056c89033?auto=format&fit=crop&w=1200&q=80" alt="">
+                            <div class="gs-event-body">
+                                <span class="gs-badge upcoming">UPCOMING</span>
+                                <div class="gs-event-title">Creator Showcase stream and community challenge</div>
+                                <div class="gs-event-desc">Chuỗi livestream kết hợp thử thách cộng đồng cùng các creator nổi bật trong hệ sinh thái GameStore.</div>
+                                <div class="gs-mini-stat">
+                                    <span>📅 18 Apr</span>
+                                    <span>👥 1,540 registered</span>
+                                </div>
+                                <a href="#" class="gs-btn-outline w-100">Register</a>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <article class="gs-event-card h-100">
+                            <img src="https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?auto=format&fit=crop&w=1200&q=80" alt="">
+                            <div class="gs-event-body">
+                                <span class="gs-badge">COMMUNITY</span>
+                                <div class="gs-event-title">Guild Wars meetup with rewards for top squad performance</div>
+                                <div class="gs-event-desc">Hoạt động nhóm cho cộng đồng bang hội với nhiệm vụ teamwork và phần quà dành cho đội xuất sắc.</div>
+                                <div class="gs-mini-stat">
+                                    <span>📅 20 Apr</span>
+                                    <span>👥 890 groups</span>
+                                </div>
+                                <a href="#" class="gs-btn-outline w-100">View Event</a>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-5">
+                <h3 class="gs-section-title">Event Schedule</h3>
+                <p class="gs-section-subtitle">Lịch trình hoạt động trong tuần dành cho cộng đồng và giải đấu.</p>
+
+                <div class="gs-schedule-card">
+                    <div class="gs-schedule-item">
+                        <div class="gs-schedule-time">16 Apr · 20:00</div>
+                        <div>
+                            <div class="gs-schedule-name">Cyber Arcane Championship Finals</div>
+                            <div class="gs-schedule-meta">Tournament · Live Broadcast · Arena Main Stage</div>
+                        </div>
+                        <span class="gs-badge live mb-0">LIVE NOW</span>
+                    </div>
+
+                    <div class="gs-schedule-item">
+                        <div class="gs-schedule-time">18 Apr · 19:30</div>
+                        <div>
+                            <div class="gs-schedule-name">Creator Showcase Session</div>
+                            <div class="gs-schedule-meta">Community · Stream Session · Online Event Hub</div>
+                        </div>
+                        <span class="gs-badge upcoming mb-0">UPCOMING</span>
+                    </div>
+
+                    <div class="gs-schedule-item">
+                        <div class="gs-schedule-time">20 Apr · 18:00</div>
+                        <div>
+                            <div class="gs-schedule-name">Guild Wars Community Meetup</div>
+                            <div class="gs-schedule-meta">Group Event · Team Battle · Guild Zone</div>
+                        </div>
+                        <span class="gs-badge mb-0">OPEN</span>
+                    </div>
+
+                    <div class="gs-schedule-item">
+                        <div class="gs-schedule-time">22 Apr · 21:00</div>
+                        <div>
+                            <div class="gs-schedule-name">Night Raid Co-op Session</div>
+                            <div class="gs-schedule-meta">Special Event · Squad Match · Global Lobby</div>
+                        </div>
+                        <span class="gs-badge mb-0">LIMITED</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-5">
+                <h3 class="gs-section-title">Featured Groups</h3>
+                <p class="gs-section-subtitle">Những nhóm cộng đồng nổi bật đang tổ chức sự kiện và hoạt động thường xuyên.</p>
+
+                <div class="row g-4">
+                    <div class="col-md-6 col-xl-4">
+                        <article class="gs-group-card h-100">
+                            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80" alt="">
+                            <div class="gs-group-body">
+                                <div class="gs-group-title">Arcane Elite Squad</div>
+                                <div class="gs-group-desc">Nhóm thi đấu tập trung vào PvP xếp hạng, tổ chức scrim và giải đấu nội bộ mỗi tuần.</div>
+                                <div class="gs-mini-stat">
+                                    <span>👥 1,280 members</span>
+                                    <span>📌 12 active events</span>
+                                </div>
+                                <a href="#" class="gs-btn-outline w-100">View Group</a>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <article class="gs-group-card h-100">
+                            <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80" alt="">
+                            <div class="gs-group-body">
+                                <div class="gs-group-title">Neon Arena Community Hub</div>
+                                <div class="gs-group-desc">Cộng đồng dành cho người chơi thích đấu trường, chia sẻ build, chiến thuật và lịch event hàng tuần.</div>
+                                <div class="gs-mini-stat">
+                                    <span>👥 2,040 members</span>
+                                    <span>📌 8 active events</span>
+                                </div>
+                                <a href="#" class="gs-btn-outline w-100">View Group</a>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="col-md-6 col-xl-4">
+                        <article class="gs-group-card h-100">
+                            <img src="https://images.unsplash.com/photo-1511882150382-421056c89033?auto=format&fit=crop&w=1200&q=80" alt="">
+                            <div class="gs-group-body">
+                                <div class="gs-group-title">Raid Masters Network</div>
+                                <div class="gs-group-desc">Nhóm chuyên tổ chức raid co-op, clan event và weekly boss run cho người chơi thích teamwork.</div>
+                                <div class="gs-mini-stat">
+                                    <span>👥 980 members</span>
+                                    <span>📌 6 active events</span>
+                                </div>
+                                <a href="#" class="gs-btn-outline w-100">View Group</a>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="gs-cta-box">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-8">
+                        <div class="gs-kicker">Join the Community</div>
+                        <h3>Stay connected with every event and group activity</h3>
+                        <p>From live tournaments to community meetups, GameStore Event Group helps players discover the most exciting moments on the platform.</p>
+                    </div>
+                    <div class="col-lg-4 text-lg-end">
+                        <a href="#" class="gs-btn-primary">Explore Events</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

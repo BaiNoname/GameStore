@@ -127,12 +127,14 @@ namespace GameStore.Controllers.Auth
         [HttpGet("forgot")]
         public IActionResult ForgotPassword()
         {
+            ViewBag.HideSubBar = true;
             return View();
         }
 
         [HttpPost("forgot")]
         public IActionResult ForgotPassword(string email)
         {
+            ViewBag.HideSubBar = true;
             email = email.Trim().ToLower();
 
             if (authService.SendResetCode(email, out string message))
@@ -149,6 +151,7 @@ namespace GameStore.Controllers.Auth
         [HttpGet("verify")]
         public IActionResult VerifyCode()
         {
+            ViewBag.HideSubBar = true;
             var email = HttpContext.Session.GetString("ResetEmail");
 
             if (email == null)
@@ -160,6 +163,7 @@ namespace GameStore.Controllers.Auth
         [HttpPost("verify")]
         public IActionResult VerifyCode(string code)
         {
+            ViewBag.HideSubBar = true;
             var email = HttpContext.Session.GetString("ResetEmail");
 
             Console.WriteLine("EMAIL SESSION: " + email); // debug
@@ -184,6 +188,7 @@ namespace GameStore.Controllers.Auth
         [HttpGet("reset")]
         public IActionResult ResetPassword()
         {
+            ViewBag.HideSubBar = true;
             var email = HttpContext.Session.GetString("ResetEmail");
 
             if (email == null)
@@ -195,6 +200,7 @@ namespace GameStore.Controllers.Auth
         [HttpPost("reset")]
         public IActionResult ResetPassword(string password, string confirmPassword)
         {
+            ViewBag.HideSubBar = true;
             var email = HttpContext.Session.GetString("ResetEmail");
 
             if (string.IsNullOrEmpty(email))
