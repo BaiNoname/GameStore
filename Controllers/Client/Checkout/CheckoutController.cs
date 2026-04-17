@@ -3,6 +3,7 @@
 namespace GameStore.Controllers.Client.Checkout
 {
     [Route("checkout")]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class CheckoutController : Controller
     {
         [Route("")]

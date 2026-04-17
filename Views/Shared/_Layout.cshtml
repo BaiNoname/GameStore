@@ -604,12 +604,15 @@
                         </a>
                     </div>
 
-                    <form class="gs-search d-flex ms-auto align-items-center" method="get" action="/home">
+                    <form id="globalSearchForm" method="get" action="/home" class="gs-search d-flex align-items-center">
+                        <input type="hidden" name="layoutSearch" value="1" />
+
                         <input class="form-control gs-search-input me-2 flex-grow-1"
                                type="text"
-                               name="search"
-                               value="@Context.Request.Query["search"]"
+                               name="globalSearch"
+                               value="@ViewContext.HttpContext.Request.Query["globalSearch"]"
                                placeholder="Search game..." />
+
                         <button class="btn gs-search-btn" type="submit">
                             Search the store
                         </button>
@@ -934,5 +937,19 @@
             showToast("@Html.Raw(msg)", "@type");
         </script>
     }
+
+    <script>
+        const globalSearchForm = document.getElementById("globalSearchForm");
+        if (globalSearchForm) {
+            globalSearchForm.addEventListener("submit", function () {
+                const keyword = globalSearchForm.querySelector('input[name="globalSearch"]');
+                if (keyword && keyword.value.trim() !== "") {
+                    globalSearchForm.action = "/home#all-games-section";
+                } else {
+                    globalSearchForm.action = "/home";
+                }
+            });
+        }
+    </script>
 </body>
 </html>

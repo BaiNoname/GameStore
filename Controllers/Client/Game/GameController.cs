@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Client.Game
 {
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class GameController : Controller
     {
         private readonly GameService gameService;
@@ -19,14 +20,15 @@ namespace GameStore.Controllers.Client.Game
 
         public IActionResult Detail(string id, string returnUrl)
         {
-            ViewBag.ReturnUrl = returnUrl ?? Request.Headers["Referer"].ToString();
+            ViewBag.ReturnUrl = !string.IsNullOrWhiteSpace(returnUrl)
+                ? returnUrl
+                : Url.Action("Index", "Home");
 
             var game = gameService.findById(id);
             ViewBag.HideSubBar = true;
 
             ViewBag.Categories = categoryService.findAll();
 
-            // 🔥 THÊM ĐOẠN NÀY (GIỐNG HOME)
             List<string> ownedGameIds = new List<string>();
             List<string> cartGameIds = new List<string>();
 
@@ -34,13 +36,11 @@ namespace GameStore.Controllers.Client.Game
             {
                 var userId = int.Parse(User.FindFirst("UserId").Value);
 
-                // 🎮 game đã mua
                 ownedGameIds = gameService.GetDb().ThuVienGames
                     .Where(x => x.MaNguoiDung == userId)
                     .Select(x => x.MaGame)
                     .ToList();
 
-                // 🛒 game trong cart
                 cartGameIds = gameService.GetDb().ChiTietGioHangs
                     .Where(x => x.GioHang.MaNguoiDung == userId)
                     .Select(x => x.MaGame)

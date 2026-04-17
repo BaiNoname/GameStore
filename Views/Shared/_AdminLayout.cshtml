@@ -19,17 +19,6 @@
     @RenderSection("Styles", required: false)
 
     <style>
-        /* ===== Responsive fix only - giữ nguyên logic ===== */
-
-        .app-topstrip {
-            min-height: 68px;
-        }
-
-            .app-topstrip .steam-logo-link img {
-                max-width: 100%;
-                height: auto;
-                display: block;
-            }
 
         .left-sidebar .brand-logo {
             min-height: 70px;
@@ -103,10 +92,6 @@
                 padding-bottom: 12px !important;
             }
 
-                .app-topstrip .steam-logo-link img {
-                    width: 132px !important;
-                }
-
             .app-header .navbar {
                 min-height: 64px;
                 padding-left: 12px;
@@ -135,10 +120,6 @@
                 padding-top: 10px !important;
                 padding-bottom: 10px !important;
             }
-
-                .app-topstrip .steam-logo-link img {
-                    width: 118px !important;
-                }
 
             .app-header .navbar {
                 min-height: 60px;
@@ -183,9 +164,6 @@
                     margin-bottom: 0 !important;
                 }
 
-                .app-topstrip .steam-logo-link img {
-                    width: 108px !important;
-                }
 
             .app-header .navbar {
                 min-height: 56px;
@@ -221,7 +199,137 @@
                 min-width: 160px;
                 font-size: 14px;
             }
+
         }
+
+        .navbar-brand.brand-combo {
+            display: inline-flex;
+            align-items: center;
+            gap: 45px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .brand-icon {
+            height: 56px;
+            transform: scale(1.8);
+            transform-origin: right center;
+            display: block;
+            width: auto;
+            max-width: none;
+        }
+
+        .brand-wordmark {
+            height: 80px;
+            transform: scale(1.28);
+            transform-origin: left center;
+            display: block;
+            margin-left: -70px;
+            width: auto;
+            max-width: none;
+        }
+
+        .app-topstrip .brand-combo {
+            overflow: visible;
+        }
+
+            .app-topstrip .brand-combo img {
+                display: block;
+                filter: brightness(1.08);
+            }
+
+        @@media (max-width: 767.98px) {
+            .navbar-brand.brand-combo
+
+        {
+            gap: 20px;
+        }
+
+        .brand-icon {
+            height: 42px;
+            transform: scale(1.35);
+        }
+
+        .brand-wordmark {
+            height: 58px;
+            transform: scale(1.08);
+            margin-left: -38px;
+        }
+
+        }
+
+        @@media (max-width: 575.98px) {
+            .navbar-brand.brand-combo
+
+        {
+            gap: 14px;
+        }
+
+        .brand-icon {
+            height: 34px;
+            transform: scale(1.18);
+        }
+
+        .brand-wordmark {
+            height: 46px;
+            transform: scale(1);
+            margin-left: -24px;
+        }
+
+        }
+
+        .app-topstrip {
+            min-height: 68px;
+            position: relative;
+            z-index: 2000;
+        }
+
+        .left-sidebar {
+            z-index: 1000;
+        }
+
+        .app-topstrip .d-flex.align-items-center.justify-content-center.gap-5 {
+            position: relative;
+            z-index: 2001;
+        }
+
+        .app-topstrip .brand-combo {
+            position: relative;
+            z-index: 2002;
+        }
+
+        #navbarNav {
+            margin-top: 50px;
+        }
+
+        @@media (max-width: 991.98px) {
+            #navbarNav
+
+        {
+            margin-top: 20px;
+        }
+
+        }
+
+        @@media (max-width: 767.98px) {
+            #navbarNav
+
+        {
+            margin-top: 10px;
+        }
+
+        }
+
+        @@media (max-width: 575.98px) {
+            #navbarNav
+
+        {
+            margin-top: 0;
+        }
+
+        }
+
+
     </style>
 </head>
 
@@ -236,8 +344,9 @@
         <!-- Top strip -->
         <div class="app-topstrip bg-dark py-3 px-3 w-100 d-lg-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center justify-content-center gap-5 mb-2 mb-lg-0">
-                <a class="d-flex justify-content-center text-decoration-none steam-logo-link" href="/">
-                    <img src="https://store.fastly.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016" alt="Logo" width="150">
+                <a class="navbar-brand brand-combo" href="/admin">
+                    <img src="~/assets/images/logos/Artboard2.svg" class="brand-wordmark" />
+                    <img src="~/assets/images/logos/Artboard1.svg" class="brand-icon" />
                 </a>
             </div>
         </div>

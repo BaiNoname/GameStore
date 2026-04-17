@@ -7,16 +7,15 @@ namespace GameStore.Controllers.Admin
 {
     [Authorize(Roles = "admin")]
     [Route("admin")]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class CategoryController : Controller
     {
-
         private CategoryService categoryService;
         private const int pageSize = 10;
 
         public CategoryController(CategoryService _categoryService)
         {
             categoryService = _categoryService;
-
         }
 
         [Route("category")]
@@ -39,20 +38,23 @@ namespace GameStore.Controllers.Admin
         }
 
         [Route("category/add")]
-        public IActionResult Add()
+        public IActionResult Add(string keyword = "", int page = 1)
         {
+            ViewBag.Keyword = keyword;
+            ViewBag.CurrentPage = page;
             return View("~/Views/Admin/Category/Add.cshtml");
         }
 
         [HttpPost]
         [Route("category/add")]
-        public IActionResult Add(TheLoaiGame category)
+        public IActionResult Add(TheLoaiGame category, string keyword = "", int page = 1)
         {
-            // trim input
             category.MaTheLoai = category.MaTheLoai?.Trim();
             category.TenLoaiGame = category.TenLoaiGame?.Trim();
 
-            // validate
+            ViewBag.Keyword = keyword;
+            ViewBag.CurrentPage = page;
+
             if (string.IsNullOrWhiteSpace(category.MaTheLoai))
             {
                 TempData["Msg"] = "❌ Mã thể loại không được để trống!";
@@ -67,7 +69,6 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/Category/Add.cshtml", category);
             }
 
-            // check trùng MaTheLoai
             if (categoryService.findById(category.MaTheLoai) != null)
             {
                 TempData["Msg"] = "❌ Mã thể loại đã tồn tại!";
@@ -79,7 +80,7 @@ namespace GameStore.Controllers.Admin
             {
                 TempData["Msg"] = "✅ Thêm thể loại thành công!";
                 TempData["MsgType"] = "success";
-                return RedirectToAction("Index", new { page = 1 });
+                return RedirectToAction("Index", new { keyword, page });
             }
             else
             {
@@ -90,7 +91,7 @@ namespace GameStore.Controllers.Admin
         }
 
         [Route("category/delete/{id}")]
-        public IActionResult Delete(string id, int page = 1)
+        public IActionResult Delete(string id, string keyword = "", int page = 1)
         {
             if (categoryService.Delete(id))
             {
@@ -103,43 +104,51 @@ namespace GameStore.Controllers.Admin
                 TempData["MsgType"] = "danger";
             }
 
-            // Nếu trang hiện tại trống → giảm page
-            var allCategories = categoryService.findAll("", 1, int.MaxValue, out int _);
-            int maxPage = (int)Math.Ceiling((double)allCategories.Count / pageSize);
-            if (page > maxPage) page = maxPage;
+            int totalPages;
+            categoryService.findAll(keyword, 1, pageSize, out totalPages);
 
-            return RedirectToAction("Index", new { page = page });
+            if (totalPages <= 0) totalPages = 1;
+            if (page > totalPages) page = totalPages;
+
+            return RedirectToAction("Index", new { keyword, page });
         }
 
         [Route("category/edit/{id}")]
-        public IActionResult Edit(string id)
+        public IActionResult Edit(string id, string keyword = "", int page = 1)
         {
             var category = categoryService.findById(id);
             if (category == null)
             {
                 TempData["Msg"] = "❌ Category không tồn tại!";
                 TempData["MsgType"] = "danger";
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", new { keyword, page });
             }
+
+            ViewBag.Keyword = keyword;
+            ViewBag.CurrentPage = page;
 
             return View("~/Views/Admin/Category/Edit.cshtml", category);
         }
 
         [HttpPost]
         [Route("category/edit/{id}")]
-        public IActionResult Edit(TheLoaiGame category)
+        public IActionResult Edit(TheLoaiGame category, string keyword = "", int page = 1)
         {
             var existing = categoryService.findById(category.MaTheLoai);
             if (existing == null)
             {
                 TempData["Msg"] = "❌ Thể loại không tồn tại!";
                 TempData["MsgType"] = "danger";
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", new { keyword, page });
             }
+
+            ViewBag.Keyword = keyword;
+            ViewBag.CurrentPage = page;
 
             bool isChanged = false;
 
-            if (!string.IsNullOrWhiteSpace(category.TenLoaiGame) && category.TenLoaiGame != existing.TenLoaiGame)
+            if (!string.IsNullOrWhiteSpace(category.TenLoaiGame) &&
+                category.TenLoaiGame.Trim() != existing.TenLoaiGame)
             {
                 existing.TenLoaiGame = category.TenLoaiGame.Trim();
                 isChanged = true;
@@ -149,21 +158,28 @@ namespace GameStore.Controllers.Admin
             {
                 TempData["Msg"] = "⚠️ Không có gì thay đổi!";
                 TempData["MsgType"] = "info";
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", new { keyword, page });
             }
 
             if (categoryService.Update(existing))
             {
-                // Tính page chứa category vừa edit
-                var allCategories = categoryService.findAll("", 1, int.MaxValue, out int _)
-                                                  .OrderBy(c => c.MaTheLoai)
-                                                  .ToList();
-                int index = allCategories.FindIndex(c => c.MaTheLoai == category.MaTheLoai);
-                int page = (index / pageSize) + 1;
+                int targetPage = page;
+
+                if (string.IsNullOrWhiteSpace(keyword))
+                {
+                    var allCategories = categoryService.findAll("", 1, int.MaxValue, out int _)
+                                                      .OrderBy(c => c.MaTheLoai)
+                                                      .ToList();
+                    int index = allCategories.FindIndex(c => c.MaTheLoai == category.MaTheLoai);
+                    if (index >= 0)
+                    {
+                        targetPage = (index / pageSize) + 1;
+                    }
+                }
 
                 TempData["Msg"] = "✅ Chỉnh sửa thể loại thành công!";
                 TempData["MsgType"] = "success";
-                return RedirectToAction("Index", new { page = page });
+                return RedirectToAction("Index", new { keyword, page = targetPage });
             }
             else
             {
@@ -172,7 +188,5 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/Category/Edit.cshtml", category);
             }
         }
-
-
     }
 }

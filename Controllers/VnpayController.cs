@@ -4,11 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Client
 {
-    /// <summary>
+
     /// Xử lý tất cả callback và redirect từ VNPay
     /// Route: /api/vnpay/...
-    /// </summary>
+
     [Route("api/vnpay")]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class VnpayController : Controller
     {
         private readonly VnpayService _vnpayService;

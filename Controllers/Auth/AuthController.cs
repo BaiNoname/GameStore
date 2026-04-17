@@ -115,6 +115,8 @@ namespace GameStore.Controllers.Auth
         [HttpGet("logout")]
         public async Task<IActionResult> Logout()
         {
+            HttpContext.Session.Clear();
+
             await HttpContext.SignOutAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme);
 
