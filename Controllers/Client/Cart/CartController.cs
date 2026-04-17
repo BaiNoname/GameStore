@@ -6,6 +6,7 @@ namespace GameStore.Controllers.Client.Cart
 {
     [Authorize]
     [Route("cart")]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class CartController : Controller
     {
         private readonly CartService cartService;
@@ -21,11 +22,23 @@ namespace GameStore.Controllers.Client.Cart
 
         private int GetUserId() => int.Parse(User.FindFirst("UserId").Value);
 
+        private string GetSafeReturnUrl(string? returnUrl = null)
+        {
+            var url = returnUrl
+                      ?? TempData["ReturnUrl"]?.ToString()
+                      ?? "/home/index#game-list-section";
+
+            TempData["ReturnUrl"] = url;
+            return url;
+        }
+
         [HttpGet("")]
         [HttpGet("index")]
         public async Task<IActionResult> Index(string returnUrl)
         {
-            // 🔥 MoMo redirect về /cart với params
+            returnUrl = GetSafeReturnUrl(returnUrl);
+
+            // MoMo redirect về /cart với params
             if (Request.Query.ContainsKey("resultCode") && Request.Query.ContainsKey("orderId"))
             {
                 var resultCode = Request.Query["resultCode"].ToString();
@@ -35,7 +48,6 @@ namespace GameStore.Controllers.Client.Cart
                 {
                     if (orderId.StartsWith("TOPUP_"))
                     {
-                        // TOPUP_{userId}_{timestamp} → lấy userId
                         var parts = orderId.Split('_');
                         var amount = decimal.Parse(Request.Query["amount"].ToString());
 
@@ -61,11 +73,12 @@ namespace GameStore.Controllers.Client.Cart
                         var maGD = orderId["ORDER_".Length..];
                         try { await paymentService.FailMomo(maGD); } catch { }
                     }
+
                     TempData["ToastMessage"] = "Thanh toán thất bại!";
                     TempData["ToastType"] = "error";
                 }
 
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", new { returnUrl });
             }
 
             if (Request.Query["success"] == "momo")
@@ -73,6 +86,7 @@ namespace GameStore.Controllers.Client.Cart
                 TempData["ToastMessage"] = "Thanh toán MoMo thành công 🎉";
                 TempData["ToastType"] = "success";
             }
+
             if (Request.Query["error"] == "momo")
             {
                 TempData["ToastMessage"] = "Thanh toán MoMo thất bại!";
@@ -82,6 +96,7 @@ namespace GameStore.Controllers.Client.Cart
             var cart = cartService.GetCart(GetUserId());
             ViewBag.HideSubBar = true;
             ViewBag.ReturnUrl = returnUrl;
+
             TempData["ReturnUrl"] = returnUrl;
             return View(cart);
         }
@@ -89,36 +104,53 @@ namespace GameStore.Controllers.Client.Cart
         [HttpGet("add")]
         public IActionResult Add(string gameId, string returnUrl, string mode)
         {
+            returnUrl = GetSafeReturnUrl(returnUrl);
+
             var result = cartService.AddToCart(GetUserId(), gameId);
+
             TempData["ToastMessage"] = result ? "Đã thêm vào giỏ hàng 🛒" : "Game đã có trong giỏ hàng!";
             TempData["ToastType"] = result ? "success" : "error";
             TempData["ReturnUrl"] = returnUrl;
-            if (mode == "buy") return RedirectToAction("Index", new { returnUrl });
-            return Redirect(returnUrl ?? "/");
+
+            if (mode == "buy")
+                return RedirectToAction("Index", new { returnUrl });
+
+            return Redirect(returnUrl);
         }
 
         [HttpGet("remove")]
         public IActionResult Remove(string gameId, string returnUrl)
         {
+            returnUrl = GetSafeReturnUrl(returnUrl);
+
             cartService.RemoveFromCart(GetUserId(), gameId);
+
             TempData["ToastMessage"] = "Đã xóa game khỏi giỏ hàng";
             TempData["ToastType"] = "success";
             TempData["ReturnUrl"] = returnUrl;
+
             return RedirectToAction("Index", new { returnUrl });
         }
 
         [HttpGet("clear")]
-        public IActionResult Clear()
+        public IActionResult Clear(string returnUrl)
         {
+            returnUrl = GetSafeReturnUrl(returnUrl);
+
             cartService.ClearCart(GetUserId());
+
             TempData["ToastMessage"] = "Đã xóa toàn bộ giỏ hàng 🧹";
             TempData["ToastType"] = "success";
-            return RedirectToAction("Index");
+            TempData["ReturnUrl"] = returnUrl;
+
+            return RedirectToAction("Index", new { returnUrl });
         }
 
         [HttpGet("/checkout")]
-        public async Task<IActionResult> Checkout(string method = "balance")
+        public async Task<IActionResult> Checkout(string method = "balance", string returnUrl = null)
         {
+            returnUrl = GetSafeReturnUrl(returnUrl);
+
             var userId = GetUserId();
 
             if (method.Equals("momo", StringComparison.OrdinalIgnoreCase))
@@ -129,7 +161,7 @@ namespace GameStore.Controllers.Client.Cart
                 {
                     TempData["ToastMessage"] = "Giỏ hàng trống!";
                     TempData["ToastType"] = "error";
-                    return Redirect("/cart");
+                    return RedirectToAction("Index", "Cart", new { returnUrl });
                 }
 
                 var total = cart.ChiTietGioHangs.Sum(x => x.DonGiaHienTai);
@@ -143,11 +175,12 @@ namespace GameStore.Controllers.Client.Cart
                 return Redirect(paymentUrl);
             }
 
-            // balance
             var result = await paymentService.Checkout(userId);
+
             TempData["ToastMessage"] = result ? "Thanh toán thành công 💳" : "Thanh toán thất bại!";
             TempData["ToastType"] = result ? "success" : "error";
-            return Redirect("/cart");
+
+            return RedirectToAction("Index", "Cart", new { returnUrl });
         }
     }
 }

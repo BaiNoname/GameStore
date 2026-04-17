@@ -8,6 +8,7 @@ namespace GameStore.Controllers.Admin
 {
     [Authorize(Roles = "admin")]
     [Route("admin")]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class DashboardController : Controller
     {
         private readonly GameStoreContext db;

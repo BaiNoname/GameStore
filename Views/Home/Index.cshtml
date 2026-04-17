@@ -9,136 +9,176 @@
 
     var hotGames = ViewBag.HotTop as List<GameStore.Models.Game> ?? new List<GameStore.Models.Game>();
     var newGames = ViewBag.NewGames as List<GameStore.Models.Game> ?? new List<GameStore.Models.Game>();
+
+    var searchValue = ViewBag.SearchValue?.ToString() ?? "";
+    var globalSearchValue = ViewBag.GlobalSearchValue?.ToString() ?? "";
+    var activeKeyword = ViewBag.ActiveKeyword?.ToString() ?? "";
+    var categoryValue = Context.Request.Query["category"].ToString();
+
+    var currentPageUrl = Context.Request.Path + Context.Request.QueryString;
+
+    var allGamesReturnUrl = Url.Action("Index", "Home", new
+    {
+        search = searchValue,
+        globalSearch = globalSearchValue,
+        category = categoryValue,
+        page = ViewBag.CurrentPage
+    }) + "#all-games-section";
+
+    var hideTopSections = ViewBag.HideTopSections != null && (bool)ViewBag.HideTopSections;
+    var hasFilterResult = !string.IsNullOrWhiteSpace(activeKeyword)
+                       || !string.IsNullOrWhiteSpace(categoryValue);
 }
 
 <main class="gs-page">
     <div class="container-xxl py-4 py-lg-5">
 
-        <!-- ================= HERO ================= -->
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-            <div>
-                <div class="gs-kicker">Featured Collection</div>
-                <h2 class="gs-block-title mb-0">🔥 Hot Games</h2>
+        @if (!hideTopSections)
+        {
+                        <!-- ================= HERO ================= -->
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <div>
+                    <div class="gs-kicker">Featured Collection</div>
+                    <h2 class="gs-block-title mb-0">🔥 Hot Games</h2>
+                </div>
             </div>
-        </div>
 
-        <div id="heroCarousel" class="carousel slide mb-5 gs-hero-wrap" data-bs-ride="carousel">
-            <div class="carousel-inner rounded-5 overflow-hidden shadow-lg">
+            <div id="heroCarousel" class="carousel slide mb-5 gs-hero-wrap" data-bs-ride="carousel">
+                <div class="carousel-inner rounded-5 overflow-hidden shadow-lg">
 
-                @for (int i = 0; i < hotGames.Count; i++)
-                {
-                    var g = hotGames[i];
-                    <div class="carousel-item @(i == 0 ? "active" : "")">
-                        <div class="hero-slide">
-                            <a asp-controller="Game" asp-action="Detail" asp-route-id="@g.MaGame">
-                                <img src="~/images/@g.Hinh" class="w-100 hero-img" alt="@g.TenGame" />
-                            </a>
+                    @for (int i = 0; i < hotGames.Count; i++)
+                    {
+                        var g = hotGames[i];
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <div class="hero-slide">
+                                <a asp-controller="Game" asp-action="Detail" asp-route-id="@g.MaGame">
+                                    <img src="~/images/@g.Hinh" class="w-100 hero-img" alt="@g.TenGame" />
+                                </a>
 
-                            <div class="hero-backdrop"></div>
+                                <div class="hero-backdrop"></div>
 
-                            <div class="hero-overlay">
-                                <span class="hero-tag">Top Seller</span>
-                                <h2>@g.TenGame</h2>
-                                <p class="hero-category">@g.MaTheLoai</p>
+                                <div class="hero-overlay">
+                                    <span class="hero-tag">Top Seller</span>
+                                    <h2>@g.TenGame</h2>
+                                    <p class="hero-category">@g.MaTheLoai</p>
 
-                                <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
-                                    <span class="hero-price">
-                                        @String.Format("{0:N0} VNĐ", g.Gia)
-                                    </span>
-                                </div>
+                                    <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
+                                        <span class="hero-price">
+                                            @String.Format("{0:N0} VNĐ", g.Gia)
+                                        </span>
+                                    </div>
 
-                                <div class="mt-2 text-light-emphasis">
-                                    👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> lượt mua
-                                </div>
+                                    <div class="mt-2 text-light-emphasis">
+                                        👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> lượt mua
+                                    </div>
 
-                                <div class="d-flex gap-2 flex-wrap mt-4">
-                                    <a asp-controller="Game"
-                                       asp-action="Detail"
-                                       asp-route-id="@g.MaGame"
-                                       class="btn gs-btn-primary rounded-pill px-4">
-                                        Xem chi tiết
-                                    </a>
-
-                                    @if (owned.Contains(g.MaGame))
-                                    {
-                                        <button class="btn gs-btn-muted rounded-pill px-4"
-                                                onclick="showToast('Bạn đã sở hữu game này rồi 🎮', 'error')">
-                                            Owned
-                                        </button>
-                                    }
-                                    else if (cart.Contains(g.MaGame))
-                                    {
-                                        <a asp-controller="Cart"
-                                           asp-action="Index"
-                                           asp-route-gameId="@g.MaGame"
-                                           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
-                                           class="btn gs-btn-warning rounded-pill px-4">
-                                            In Cart
+                                    <div class="d-flex gap-2 flex-wrap mt-4">
+                                        <a asp-controller="Game"
+                                           asp-action="Detail"
+                                           asp-route-id="@g.MaGame"
+                                           asp-route-returnUrl="@currentPageUrl"
+                                           class="btn gs-btn-primary rounded-pill px-4">
+                                            Xem chi tiết
                                         </a>
-                                    }
-                                    else
-                                    {
-                                        <a asp-controller="Cart"
-                                           asp-action="Add"
-                                           asp-route-gameId="@g.MaGame"
-                                           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
-                                           asp-route-mode="add"
-                                           class="btn gs-btn-glass rounded-pill px-4">
-                                            Add to cart
-                                        </a>
-                                    }
+
+                                        @if (owned.Contains(g.MaGame))
+                                        {
+                                            <button class="btn gs-btn-muted rounded-pill px-4"
+                                                    onclick="showToast('Bạn đã sở hữu game này rồi 🎮', 'error')">
+                                                Owned
+                                            </button>
+                                        }
+                                        else if (cart.Contains(g.MaGame))
+                                        {
+                                            <a asp-controller="Cart"
+                                               asp-action="Index"
+                                               asp-route-returnUrl="@currentPageUrl"
+                                               class="btn gs-btn-warning rounded-pill px-4">
+                                                In Cart
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-controller="Cart"
+                                               asp-action="Add"
+                                               asp-route-gameId="@g.MaGame"
+                                               asp-route-returnUrl="@currentPageUrl"
+                                               asp-route-mode="add"
+                                               class="btn gs-btn-glass rounded-pill px-4">
+                                                Add to cart
+                                            </a>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                }
+                    }
 
+                </div>
+
+                <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+
+                <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+            </div>
+        }
+
+
+
+        @if (!hideTopSections)
+        {
+                <!-- ================= NEW GAMES ================= -->
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <div>
+                    <div class="gs-kicker">Just Arrived</div>
+                    <h2 class="gs-block-title mb-0">🆕 New Games</h2>
+                </div>
             </div>
 
-            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon"></span>
-            </button>
-
-            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon"></span>
-            </button>
-        </div>
-
-        <!-- ================= NEW GAMES ================= -->
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-            <div>
-                <div class="gs-kicker">Just Arrived</div>
-                <h2 class="gs-block-title mb-0">🆕 New Games</h2>
-            </div>
-        </div>
-
-        <div class="hot-scroll mb-5">
-            @foreach (var g in newGames)
-            {
-                <a class="hot-item" asp-controller="Game" asp-action="Detail" asp-route-id="@g.MaGame">
-                    <div class="hot-thumb-wrap">
-                        <img src="~/images/@g.Hinh" alt="@g.TenGame" />
-                        <span class="hot-badge">NEW</span>
-                    </div>
-                    <div class="hot-info">
-                        <div class="hot-name">@g.TenGame</div>
-                        <small class="hot-price">@String.Format("{0:N0}", g.Gia) VNĐ</small>
-                        <div class="small text-secondary mt-1">
-                            👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> lượt mua
+            <div class="hot-scroll mb-5">
+                @foreach (var g in newGames)
+                {
+                    <a class="hot-item"
+                       asp-controller="Game"
+                       asp-action="Detail"
+                       asp-route-id="@g.MaGame"
+                       asp-route-returnUrl="@currentPageUrl">
+                        <div class="hot-thumb-wrap">
+                            <img src="~/images/@g.Hinh" alt="@g.TenGame" />
+                            <span class="hot-badge">NEW</span>
                         </div>
-                    </div>
-                </a>
-            }
-        </div>
+                        <div class="hot-info">
+                            <div class="hot-name">@g.TenGame</div>
+                            <small class="hot-price">@String.Format("{0:N0}", g.Gia) VNĐ</small>
+                            <div class="small text-secondary mt-1">
+                                👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> lượt mua
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+        
 
         <!-- ================= FILTER ================= -->
         <div class="gs-panel mb-4">
             <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3">
                 <div>
-                    <div class="gs-kicker">Store Catalog</div>
-                    <h3 class="gs-section-title mb-0">
-                        @(ViewBag.CategoryName ?? "All Games")
-                    </h3>
+                    <div>
+                        <h3 class="gs-section-title mb-0">
+                            @(ViewBag.CategoryName ?? "All Games")
+                        </h3>
+
+                        @if (hasFilterResult)
+                        {
+                            <div class="small text-secondary mt-2">
+                                Tìm thấy <strong>@Model.Count</strong> game phù hợp
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
 
@@ -149,7 +189,11 @@
                     </button>
                     <ul class="dropdown-menu gs-dd">
                         <li>
-                            <a class="dropdown-item" href="/Home?category=" data-name="All Games">All</a>
+                            <a class="dropdown-item"
+                               href="@Url.Action("Index", "Home", new { category = "" })#all-games-section"
+                               data-name="All Games">
+                                All
+                            </a>
                         </li>
                         @if (ViewBag.Categories != null)
                         {
@@ -157,7 +201,7 @@
                             {
                                 <li>
                                     <a class="dropdown-item"
-                                       href="/home?category=@c.MaTheLoai"
+                                       href="@Url.Action("Index", "Home", new { category = c.MaTheLoai })#all-games-section"
                                        data-name="@c.TenLoaiGame">
                                         @c.TenLoaiGame
                                     </a>
@@ -167,11 +211,11 @@
                     </ul>
                 </div>
 
-                <form class="gs-search d-flex ms-auto align-items-center" method="get" action="/home">
+                <form id="homeSearchForm" class="gs-search d-flex ms-auto align-items-center" method="get" action="/home">
                     <input class="form-control gs-search-input me-2 flex-grow-1"
                            type="text"
                            name="search"
-                           value="@Context.Request.Query["search"]"
+                           value="@searchValue"
                            placeholder="Search game..." />
                     <button class="btn gs-search-btn" type="submit">
                         Search
@@ -181,7 +225,7 @@
         </div>
 
         <!-- ================= ALL GAMES ================= -->
-        <div class="row g-4">
+        <div id="all-games-section" class="row g-4">
             @foreach (var game in Model)
             {
                 <div class="col-12 col-sm-6 col-lg-3">
@@ -223,8 +267,7 @@
                                     {
                                         <a asp-controller="Cart"
                                            asp-action="Index"
-                                           asp-route-gameId="@game.MaGame"
-                                           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
+                                           asp-route-returnUrl="@allGamesReturnUrl"
                                            class="btn gs-btn-warning gs-action-btn">
                                             In Cart
                                         </a>
@@ -234,17 +277,17 @@
                                         <a asp-controller="Cart"
                                            asp-action="Add"
                                            asp-route-gameId="@game.MaGame"
-                                           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
+                                           asp-route-returnUrl="@allGamesReturnUrl"
                                            asp-route-mode="add"
                                            class="btn gs-btn-primary gs-action-btn">
                                             Add to cart
                                         </a>
                                     }
 
-                                    <a asp-controller="Game"
+                                   <a asp-controller="Game"
                                        asp-action="Detail"
                                        asp-route-id="@game.MaGame"
-                                       asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)"
+                                       asp-route-returnUrl="@allGamesReturnUrl"
                                        class="btn gs-btn-outline gs-action-btn">
                                         Detail
                                     </a>
@@ -261,7 +304,12 @@
             <ul class="pagination justify-content-center gs-pagination">
                 <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
                     <a class="page-link"
-                       href="/home?page=@(ViewBag.CurrentPage - 1)&search=@Context.Request.Query["search"]&category=@Context.Request.Query["category"]">
+                       href="@Url.Action("Index", "Home", new {
+                            page = ViewBag.CurrentPage - 1,
+                            search = searchValue,
+                            globalSearch = globalSearchValue,
+                            category = Context.Request.Query["category"].ToString()
+                       })#all-games-section">
                         Previous
                     </a>
                 </li>
@@ -270,7 +318,12 @@
                 {
                     <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
                         <a class="page-link"
-                           href="/home?page=@i&search=@Context.Request.Query["search"]&category=@Context.Request.Query["category"]">
+                           href="@Url.Action("Index", "Home", new {
+                                page = i,
+                                search = searchValue,
+                                globalSearch = globalSearchValue,
+                                category = Context.Request.Query["category"].ToString()
+                           })#all-games-section">
                             @i
                         </a>
                     </li>
@@ -278,7 +331,12 @@
 
                 <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
                     <a class="page-link"
-                       href="/home?page=@(ViewBag.CurrentPage + 1)&search=@Context.Request.Query["search"]&category=@Context.Request.Query["category"]">
+                       href="@Url.Action("Index", "Home", new {
+                            page = ViewBag.CurrentPage + 1,
+                            search = searchValue,
+                            globalSearch = globalSearchValue,
+                            category = Context.Request.Query["category"].ToString()
+                       })#all-games-section">
                         Next
                     </a>
                 </li>
@@ -770,18 +828,44 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
 <script>
-    const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/gameHub")
-        .build();
+const connection = new signalR.HubConnectionBuilder()
+    .withUrl("/gameHub")
+    .build();
 
-    connection.start().then(function () {
-        console.log("Connected to GameHub");
-    }).catch(err => console.error(err));
+connection.start().then(function () {
+    console.log("Connected to GameHub");
+}).catch(err => console.error(err));
 
-    connection.on("UpdateDownload", function (gameId, count) {
-        console.log("RECEIVED:", gameId, count);
+connection.on("UpdateDownload", function (gameId, count) {
+    console.log("RECEIVED:", gameId, count);
 
-        const elements = document.querySelectorAll(`[id='download-${gameId}']`);
-        elements.forEach(el => el.innerText = count);
+    const elements = document.querySelectorAll(`[id='download-${gameId}']`);
+    elements.forEach(el => el.innerText = count);
+});
+
+window.addEventListener("load", function () {
+        const params = new URLSearchParams(window.location.search);
+        const isLayoutSearch = params.get("layoutSearch") === "1";
+
+        if (isLayoutSearch) {
+            const target = document.getElementById("all-games-section");
+            if (target) {
+                setTimeout(() => {
+                    target.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+                }, 120);
+            }
+        }
     });
+
+const homeSearchForm = document.getElementById("homeSearchForm");
+if (homeSearchForm) {
+    homeSearchForm.addEventListener("submit", function () {
+        const action = homeSearchForm.getAttribute("action") || "/home";
+        homeSearchForm.setAttribute("action", action + "#all-games-section");
+    });
+}
 </script>
+

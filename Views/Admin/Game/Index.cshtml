@@ -35,7 +35,12 @@
                 <button class="btn btn-success">Search</button>
             </form>
 
-            <a href="/admin/game/add" class="btn btn-primary">
+            <a asp-controller="Game"
+               asp-action="Add"
+               asp-route-keyword="@Model.Keyword"
+               asp-route-categoryId="@Model.CategoryId"
+               asp-route-page="@Model.CurrentPage"
+               class="btn btn-primary">
                 + Add New Game
             </a>
 
@@ -73,10 +78,12 @@
                             <td>
                                 <div class="d-flex gap-2 flex-wrap admin-action-group">
                                     <a class="btn btn-sm btn-warning"
-                                       asp-controller="game"
-                                       asp-action="edit"
+                                       asp-controller="Game"
+                                       asp-action="Edit"
                                        asp-route-id="@game.MaGame"
-                                       asp-route-page="@Model.CurrentPage">
+                                       asp-route-page="@Model.CurrentPage"
+                                       asp-route-keyword="@Model.Keyword"
+                                       asp-route-categoryId="@Model.CategoryId">
                                         Edit
                                     </a>
 
@@ -144,6 +151,8 @@
             <div class="modal-footer border-secondary flex-wrap">
                 <form method="get" id="deleteForm">
                     <input type="hidden" name="page" value="@Model.CurrentPage" />
+                    <input type="hidden" name="keyword" value="@Model.Keyword" />
+                    <input type="hidden" name="categoryId" value="@Model.CategoryId" />
                     <button type="submit" class="btn btn-danger">
                         Đồng ý xóa
                     </button>
@@ -283,6 +292,6 @@
         modalTitle.textContent = gameName;
 
         const form = deleteModal.querySelector('#deleteForm');
-        form.action = `/admin/game/delete/${gameId}?page=@Model.CurrentPage`;
+        form.action = `/admin/game/delete/${gameId}`;
     });
 </script>

@@ -23,6 +23,8 @@
 
         <div class="card-body">
             <form method="post" asp-controller="user" asp-action="add">
+                <input type="hidden" name="keyword" value="@ViewBag.Keyword" />
+                <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
 
                 <!-- Category Name -->
                 <div class="mb-3">
@@ -85,7 +87,10 @@
                 <!-- Buttons -->
                 <div class="d-flex justify-content-end gap-2">
 
-                    <a href="/Admin/user/index"
+                    <a asp-controller="User"
+                       asp-action="Index"
+                       asp-route-keyword="@ViewBag.Keyword"
+                       asp-route-page="@ViewBag.CurrentPage"
                        class="btn btn-secondary">
                         Back
                     </a>

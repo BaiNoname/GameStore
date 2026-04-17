@@ -115,6 +115,7 @@
                             <a asp-controller="Cart"
                                asp-action="Checkout"
                                asp-route-method="momo"
+                               asp-route-returnUrl="@ViewBag.ReturnUrl"
                                class="btn gs-btn-momo gs-summary-btn">
                                 🟣 Pay with MoMo
                             </a>
@@ -123,7 +124,8 @@
                                 var returnUrl = ViewBag.ReturnUrl ?? TempData["ReturnUrl"]?.ToString() ?? "/home";
                             }
 
-                            <a href="@returnUrl" class="btn gs-btn-muted gs-summary-btn">
+                            <a href="@(ViewBag.ReturnUrl ?? "/home/index#game-list-section")"
+                               class="btn gs-btn-muted gs-summary-btn">
                                 ← Back
                             </a>
                         </div>
@@ -152,6 +154,7 @@
 
                             <a asp-controller="Cart"
                                asp-action="Clear"
+                               asp-route-returnUrl="@ViewBag.ReturnUrl"
                                class="btn gs-btn-danger px-4">
                                 Đồng ý
                             </a>
@@ -180,6 +183,7 @@
 
                             <form method="get" action="/checkout">
                                 <input type="hidden" name="method" value="balance" />
+                                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                                 <button type="submit" class="btn gs-btn-success px-4">
                                     Đồng ý thanh toán
                                 </button>

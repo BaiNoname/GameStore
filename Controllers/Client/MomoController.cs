@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GameStore.Controllers.Client;
 
 [Route("api/momo")]
+[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class MomoController : Controller
 {
     private readonly IMomoService _momoService;

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GameStore.Controllers;
 
 [Route("home")]
+[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class HomeController : Controller
 {
     private GameService gameService;
@@ -19,22 +20,31 @@ public class HomeController : Controller
     [Route("~/")]
     [Route("index")]
     [Route("")]
-    public IActionResult Index(string search, string category, int page = 1)
+    public IActionResult Index(string search, string globalSearch, string category, string layoutSearch, int page = 1)
     {
         int pageSize = 8;
 
         // =========================
+        // 🔥 XÁC ĐỊNH KEYWORD ĐANG DÙNG
+        // - search: ô search trong Home/Index
+        // - globalSearch: ô search ở Layout
+        // =========================
+        string keyword = !string.IsNullOrWhiteSpace(globalSearch)
+            ? globalSearch
+            : search;
+
+        // =========================
         // 🔥 ALL GAME (DUY NHẤT có pagination)
         // =========================
-        var games = gameService.FilterGames(search, category, page, pageSize);
-        int totalGames = gameService.CountGames(search, category);
+        var games = gameService.FilterGames(keyword, category, page, pageSize);
+        int totalGames = gameService.CountGames(keyword, category);
 
         // =========================
         // 🎯 TITLE
         // =========================
-        if (!string.IsNullOrEmpty(search))
+        if (!string.IsNullOrEmpty(keyword))
         {
-            ViewBag.CategoryName = "Search: " + search;
+            ViewBag.CategoryName = "Search: " + keyword;
         }
         else if (!string.IsNullOrEmpty(category))
         {
@@ -59,13 +69,27 @@ public class HomeController : Controller
         // =========================
         // 🎮 UI DATA (KHÔNG PAGINATE)
         // =========================
-        ViewBag.HotTop = gameService.GetHotGames(5);                 // Top 5 → carousel
-        ViewBag.NewGames = gameService.GetNewGames(10).Take(10).ToList(); // Scroll
+        ViewBag.HotTop = gameService.GetHotGames(5);
+        ViewBag.NewGames = gameService.GetNewGames(10).Take(10).ToList();
 
         // =========================
         // 📂 CATEGORY (CHO FILTER UI)
         // =========================
         ViewBag.Categories = categoryService.findAll();
+
+        // =========================
+        // 🔍 GIỮ RIÊNG GIÁ TRỊ SEARCH
+        // - searchValue: ô search trong Home/Index
+        // - globalSearchValue: ô search ở Layout
+        // - activeKeyword: keyword thực sự đang dùng để filter
+        // - hideTopSections: chỉ ẩn Hot/New khi search từ layout
+        // =========================
+        ViewBag.SearchValue = search ?? "";
+        ViewBag.GlobalSearchValue = globalSearch ?? "";
+        ViewBag.ActiveKeyword = keyword ?? "";
+        ViewBag.LayoutSearch = layoutSearch ?? "";
+        ViewBag.HideTopSections =
+            layoutSearch == "1" && !string.IsNullOrWhiteSpace(globalSearch);
 
         // =========================
         // 🛒 OWNED + CART

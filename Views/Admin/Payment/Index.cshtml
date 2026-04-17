@@ -59,9 +59,12 @@
                             <td>
                                 <form method="post"
                                       action="/admin/payment/update-status"
-                                      class="d-flex align-items-center gap-2 flex-wrap admin-payment-action-form">
+                                      class="d-inline-flex align-items-center gap-2 admin-payment-action-form">
 
                                     <input type="hidden" name="id" value="@item.MaGD" />
+                                    <input type="hidden" name="keyword" value="@Model.Keyword" />
+                                    <input type="hidden" name="currentStatus" value="@Model.Status" />
+                                    <input type="hidden" name="page" value="@Model.CurrentPage" />
 
                                     <select name="status"
                                             class="form-select form-select-sm">
@@ -82,7 +85,6 @@
                                             class="btn btn-sm btn-warning">
                                         🔄
                                     </button>
-
                                 </form>
                             </td>
                         </tr>
@@ -212,4 +214,17 @@
             font-size: 0.9rem;
         }
     }
+
+    .admin-payment-action-form {
+        flex-wrap: nowrap !important;
+    }
+
+        .admin-payment-action-form .form-select {
+            min-width: 120px;
+            width: auto;
+        }
+
+        .admin-payment-action-form .btn {
+            flex: 0 0 auto;
+        }
 </style>

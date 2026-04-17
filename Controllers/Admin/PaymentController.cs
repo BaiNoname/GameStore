@@ -7,7 +7,8 @@ namespace GameStore.Controllers.Admin
 {
     [Authorize(Roles = "admin")]
     [Route("admin/payment")]
-    public class PaymentController: Controller
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public class PaymentController : Controller
     {
         private PaymentService paymentService;
 
@@ -16,7 +17,6 @@ namespace GameStore.Controllers.Admin
             paymentService = _paymentService;
         }
 
-        // 🔹 LIST
         [Route("index")]
         public IActionResult Index(string keyword = "", string status = "", int page = 1)
         {
@@ -37,22 +37,9 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Payment/Index.cshtml", vm);
         }
 
-        //// 🔹 DETAIL
-        //[Route("detail/{id}")]
-        //public IActionResult Detail(string id)
-        //{
-        //    var gd = paymentService.findById(id);
-
-        //    if (gd == null)
-        //        return RedirectToAction("Index");
-
-        //    return View("~/Views/Admin/Payment/Detail.cshtml", gd);
-        //}
-
-        // 🔹 UPDATE STATUS
         [HttpPost]
         [Route("update-status")]
-        public IActionResult UpdateStatus(string id, string status)
+        public IActionResult UpdateStatus(string id, string status, string keyword = "", string currentStatus = "", int page = 1)
         {
             if (paymentService.UpdateStatus(id, status))
             {
@@ -63,7 +50,12 @@ namespace GameStore.Controllers.Admin
                 TempData["Msg"] = "Update failed";
             }
 
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", new
+            {
+                keyword,
+                status = currentStatus,
+                page
+            });
         }
     }
 }

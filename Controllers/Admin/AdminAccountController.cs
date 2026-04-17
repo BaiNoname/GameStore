@@ -1,10 +1,13 @@
 ﻿using GameStore.Models;
 using GameStore.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Admin
 {
     [Route("admin/account")]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class AdminAccountController : Controller
     {
         private readonly AuthService authService;
@@ -42,15 +45,26 @@ namespace GameStore.Controllers.Admin
         }
 
         [HttpPost("change-password")]
-        public IActionResult ChangePassword(string oldPass, string newPass, string confirmPass)
+        public async Task<IActionResult> ChangePassword(string oldPass, string newPass, string confirmPass)
         {
             int userId = int.Parse(User.FindFirst("UserId").Value);
 
-            authService.ChangePassword(userId, oldPass, newPass, confirmPass, out string msg);
+            bool success = authService.ChangePassword(userId, oldPass, newPass, confirmPass, out string msg);
 
-            TempData["Msg"] = msg;
+            if (!success)
+            {
+                TempData["Msg"] = msg;
+                return RedirectToAction("Profile");
+            }
 
-            return RedirectToAction("Profile");
+            HttpContext.Session.Clear();
+
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            TempData["ToastMessage"] = "Đổi mật khẩu admin thành công. Vui lòng đăng nhập lại 🔐";
+            TempData["ToastType"] = "success";
+
+            return Redirect("/auth/login");
         }
     }
 }

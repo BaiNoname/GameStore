@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameStore.Controllers.Client.Library
 {
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class LibraryController: Controller
     {
         private readonly GameStoreContext db;

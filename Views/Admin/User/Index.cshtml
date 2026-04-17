@@ -24,7 +24,11 @@
                 </button>
             </form>
 
-            <a href="/admin/user/add" class="btn btn-primary">
+            <a asp-controller="User"
+               asp-action="Add"
+               asp-route-keyword="@Model.Keyword"
+               asp-route-page="@Model.CurrentPage"
+               class="btn btn-primary">
                 + Add New User
             </a>
 
@@ -67,7 +71,8 @@
                                        asp-controller="User"
                                        asp-action="Edit"
                                        asp-route-id="@user.MaNguoiDung"
-                                       asp-route-page="@Model.CurrentPage">
+                                       asp-route-page="@Model.CurrentPage"
+                                       asp-route-keyword="@Model.Keyword">
                                         Edit
                                     </a>
 
@@ -131,6 +136,8 @@
 
             <div class="modal-footer border-secondary flex-wrap">
                 <form method="get" id="deleteForm">
+                    <input type="hidden" name="page" value="@Model.CurrentPage" />
+                    <input type="hidden" name="keyword" value="@Model.Keyword" />
                     <button type="submit" class="btn btn-danger">
                         Đồng ý xóa
                     </button>
@@ -245,7 +252,7 @@
             document.getElementById('deleteUserName').textContent = userName;
 
             var deleteForm = document.getElementById('deleteForm');
-            deleteForm.action = '/admin/user/delete/' + userId + '?page=@Model.CurrentPage';
+            deleteForm.action = '/admin/user/delete/' + userId;
         });
     });
 </script>

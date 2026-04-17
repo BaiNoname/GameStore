@@ -23,10 +23,6 @@ public class Program
 
         var vnpayConfig = builder.Configuration.GetSection("VNPAY");
 
-        // DEBUG — xoá sau khi xác nhận xong
-        Console.WriteLine($"[DEBUG] TmnCode={vnpayConfig["TmnCode"]}");
-        Console.WriteLine($"[DEBUG] HashSecret={vnpayConfig["HashSecret"]}");
-
         builder.Services.AddVnpayClient(config =>
         {
             config.TmnCode = vnpayConfig["TmnCode"]!;

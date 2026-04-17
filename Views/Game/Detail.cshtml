@@ -80,6 +80,7 @@
 
                         @{
                             var currentUrl = Context.Request.Path + Context.Request.QueryString;
+                            var backUrl = ViewBag.ReturnUrl ?? "/home/index#game-list-section";
                         }
 
                         <div class="gs-detail-actions">
@@ -92,7 +93,7 @@
                                     Owned
                                 </button>
 
-                                <a href="@(ViewBag.ReturnUrl ?? "/home")"
+                                <a href="@backUrl"
                                    class="btn gs-btn-danger gs-action-btn">
                                     Back
                                 </a>
@@ -108,7 +109,7 @@
                                     Buy now
                                 </a>
 
-                                <a href="@(ViewBag.ReturnUrl ?? "/home")"
+                                <a href="@backUrl"
                                    class="btn gs-btn-danger gs-action-btn">
                                     Back
                                 </a>
@@ -132,7 +133,7 @@
                                     Add to cart
                                 </a>
 
-                                <a href="@(ViewBag.ReturnUrl ?? "/home")"
+                                <a href="@backUrl"
                                    class="btn gs-btn-danger gs-action-btn">
                                     Back
                                 </a>

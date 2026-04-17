@@ -8,6 +8,7 @@ namespace GameStore.Controllers.Admin
 {
     [Authorize(Roles = "admin")]
     [Route("admin")]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class GameController : Controller
     {
         private readonly GameStoreContext db;
@@ -44,63 +45,81 @@ namespace GameStore.Controllers.Admin
         }
 
         [Route("game/add")]
-        public IActionResult Add()
+        public IActionResult Add(string keyword = "", string categoryId = "", int page = 1)
         {
             ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame");
+            ViewBag.Keyword = keyword;
+            ViewBag.CategoryId = categoryId;
+            ViewBag.CurrentPage = page;
+
             return View("~/Views/Admin/Game/Add.cshtml");
         }
 
         [HttpPost]
         [Route("game/add")]
-        public async Task<IActionResult> Add(Game game, IFormFile photo)
+        public async Task<IActionResult> Add(Game game, IFormFile photo, string keyword = "", string categoryId = "", int page = 1)
         {
-            // Trim các field chuỗi
             game.MaGame = game.MaGame?.Trim();
             game.TenGame = game.TenGame?.Trim();
             game.MaTheLoai = game.MaTheLoai?.Trim();
 
-            // Validation bắt buộc
             if (string.IsNullOrWhiteSpace(game.MaGame))
             {
                 TempData["Msg"] = "❌ Mã game không được để trống!";
                 TempData["MsgType"] = "danger";
                 ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                ViewBag.Keyword = keyword;
+                ViewBag.CategoryId = categoryId;
+                ViewBag.CurrentPage = page;
                 return View("~/Views/Admin/Game/Add.cshtml", game);
             }
+
             if (string.IsNullOrWhiteSpace(game.TenGame))
             {
                 TempData["Msg"] = "❌ Tên game không được để trống!";
                 TempData["MsgType"] = "danger";
                 ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                ViewBag.Keyword = keyword;
+                ViewBag.CategoryId = categoryId;
+                ViewBag.CurrentPage = page;
                 return View("~/Views/Admin/Game/Add.cshtml", game);
             }
+
             if (string.IsNullOrWhiteSpace(game.MaTheLoai))
             {
                 TempData["Msg"] = "❌ Thể loại game không được để trống!";
                 TempData["MsgType"] = "danger";
                 ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                ViewBag.Keyword = keyword;
+                ViewBag.CategoryId = categoryId;
+                ViewBag.CurrentPage = page;
                 return View("~/Views/Admin/Game/Add.cshtml", game);
             }
+
             if (game.Gia <= 0)
             {
                 TempData["Msg"] = "❌ Giá game phải lớn hơn 0!";
                 TempData["MsgType"] = "danger";
                 ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                ViewBag.Keyword = keyword;
+                ViewBag.CategoryId = categoryId;
+                ViewBag.CurrentPage = page;
                 return View("~/Views/Admin/Game/Add.cshtml", game);
             }
 
-            // Ngày phát hành mặc định = ngày hiện tại nếu chưa nhập
             if (game.NgayRaMat == default)
             {
                 game.NgayRaMat = DateOnly.FromDateTime(DateTime.UtcNow);
             }
 
-            // Check trùng MaGame
             if (gameService.findById(game.MaGame) != null)
             {
                 TempData["Msg"] = "❌ Mã game đã tồn tại!";
                 TempData["MsgType"] = "danger";
                 ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                ViewBag.Keyword = keyword;
+                ViewBag.CategoryId = categoryId;
+                ViewBag.CurrentPage = page;
                 return View("~/Views/Admin/Game/Add.cshtml", game);
             }
 
@@ -109,7 +128,6 @@ namespace GameStore.Controllers.Admin
             {
                 game.SoLuotTai = 0;
 
-                // Xử lý ảnh nếu có
                 if (photo != null && photo.Length > 0)
                 {
                     var ext = Path.GetExtension(photo.FileName).ToLower();
@@ -118,6 +136,9 @@ namespace GameStore.Controllers.Admin
                         TempData["Msg"] = "❌ Định dạng hình ảnh không hợp lệ!";
                         TempData["MsgType"] = "danger";
                         ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                        ViewBag.Keyword = keyword;
+                        ViewBag.CategoryId = categoryId;
+                        ViewBag.CurrentPage = page;
                         return View("~/Views/Admin/Game/Add.cshtml", game);
                     }
 
@@ -137,7 +158,13 @@ namespace GameStore.Controllers.Admin
 
                 TempData["Msg"] = "✅ Thêm game thành công!";
                 TempData["MsgType"] = "success";
-                return RedirectToAction("Index");
+
+                return RedirectToAction("Index", new
+                {
+                    keyword,
+                    categoryId,
+                    page
+                });
             }
             catch
             {
@@ -151,39 +178,44 @@ namespace GameStore.Controllers.Admin
                 TempData["Msg"] = "❌ Thêm game thất bại!";
                 TempData["MsgType"] = "danger";
                 ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                ViewBag.Keyword = keyword;
+                ViewBag.CategoryId = categoryId;
+                ViewBag.CurrentPage = page;
                 return View("~/Views/Admin/Game/Add.cshtml", game);
             }
         }
 
         [Route("game/edit/{id}")]
-        public IActionResult Edit(string id, int page = 1)
+        public IActionResult Edit(string id, string keyword = "", string categoryId = "", int page = 1)
         {
             var game = gameService.findById(id);
             if (game == null)
             {
                 TempData["Msg"] = "❌ Game không tồn tại!";
                 TempData["MsgType"] = "danger";
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", new { keyword, categoryId, page });
             }
 
             ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+            ViewBag.Keyword = keyword;
+            ViewBag.CategoryId = categoryId;
             ViewBag.CurrentPage = page;
+
             return View("~/Views/Admin/Game/Edit.cshtml", game);
         }
 
         [HttpPost]
         [Route("game/edit/{id}")]
-        public async Task<IActionResult> Edit(Game game, IFormFile photo)
+        public async Task<IActionResult> Edit(Game game, IFormFile photo, string keyword = "", string categoryId = "", int page = 1)
         {
             var oldGame = gameService.findById(game.MaGame);
             if (oldGame == null)
             {
                 TempData["Msg"] = "❌ Game không tồn tại!";
                 TempData["MsgType"] = "danger";
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", new { keyword, categoryId, page });
             }
 
-            // Trim và validate
             game.TenGame = game.TenGame?.Trim();
             game.MaTheLoai = game.MaTheLoai?.Trim();
 
@@ -192,20 +224,31 @@ namespace GameStore.Controllers.Admin
                 TempData["Msg"] = "❌ Tên game không được để trống!";
                 TempData["MsgType"] = "danger";
                 ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                ViewBag.Keyword = keyword;
+                ViewBag.CategoryId = categoryId;
+                ViewBag.CurrentPage = page;
                 return View("~/Views/Admin/Game/Edit.cshtml", game);
             }
+
             if (string.IsNullOrWhiteSpace(game.MaTheLoai))
             {
                 TempData["Msg"] = "❌ Thể loại game không được để trống!";
                 TempData["MsgType"] = "danger";
                 ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                ViewBag.Keyword = keyword;
+                ViewBag.CategoryId = categoryId;
+                ViewBag.CurrentPage = page;
                 return View("~/Views/Admin/Game/Edit.cshtml", game);
             }
+
             if (game.Gia <= 0)
             {
                 TempData["Msg"] = "❌ Giá game phải lớn hơn 0!";
                 TempData["MsgType"] = "danger";
                 ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                ViewBag.Keyword = keyword;
+                ViewBag.CategoryId = categoryId;
+                ViewBag.CurrentPage = page;
                 return View("~/Views/Admin/Game/Edit.cshtml", game);
             }
 
@@ -233,6 +276,9 @@ namespace GameStore.Controllers.Admin
                         TempData["Msg"] = "❌ Định dạng hình ảnh không hợp lệ!";
                         TempData["MsgType"] = "danger";
                         ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                        ViewBag.Keyword = keyword;
+                        ViewBag.CategoryId = categoryId;
+                        ViewBag.CurrentPage = page;
                         return View("~/Views/Admin/Game/Edit.cshtml", game);
                     }
 
@@ -250,7 +296,6 @@ namespace GameStore.Controllers.Admin
 
                 gameService.Update(oldGame);
 
-                // Xóa ảnh cũ nếu có ảnh mới
                 if (newFileName != null && !string.IsNullOrEmpty(oldImage))
                 {
                     var oldPath = Path.Combine(env.WebRootPath, "images", oldImage);
@@ -260,7 +305,13 @@ namespace GameStore.Controllers.Admin
 
                 TempData["Msg"] = "✅ Chỉnh sửa game thành công!";
                 TempData["MsgType"] = "success";
-                return RedirectToAction("Index");
+
+                return RedirectToAction("Index", new
+                {
+                    keyword,
+                    categoryId,
+                    page
+                });
             }
             catch
             {
@@ -274,12 +325,15 @@ namespace GameStore.Controllers.Admin
                 TempData["Msg"] = "❌ Chỉnh sửa game thất bại!";
                 TempData["MsgType"] = "danger";
                 ViewBag.Categories = new SelectList(categoryService.findAll(), "MaTheLoai", "TenLoaiGame", game.MaTheLoai);
+                ViewBag.Keyword = keyword;
+                ViewBag.CategoryId = categoryId;
+                ViewBag.CurrentPage = page;
                 return View("~/Views/Admin/Game/Edit.cshtml", game);
             }
         }
 
         [Route("game/delete/{id}")]
-        public IActionResult Delete(string id, int page = 1)
+        public IActionResult Delete(string id, string keyword = "", string categoryId = "", int page = 1)
         {
             var game = gameService.findById(id);
             if (game != null)
@@ -305,12 +359,17 @@ namespace GameStore.Controllers.Admin
                 TempData["Msg"] = "❌ Game không tồn tại!";
             }
 
-            // kiểm tra nếu page hiện tại trống thì giảm page
-            int totalItems = gameService.CountGames("", "");
+            int totalItems = gameService.CountGames(keyword, categoryId);
             int maxPage = (int)Math.Ceiling((double)totalItems / pageSize);
+            if (maxPage <= 0) maxPage = 1;
             if (page > maxPage) page = maxPage;
 
-            return RedirectToAction("Index", new { page = page });
+            return RedirectToAction("Index", new
+            {
+                keyword,
+                categoryId,
+                page
+            });
         }
     }
 }
