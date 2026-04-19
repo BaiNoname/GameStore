@@ -17,6 +17,11 @@ namespace GameStore.Models
         public DbSet<ChiTietGioHang> ChiTietGioHangs => Set<ChiTietGioHang>();
         public DbSet<ChiTietGiaoDich> ChiTietGiaoDiches => Set<ChiTietGiaoDich>();
         public DbSet<ThuVienGame> ThuVienGames => Set<ThuVienGame>();
+        public DbSet<News> News => Set<News>();
+        public DbSet<Event> Events => Set<Event>();
+        public DbSet<EventParticipant> EventParticipants => Set<EventParticipant>();
+        public DbSet<EventMessage> EventMessages => Set<EventMessage>();
+        public DbSet<EventAnnouncement> EventAnnouncements => Set<EventAnnouncement>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -103,13 +108,19 @@ namespace GameStore.Models
 
                 entity.Property(e => e.PhuongThuc).HasColumnName("phuongthuc");
 
+                entity.Property(e => e.LoaiGiaoDich)
+                      .HasColumnName("loaigiaodich")
+                      .HasDefaultValue("GamePurchase");
+
                 entity.Property(e => e.CreatedAt)
                       .HasColumnName("createdat")
                       .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
                 entity.Property(e => e.VnpTransactionNo).HasColumnName("vnptransactionno");
 
                 entity.HasIndex(e => e.MaNguoiDung);
                 entity.HasIndex(e => e.TrangThai);
+                entity.HasIndex(e => e.LoaiGiaoDich);
 
                 entity.HasOne(e => e.NguoiDung)
                       .WithMany(n => n.GiaoDiches)
@@ -240,6 +251,165 @@ namespace GameStore.Models
 
                 // 🔥 chống mua trùng ở DB level
                 entity.HasIndex(e => new { e.MaNguoiDung, e.MaGame }).IsUnique();
+            });
+
+            // =========================
+            // News
+            // =========================
+            modelBuilder.Entity<News>(entity =>
+            {
+                entity.ToTable("news");
+                entity.HasKey(e => e.NewsId);
+
+                entity.Property(e => e.NewsId).HasColumnName("newsid");
+                entity.Property(e => e.Title).HasColumnName("title");
+                entity.Property(e => e.Slug).HasColumnName("slug");
+                entity.Property(e => e.Summary).HasColumnName("summary");
+                entity.Property(e => e.Content).HasColumnName("content");
+                entity.Property(e => e.Thumbnail).HasColumnName("thumbnail");
+                entity.Property(e => e.AuthorUserId).HasColumnName("authoruserid");
+                entity.Property(e => e.RelatedGameId).HasColumnName("relatedgameid");
+                entity.Property(e => e.NewsType).HasColumnName("newstype");
+                entity.Property(e => e.Status).HasColumnName("status");
+                entity.Property(e => e.IsFeatured).HasColumnName("isfeatured").HasDefaultValue(false);
+                entity.Property(e => e.ViewCount).HasColumnName("viewcount").HasDefaultValue(0);
+                entity.Property(e => e.PublishedAt).HasColumnName("publishedat").HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.ExpiredAt).HasColumnName("expiredat");
+                entity.Property(e => e.CreatedAt).HasColumnName("createdat").HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updatedat");
+
+                entity.HasIndex(e => e.Slug).IsUnique();
+
+                entity.HasOne(e => e.NguoiDung)
+                      .WithMany()
+                      .HasForeignKey(e => e.AuthorUserId)
+                      .HasConstraintName("fk_news_nguoidung");
+
+                entity.HasOne(e => e.Game)
+                      .WithMany()
+                      .HasForeignKey(e => e.RelatedGameId)
+                      .HasConstraintName("fk_news_game");
+            });
+
+            // =========================
+            // Event
+            // =========================
+            modelBuilder.Entity<Event>(entity =>
+            {
+                entity.ToTable("event");
+                entity.HasKey(e => e.EventId);
+
+                entity.Property(e => e.EventId).HasColumnName("eventid");
+                entity.Property(e => e.Title).HasColumnName("title");
+                entity.Property(e => e.Slug).HasColumnName("slug");
+                entity.Property(e => e.Summary).HasColumnName("summary");
+                entity.Property(e => e.Content).HasColumnName("content");
+                entity.Property(e => e.Banner).HasColumnName("banner");
+                entity.Property(e => e.RelatedGameId).HasColumnName("relatedgameid");
+                entity.Property(e => e.EventType).HasColumnName("eventtype");
+                entity.Property(e => e.AccessType).HasColumnName("accesstype");
+                entity.Property(e => e.Price).HasColumnName("price");
+                entity.Property(e => e.MaxParticipants).HasColumnName("maxparticipants");
+                entity.Property(e => e.CurrentParticipants).HasColumnName("currentparticipants").HasDefaultValue(0);
+                entity.Property(e => e.PrizeInfo).HasColumnName("prizeinfo");
+                entity.Property(e => e.Status).HasColumnName("status");
+                entity.Property(e => e.StartAt).HasColumnName("startat");
+                entity.Property(e => e.EndAt).HasColumnName("endat");
+                entity.Property(e => e.CreatedBy).HasColumnName("createdby");
+                entity.Property(e => e.CreatedAt).HasColumnName("createdat").HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updatedat");
+
+                entity.HasIndex(e => e.Slug).IsUnique();
+
+                entity.HasOne(e => e.Game)
+                      .WithMany()
+                      .HasForeignKey(e => e.RelatedGameId)
+                      .HasConstraintName("fk_event_game");
+
+                entity.HasOne(e => e.NguoiDung)
+                      .WithMany()
+                      .HasForeignKey(e => e.CreatedBy)
+                      .HasConstraintName("fk_event_nguoidung");
+            });
+
+            // =========================
+            // EventParticipant
+            // =========================
+            modelBuilder.Entity<EventParticipant>(entity =>
+            {
+                entity.ToTable("eventparticipant");
+                entity.HasKey(e => e.ParticipantId);
+
+                entity.Property(e => e.ParticipantId).HasColumnName("participantid");
+                entity.Property(e => e.EventId).HasColumnName("eventid");
+                entity.Property(e => e.UserId).HasColumnName("userid");
+                entity.Property(e => e.JoinStatus).HasColumnName("joinstatus").HasDefaultValue("Joined");
+                entity.Property(e => e.PaidAmount).HasColumnName("paidamount");
+                entity.Property(e => e.JoinedAt).HasColumnName("joinedat").HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.HasIndex(e => new { e.EventId, e.UserId }).IsUnique();
+
+                entity.HasOne(e => e.Event)
+                      .WithMany(e => e.EventParticipants)
+                      .HasForeignKey(e => e.EventId)
+                      .HasConstraintName("fk_eventparticipant_event");
+
+                entity.HasOne(e => e.NguoiDung)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .HasConstraintName("fk_eventparticipant_nguoidung");
+            });
+
+            // =========================
+            // EventMessage
+            // =========================
+            modelBuilder.Entity<EventMessage>(entity =>
+            {
+                entity.ToTable("eventmessage");
+                entity.HasKey(e => e.MessageId);
+
+                entity.Property(e => e.MessageId).HasColumnName("messageid");
+                entity.Property(e => e.EventId).HasColumnName("eventid");
+                entity.Property(e => e.UserId).HasColumnName("userid");
+                entity.Property(e => e.Content).HasColumnName("content");
+                entity.Property(e => e.CreatedAt).HasColumnName("createdat").HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.IsDeleted).HasColumnName("isdeleted").HasDefaultValue(false);
+
+                entity.HasOne(e => e.Event)
+                      .WithMany(e => e.EventMessages)
+                      .HasForeignKey(e => e.EventId)
+                      .HasConstraintName("fk_eventmessage_event");
+
+                entity.HasOne(e => e.NguoiDung)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .HasConstraintName("fk_eventmessage_nguoidung");
+            });
+
+            // =========================
+            // EventAnnouncement
+            // =========================
+            modelBuilder.Entity<EventAnnouncement>(entity =>
+            {
+                entity.ToTable("eventannouncement");
+                entity.HasKey(e => e.AnnouncementId);
+
+                entity.Property(e => e.AnnouncementId).HasColumnName("announcementid");
+                entity.Property(e => e.EventId).HasColumnName("eventid");
+                entity.Property(e => e.Title).HasColumnName("title");
+                entity.Property(e => e.Content).HasColumnName("content");
+                entity.Property(e => e.CreatedAt).HasColumnName("createdat").HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.CreatedBy).HasColumnName("createdby");
+
+                entity.HasOne(e => e.Event)
+                      .WithMany(e => e.EventAnnouncements)
+                      .HasForeignKey(e => e.EventId)
+                      .HasConstraintName("fk_eventannouncement_event");
+
+                entity.HasOne(e => e.NguoiDung)
+                      .WithMany()
+                      .HasForeignKey(e => e.CreatedBy)
+                      .HasConstraintName("fk_eventannouncement_nguoidung");
             });
         }
     }

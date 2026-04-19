@@ -1,0 +1,152 @@
+﻿@model GameStore.Models.News
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Edit News";
+}
+
+<div class="container mt-5">
+    <div class="card bg-light shadow-lg border-0">
+        <div class="card-header border-bottom border-secondary">
+            <h4 class="mb-0">📰 Edit News</h4>
+        </div>
+
+        @if (TempData["Msg"] != null)
+        {
+            var msgType = TempData["MsgType"]?.ToString() ?? "info";
+            <div class="alert alert-@msgType mt-2 mx-3 fw-bold">
+                @TempData["Msg"]
+            </div>
+        }
+
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" asp-controller="News" asp-action="Edit" asp-route-id="@Model.NewsId">
+                <input type="hidden" asp-for="NewsId" />
+                <input type="hidden" name="keyword" value="@ViewBag.Keyword" />
+                <input type="hidden" name="newsType" value="@ViewBag.NewsType" />
+                <input type="hidden" name="status" value="@ViewBag.Status" />
+                <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
+
+                <div class="mb-3">
+                    <label class="form-label">Title</label>
+                    <input class="form-control" asp-for="Title" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Slug</label>
+                    <input class="form-control" asp-for="Slug" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Summary</label>
+                    <textarea class="form-control" asp-for="Summary" rows="3"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-control" asp-for="Content" rows="10"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Current Thumbnail</label>
+                    <div class="mb-2">
+                        @if (!string.IsNullOrWhiteSpace(Model.Thumbnail))
+                        {
+                            <img src="~/images/news/@Model.Thumbnail"
+                                 alt="@Model.Title"
+                                 style="width: 180px; height: 110px; object-fit: cover; border-radius: 12px; border: 1px solid #ddd;" />
+                        }
+                        else
+                        {
+                            <span class="text-muted">Chưa có ảnh</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Change Thumbnail</label>
+                    <input type="file" class="form-control" name="photo" accept="image/*" />
+                    <small class="text-muted">Chọn ảnh mới nếu muốn thay ảnh đại diện bài viết.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Related Game</label>
+                    <select class="form-select" asp-for="RelatedGameId" asp-items="ViewBag.Games">
+                        <option value="">-- Select Game --</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">News Type</label>
+                        <select class="form-select" asp-for="NewsType">
+                            <option value="General">General</option>
+                            <option value="Updates">Updates</option>
+                            <option value="Events">Events</option>
+                            <option value="Releases">Releases</option>
+                            <option value="Community">Community</option>
+                            <option value="Patch Notes">Patch Notes</option>
+                            <option value="Editorial">Editorial</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" asp-for="Status">
+                            <option value="Published">Published</option>
+                            <option value="Draft">Draft</option>
+                            <option value="Hidden">Hidden</option>
+                            <option value="Expired">Expired</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" asp-for="IsFeatured" type="checkbox" />
+                            <label class="form-check-label" asp-for="IsFeatured">Featured</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Published At</label>
+                        <input type="datetime-local"
+                               class="form-control"
+                               name="PublishedAt"
+                               value="@Model.PublishedAt.ToString("yyyy-MM-ddTHH:mm")" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Expired At</label>
+                        <input type="datetime-local"
+                               class="form-control"
+                               name="ExpiredAt"
+                               value="@(Model.ExpiredAt.HasValue? Model.ExpiredAt.Value.ToString("yyyy-MM-ddTHH:mm") : "")" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Views</label>
+                    <input class="form-control" asp-for="ViewCount" readonly />
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-controller="News"
+                       asp-action="Index"
+                       asp-route-keyword="@ViewBag.Keyword"
+                       asp-route-newsType="@ViewBag.NewsType"
+                       asp-route-status="@ViewBag.Status"
+                       asp-route-page="@ViewBag.CurrentPage"
+                       class="btn btn-secondary">
+                        Back
+                    </a>
+
+                    <button class="btn btn-success" type="submit">
+                        💾 Update News
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

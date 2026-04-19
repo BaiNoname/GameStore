@@ -1,0 +1,647 @@
+﻿@using GameStore.Pagination.User
+@model NewsPageVM
+
+@{
+    ViewData["Title"] = "News";
+
+    var featured = Model.FeaturedNews.FirstOrDefault();
+
+    string GetBadgeClass(string? type)
+    {
+        return type == "Hot" ? "gs-badge hot" : "gs-badge";
+    }
+
+    string GetDisplayType(string? type)
+    {
+        return string.IsNullOrWhiteSpace(type) ? "NEWS" : type!.ToUpper();
+    }
+
+    string GetImage(string? image)
+    {
+        if (string.IsNullOrWhiteSpace(image))
+            return "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1600&q=80";
+
+        if (image.StartsWith("http://") || image.StartsWith("https://"))
+            return image;
+
+        return Url.Content("~/images/news/" + image);
+    }
+
+    string GetAuthor(GameStore.Models.News item)
+    {
+        return item.NguoiDung?.TenNguoiDung
+               ?? item.NguoiDung?.Email
+               ?? "GameStore Editorial";
+    }
+
+    string GetSummary(GameStore.Models.News item)
+    {
+        if (!string.IsNullOrWhiteSpace(item.Summary))
+            return item.Summary!;
+
+        if (!string.IsNullOrWhiteSpace(item.Content))
+        {
+            var text = item.Content;
+            if (text.Length > 180) return text.Substring(0, 180) + "...";
+            return text;
+        }
+
+        return "Bài viết đang được cập nhật nội dung.";
+    }
+
+    string GetReadTime(GameStore.Models.News item)
+    {
+        var text = (item.Content ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(text)) return "1 min read";
+
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+        var mins = Math.Max(1, (int)Math.Ceiling(words / 180.0));
+        return $"{mins} min read";
+    }
+
+    var types = new List<string> { "All", "General", "Updates", "Events", "Releases", "Community", "Patch Notes", "Editorial" };
+}
+
+<main class="gs-page">
+    <div class="container-xxl">
+        <div class="mb-4">
+            <div class="gs-kicker">Editorial Hub</div>
+            <h1 class="gs-title">GameStore News</h1>
+            <p class="gs-subtitle">
+                Cập nhật những tin tức nóng nhất về game mới, bản vá, sự kiện cộng đồng và các bài viết nổi bật từ GameStore.
+            </p>
+        </div>
+
+        <div class="gs-pillbar">
+            @foreach (var type in types)
+            {
+                <a href="/news?newsType=@Uri.EscapeDataString(type)&page=1"
+                   class="gs-pill @(Model.NewsType == type ? "active" : "")">
+                    @type
+                </a>
+            }
+        </div>
+
+        @if (featured != null)
+        {
+            <section class="gs-feature-wrap">
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <article class="gs-feature-main">
+                            <div class="gs-feature-image-wrap">
+                                <img src="@GetImage(featured.Thumbnail)" alt="@featured.Title">
+                                <div class="gs-feature-overlay">
+                                    <div>
+                                        <span class="gs-badge hot">HOT NEWS</span>
+                                        <h2 class="gs-feature-title">@featured.Title</h2>
+                                        <p class="gs-feature-desc">
+                                            @GetSummary(featured)
+                                        </p>
+                                        <div class="gs-meta">
+                                            <span>📅 @featured.PublishedAt.ToString("dd MMM yyyy")</span>
+                                            <span>📰 @GetAuthor(featured)</span>
+                                            <span>⏱ @GetReadTime(featured)</span>
+                                        </div>
+                                        <a href="/news/detail/@featured.Slug" class="gs-btn-primary">Read More</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="row g-4 h-100">
+                            @foreach (var item in Model.TrendingNews.Take(3))
+                            {
+                                <div class="col-12">
+                                    <a href="/news/detail/@item.Slug">
+                                        <article class="gs-feature-side-card">
+                                            <img src="@GetImage(item.Thumbnail)" alt="@item.Title">
+                                            <div>
+                                                <span class="@GetBadgeClass(item.NewsType)">@GetDisplayType(item.NewsType)</span>
+                                                <div class="gs-feature-side-title">@item.Title</div>
+                                                <div class="gs-meta mb-0">
+                                                    <span>@item.PublishedAt.ToString("dd MMM yyyy")</span>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </section>
+        }
+
+        <section class="mb-5">
+            <div class="row align-items-end mb-3">
+                <div class="col-lg-8">
+                    <h3 class="gs-section-title">Latest News</h3>
+                    <p class="gs-section-subtitle">Những bài viết mới nhất từ hệ thống GameStore.</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                @if (Model.LatestNews.Any())
+                {
+                    @foreach (var item in Model.LatestNews)
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <article class="gs-news-card h-100">
+                                <img src="@GetImage(item.Thumbnail)" alt="@item.Title">
+                                <div class="gs-news-body">
+                                    <span class="@GetBadgeClass(item.NewsType)">@GetDisplayType(item.NewsType)</span>
+                                    <div class="gs-news-title">@item.Title</div>
+                                    <div class="gs-news-desc">@GetSummary(item)</div>
+                                    <div class="gs-meta">
+                                        <span>@item.PublishedAt.ToString("dd MMM yyyy")</span>
+                                        <span>@GetReadTime(item)</span>
+                                    </div>
+                                    <a href="/news/detail/@item.Slug" class="gs-readmore">Read Article →</a>
+                                </div>
+                            </article>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="gs-cta-box">
+                            <h3>Chưa có bài viết phù hợp</h3>
+                            <p>Hiện chưa có bài viết nào trong chuyên mục này. Vui lòng quay lại sau.</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="mt-5">
+                    <ul class="pagination justify-content-center gs-pagination flex-wrap">
+                        <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               href="/news?newsType=@Uri.EscapeDataString(Model.NewsType)&page=@(Model.CurrentPage - 1)">
+                                Previous
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   href="/news?newsType=@Uri.EscapeDataString(Model.NewsType)&page=@i">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               href="/news?newsType=@Uri.EscapeDataString(Model.NewsType)&page=@(Model.CurrentPage + 1)">
+                                Next
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </section>
+
+        <section class="mb-5">
+            <div class="row">
+                <div class="col-lg-8">
+                    <h3 class="gs-section-title">Trending This Week</h3>
+                    <p class="gs-section-subtitle">Các bài viết được quan tâm nhiều nhất trong tuần.</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                @{
+                    var trendingLeft = Model.TrendingNews.Take(2).ToList();
+                    var trendingRight = Model.TrendingNews.Skip(2).Take(2).ToList();
+                }
+
+                <div class="col-lg-6">
+                    @foreach (var item in trendingLeft)
+                    {
+                        <a href="/news/detail/@item.Slug">
+                            <article class="gs-trending-card">
+                                <img src="@GetImage(item.Thumbnail)" alt="@item.Title">
+                                <div>
+                                    <span class="gs-badge">TRENDING</span>
+                                    <div class="gs-trending-title">@item.Title</div>
+                                    <div class="gs-meta mb-0">
+                                        <span>@item.PublishedAt.ToString("dd MMM yyyy")</span>
+                                    </div>
+                                </div>
+                            </article>
+                        </a>
+                    }
+                </div>
+
+                <div class="col-lg-6">
+                    @foreach (var item in trendingRight)
+                    {
+                        <a href="/news/detail/@item.Slug">
+                            <article class="gs-trending-card">
+                                <img src="@GetImage(item.Thumbnail)" alt="@item.Title">
+                                <div>
+                                    <span class="gs-badge">@GetDisplayType(item.NewsType)</span>
+                                    <div class="gs-trending-title">@item.Title</div>
+                                    <div class="gs-meta mb-0">
+                                        <span>@item.PublishedAt.ToString("dd MMM yyyy")</span>
+                                    </div>
+                                </div>
+                            </article>
+                        </a>
+                    }
+                </div>
+            </div>
+        </section>
+
+        <section class="gs-cta-box">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <div class="gs-kicker">Stay Updated</div>
+                    <h3>Never miss the next big update</h3>
+                    <p>The latest game releases, event highlights and patch notes — all in one place for your community.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="/news?newsType=All&page=1" class="gs-btn-primary">Explore More News</a>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<style>
+    :root {
+        --gs-bg: #07111f;
+        --gs-bg-2: #0b1728;
+        --gs-card: rgba(14, 25, 43, 0.88);
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-text: #f3f7ff;
+        --gs-muted: #94a3b8;
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+        --gs-accent: #7dd3fc;
+        --gs-hot: #f59e0b;
+    }
+
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+
+    body {
+        background: radial-gradient(circle at top left, rgba(124, 58, 237, 0.18), transparent 24%), radial-gradient(circle at top right, rgba(37, 99, 235, 0.14), transparent 22%), linear-gradient(180deg, #050b16 0%, #07111f 40%, #091626 100%);
+        color: var(--gs-text);
+        min-height: 100vh;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .gs-page {
+        padding: 48px 0 70px;
+    }
+
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: var(--gs-accent);
+        margin-bottom: 8px;
+    }
+
+    .gs-title {
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: #fff;
+        margin-bottom: 10px;
+    }
+
+    .gs-subtitle {
+        color: var(--gs-muted);
+        max-width: 760px;
+        margin-bottom: 0;
+    }
+
+    .gs-pillbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 28px 0 36px;
+    }
+
+    .gs-pill {
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.05);
+        color: #e2e8f0;
+        border-radius: 999px;
+        padding: 10px 18px;
+        font-weight: 600;
+        transition: .25s ease;
+    }
+
+        .gs-pill.active,
+        .gs-pill:hover {
+            background: var(--gs-primary);
+            color: #fff;
+            border-color: transparent;
+        }
+
+    .gs-feature-wrap {
+        margin-bottom: 42px;
+    }
+
+    .gs-feature-main,
+    .gs-feature-side-card,
+    .gs-news-card,
+    .gs-trending-card,
+    .gs-cta-box {
+        background: linear-gradient(180deg, rgba(14,25,43,0.94), rgba(9,18,33,0.94));
+        border: 1px solid var(--gs-line);
+        border-radius: 28px;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+        overflow: hidden;
+    }
+
+    .gs-feature-main {
+        height: 100%;
+    }
+
+    .gs-feature-image-wrap {
+        position: relative;
+        min-height: 420px;
+        overflow: hidden;
+    }
+
+        .gs-feature-image-wrap img {
+            width: 100%;
+            height: 100%;
+            min-height: 420px;
+            object-fit: cover;
+            display: block;
+            filter: brightness(0.62);
+            transition: transform .4s ease;
+        }
+
+    .gs-feature-main:hover img {
+        transform: scale(1.04);
+    }
+
+    .gs-feature-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(2,6,23,0.05) 0%, rgba(2,6,23,0.32) 40%, rgba(2,6,23,0.90) 100%);
+        display: flex;
+        align-items: end;
+        padding: 28px;
+    }
+
+    .gs-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(15,23,42,0.72);
+        color: #fff;
+        margin-bottom: 14px;
+    }
+
+        .gs-badge.hot {
+            color: #fbbf24;
+            background: rgba(245, 158, 11, 0.14);
+            border-color: rgba(245, 158, 11, 0.18);
+        }
+
+    .gs-feature-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: clamp(1.8rem, 3vw, 2.7rem);
+        line-height: 1.14;
+        margin-bottom: 14px;
+        color: #fff;
+    }
+
+    .gs-feature-desc {
+        color: #dbe6f7;
+        line-height: 1.75;
+        max-width: 760px;
+        margin-bottom: 18px;
+    }
+
+    .gs-meta {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        color: #a9b7c9;
+        font-size: .95rem;
+        margin-bottom: 18px;
+    }
+
+    .gs-btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 20px;
+        border-radius: 999px;
+        background: var(--gs-primary);
+        color: #fff;
+        font-weight: 700;
+        border: none;
+        box-shadow: 0 14px 28px rgba(37, 99, 235, 0.25);
+    }
+
+        .gs-btn-primary:hover {
+            color: #fff;
+        }
+
+    .gs-feature-side-card {
+        display: flex;
+        gap: 14px;
+        padding: 14px;
+        height: 100%;
+        transition: .25s ease;
+    }
+
+        .gs-feature-side-card:hover,
+        .gs-news-card:hover,
+        .gs-trending-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 26px 48px rgba(0,0,0,0.32);
+        }
+
+        .gs-feature-side-card img {
+            width: 130px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 18px;
+            flex-shrink: 0;
+        }
+
+    .gs-feature-side-title {
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.4;
+        margin-bottom: 10px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .gs-section-title {
+        font-size: clamp(1.4rem, 2vw, 2rem);
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 6px;
+    }
+
+    .gs-section-subtitle {
+        color: var(--gs-muted);
+        margin-bottom: 24px;
+    }
+
+    .gs-news-card img {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .gs-news-body {
+        padding: 20px;
+    }
+
+    .gs-news-title {
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.45;
+        margin-bottom: 10px;
+        min-height: 52px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .gs-news-desc {
+        color: #cbd5e1;
+        line-height: 1.7;
+        margin-bottom: 14px;
+        min-height: 72px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .gs-readmore {
+        color: var(--gs-accent);
+        font-weight: 700;
+    }
+
+    .gs-trending-card {
+        display: flex;
+        gap: 14px;
+        padding: 14px;
+        margin-bottom: 14px;
+    }
+
+        .gs-trending-card img {
+            width: 110px;
+            height: 90px;
+            border-radius: 16px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+    .gs-trending-title {
+        color: #fff;
+        font-weight: 700;
+        line-height: 1.45;
+        margin-bottom: 8px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .gs-cta-box {
+        padding: 30px;
+        background: linear-gradient(135deg, rgba(124,58,237,0.16), rgba(37,99,235,0.16), rgba(6,182,212,0.10));
+    }
+
+        .gs-cta-box h3 {
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .gs-cta-box p {
+            color: #dbe6f7;
+            margin-bottom: 0;
+            line-height: 1.7;
+        }
+
+    .gs-pagination .page-link {
+        background: rgba(255,255,255,0.04);
+        color: #dbe6f7;
+        border: 1px solid rgba(255,255,255,0.08);
+        margin: 0 4px;
+        border-radius: 14px !important;
+        min-width: 44px;
+        text-align: center;
+        box-shadow: none;
+    }
+
+        .gs-pagination .page-link:hover {
+            background: rgba(255,255,255,0.10);
+            color: #fff;
+        }
+
+    .gs-pagination .page-item.active .page-link {
+        background: var(--gs-primary);
+        border-color: transparent;
+        color: #fff;
+    }
+
+    @@media (max-width: 991.98px) {
+        .gs-feature-image-wrap, .gs-feature-image-wrap img {
+            min-height: 320px;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .gs-page {
+            padding: 30px 0 50px;
+        }
+
+        .gs-feature-overlay,
+        .gs-news-body,
+        .gs-cta-box {
+            padding: 18px;
+        }
+
+        .gs-feature-side-card {
+            flex-direction: column;
+        }
+
+            .gs-feature-side-card img,
+            .gs-trending-card img {
+                width: 100%;
+                height: 180px;
+            }
+
+        .gs-trending-card {
+            flex-direction: column;
+        }
+    }
+</style>

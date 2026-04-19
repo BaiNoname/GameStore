@@ -1,0 +1,66 @@
+﻿using GameStore.Pagination.User;
+using GameStore.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace GameStore.Controllers
+{
+    [Route("news")]
+    public class NewsController : Controller
+    {
+        private readonly NewsService newsService;
+
+        public NewsController(NewsService _newsService)
+        {
+            newsService = _newsService;
+        }
+
+        [Route("")]
+        [Route("index")]
+        public IActionResult Index(string newsType = "All", int page = 1)
+        {
+            ViewBag.HideSubBar = true;
+            int pageSize = 6;
+            int totalPages;
+
+            var featured = newsService.GetFeatured(1);
+            var latest = newsService.FindPublished(newsType, page, pageSize, out totalPages);
+            var trending = newsService.GetTrending(4);
+
+            var vm = new NewsPageVM
+            {
+                FeaturedNews = featured,
+                LatestNews = latest,
+                TrendingNews = trending,
+                NewsType = string.IsNullOrWhiteSpace(newsType) ? "All" : newsType,
+                CurrentPage = page,
+                TotalPages = totalPages
+            };
+
+            return View("~/Views/News/Index.cshtml", vm);
+        }
+
+        [Route("detail/{slug}")]
+        public IActionResult Detail(string slug)
+        {
+            ViewBag.HideSubBar = true;
+            if (string.IsNullOrWhiteSpace(slug))
+                return RedirectToAction("Index");
+
+            var news = newsService.FindBySlug(slug);
+
+            if (news == null)
+            {
+                TempData["ToastMessage"] = "Bài viết không tồn tại hoặc đã hết hạn";
+                TempData["ToastType"] = "error";
+                return RedirectToAction("Index");
+            }
+
+            newsService.IncreaseView(news.NewsId);
+
+            ViewBag.TrendingNews = newsService.GetTrending(4);
+            ViewBag.LatestNews = newsService.GetLatest(4);
+
+            return View("~/Views/News/Detail.cshtml", news);
+        }
+    }
+}

@@ -8,8 +8,7 @@ public class GiaoDich
     public decimal ThanhTien { get; set; }
     public string TrangThai { get; set; }
     public string PhuongThuc { get; set; }
-
-    // 🔥 thêm cái này
+    public string LoaiGiaoDich { get; set; } = "GamePurchase";
     public DateTime CreatedAt { get; set; }
     public string? VnpTransactionNo { get; set; }
 

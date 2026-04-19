@@ -124,6 +124,7 @@ public class Program
         builder.Services.AddScoped<PaymentService, PaymentServiceImpl>();
         builder.Services.AddScoped<CartService, CartServiceImpl>();
         builder.Services.AddScoped<ReviewService, ReviewServiceImpl>();
+        builder.Services.AddScoped<NewsService, NewsServiceImpl>();
 
         // Register Vnpay service implementation
         builder.Services.AddScoped<VnpayService, VnpayServiceImpl>();
@@ -162,6 +163,7 @@ public class Program
                      path.StartsWith("/library") ||
                      path.StartsWith("/home") ||
                      path.StartsWith("/account") ||
+                     path.StartsWith("/news") ||
                      path.StartsWith("/checkout")))
                 {
                     context.Response.Redirect("/admin");
