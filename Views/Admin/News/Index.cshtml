@@ -1,0 +1,285 @@
+﻿@model List<GameStore.Models.News>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý News";
+
+    string keyword = ViewBag.Keyword?.ToString() ?? "";
+    string newsType = ViewBag.NewsType?.ToString() ?? "";
+    string status = ViewBag.Status?.ToString() ?? "";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+}
+
+<div class="card admin-list-card">
+    <div class="card-body">
+        <h4 class="card-title">Danh sách News</h4>
+        <p class="card-subtitle mb-3">Quản lý toàn bộ bài viết tin tức trong hệ thống</p>
+
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
+            <form method="get" action="/admin/news/index" class="d-flex gap-2 flex-wrap admin-search-form admin-news-search-form">
+                <input type="text"
+                       name="keyword"
+                       value="@keyword"
+                       class="form-control"
+                       placeholder="Tìm theo tiêu đề..." />
+
+                <select name="newsType" class="form-control">
+                    <option value="">-- Tất cả loại tin --</option>
+                    <option value="Updates" selected="@(newsType == "Updates")">Updates</option>
+                    <option value="Events" selected="@(newsType == "Events")">Events</option>
+                    <option value="Releases" selected="@(newsType == "Releases")">Releases</option>
+                    <option value="Community" selected="@(newsType == "Community")">Community</option>
+                    <option value="Patch Notes" selected="@(newsType == "Patch Notes")">Patch Notes</option>
+                    <option value="Editorial" selected="@(newsType == "Editorial")">Editorial</option>
+                    <option value="General" selected="@(newsType == "General")">General</option>
+                </select>
+
+                <select name="status" class="form-control">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="Published" selected="@(status == "Published")">Published</option>
+                    <option value="Draft" selected="@(status == "Draft")">Draft</option>
+                    <option value="Hidden" selected="@(status == "Hidden")">Hidden</option>
+                    <option value="Expired" selected="@(status == "Expired")">Expired</option>
+                </select>
+
+                <button class="btn btn-success" type="submit">Search</button>
+            </form>
+
+            <a asp-controller="News"
+               asp-action="Add"
+               asp-route-keyword="@keyword"
+               asp-route-newsType="@newsType"
+               asp-route-status="@status"
+               asp-route-page="@currentPage"
+               class="btn btn-primary">
+                + Add News
+            </a>
+        </div>
+
+        @if (TempData["Msg"] != null)
+        {
+            var msgType = TempData["MsgType"]?.ToString() ?? "info";
+            <div class="alert alert-@msgType mb-3 fw-bold admin-inline-alert">
+                @TempData["Msg"]
+            </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-striped align-middle admin-news-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Thumbnail</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Featured</th>
+                        <th>Game</th>
+                        <th>Views</th>
+                        <th>Published</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.NewsId</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.Thumbnail))
+                                    {
+                                        <img src="@(item.Thumbnail.StartsWith("http") ? item.Thumbnail : Url.Content("~/images/news/" + item.Thumbnail))"
+                                             alt="@item.Title"
+                                             class="admin-news-thumb" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No image</span>
+                                    }
+                                </td>
+                                <td class="text-break">
+                                    <div class="fw-bold">@item.Title</div>
+                                    <small class="text-muted">@item.Slug</small>
+                                </td>
+                                <td>@item.NewsType</td>
+                                <td>@item.Status</td>
+                                <td>@(item.IsFeatured ? "Yes" : "No")</td>
+                                <td>@(item.Game?.TenGame ?? "-")</td>
+                                <td>@item.ViewCount</td>
+                                <td>@item.PublishedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <div class="d-flex gap-2 flex-wrap admin-action-group">
+                                        <a class="btn btn-sm btn-warning"
+                                           asp-controller="News"
+                                           asp-action="Edit"
+                                           asp-route-id="@item.NewsId"
+                                           asp-route-keyword="@keyword"
+                                           asp-route-newsType="@newsType"
+                                           asp-route-status="@status"
+                                           asp-route-page="@currentPage">
+                                            Edit
+                                        </a>
+
+                                        <button class="btn btn-danger btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteModal"
+                                                data-news-id="@item.NewsId"
+                                                data-news-title="@item.Title">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center text-muted">Chưa có bài viết nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (totalPages > 1)
+            {
+                <nav>
+                    <ul class="pagination justify-content-center mt-4 flex-wrap">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               href="?keyword=@keyword&newsType=@newsType&status=@status&page=@(currentPage - 1)">
+                                Previous
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link"
+                                   href="?keyword=@keyword&newsType=@newsType&status=@status&page=@i">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               href="?keyword=@keyword&newsType=@newsType&status=@status&page=@(currentPage + 1)">
+                                Next
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Xác nhận xóa bài viết</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Bạn có chắc muốn xóa bài viết <strong id="deleteNewsTitle"></strong> không?
+            </div>
+
+            <div class="modal-footer border-secondary flex-wrap">
+                <form method="get" id="deleteForm">
+                    <input type="hidden" name="keyword" value="@keyword" />
+                    <input type="hidden" name="newsType" value="@newsType" />
+                    <input type="hidden" name="status" value="@status" />
+                    <input type="hidden" name="page" value="@currentPage" />
+                    <button type="submit" class="btn btn-danger">Đồng ý xóa</button>
+                </form>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-list-card .card-body {
+        padding: 1rem;
+    }
+
+    .admin-news-search-form > input,
+    .admin-news-search-form > select {
+        min-width: 0;
+        flex: 1 1 180px;
+    }
+
+    .admin-inline-alert {
+        width: 100%;
+        word-break: break-word;
+    }
+
+    .admin-news-table th,
+    .admin-news-table td {
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+        .admin-news-table td.text-break {
+            white-space: normal;
+            word-break: break-word;
+            min-width: 240px;
+            max-width: 320px;
+        }
+
+    .admin-news-thumb {
+        width: 90px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .admin-action-group {
+        min-width: 120px;
+    }
+
+    @@media (max-width: 991.98px) {
+        .admin-list-toolbar {
+            align-items: stretch !important;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .admin-news-search-form {
+            flex-direction: column;
+        }
+
+            .admin-news-search-form > input,
+            .admin-news-search-form > select,
+            .admin-news-search-form > button,
+            .admin-list-toolbar > .btn {
+                width: 100%;
+                flex: 1 1 auto;
+            }
+
+        .admin-news-table {
+            min-width: 1200px;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const deleteModal = document.getElementById("deleteModal");
+        deleteModal.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget;
+            const newsId = button.getAttribute("data-news-id");
+            const newsTitle = button.getAttribute("data-news-title");
+
+            document.getElementById("deleteNewsTitle").textContent = newsTitle;
+            document.getElementById("deleteForm").action = "/admin/news/delete/" + newsId;
+        });
+    });
+</script>
