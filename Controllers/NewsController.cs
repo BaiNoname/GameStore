@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace GameStore.Controllers
 {
     [Route("news")]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+
     public class NewsController : Controller
     {
         private readonly NewsService newsService;

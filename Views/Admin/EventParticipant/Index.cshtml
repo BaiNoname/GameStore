@@ -1,0 +1,97 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Event Participants";
+
+    var ev = ViewBag.Event as GameStore.Models.Event;
+    var participants = ViewBag.Participants as List<GameStore.Models.EventParticipant> ?? new List<GameStore.Models.EventParticipant>();
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <div>
+            <h3 class="mb-1">👥 Event Participants</h3>
+            <p class="text-muted mb-0">
+                Event: <strong>@(ev?.Title ?? "Unknown Event")</strong>
+            </p>
+        </div>
+
+        <a href="/admin/event/index" class="btn btn-secondary">
+            ← Back to Events
+        </a>
+    </div>
+
+    @if (TempData["Msg"] != null)
+    {
+        var msgType = TempData["MsgType"]?.ToString() ?? "info";
+        <div class="alert alert-@msgType fw-bold">@TempData["Msg"]</div>
+    }
+
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Participant List</h5>
+        </div>
+
+        <div class="card-body">
+            @if (participants.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Join Status</th>
+                                <th>Paid Amount</th>
+                                <th>Joined At</th>
+                                <th>Check-in</th>
+                                <th>Checked In At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in participants)
+                            {
+                                <tr>
+                                    <td>@item.ParticipantId</td>
+                                    <td>
+                                        <div class="fw-bold">
+                                            @(item.NguoiDung?.TenNguoiDung ?? item.NguoiDung?.Email ?? "Unknown")
+                                        </div>
+                                        <small class="text-muted">@item.NguoiDung?.Email</small>
+                                    </td>
+                                    <td>@item.JoinStatus</td>
+                                    <td>@item.PaidAmount.ToString("N0") VND</td>
+                                    <td>@item.JoinedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        @if (item.IsCheckedIn)
+                                        {
+                                            <span class="badge bg-success">Checked-in</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">Not checked-in</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @(item.CheckedInAt.HasValue? item.CheckedInAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "-")
+                                    </td>
+                                    <td>
+                                        <a href="/admin/event-participant/delete/@item.ParticipantId"
+                                           class="btn btn-sm btn-danger"
+                                           onclick="return confirm('Bạn có chắc muốn xóa participant này?');">
+                                            Remove
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-muted">Chưa có participant nào cho event này.</div>
+            }
+        </div>
+    </div>
+</div>

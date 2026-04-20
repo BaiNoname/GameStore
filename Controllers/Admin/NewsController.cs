@@ -162,11 +162,8 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/News/Add.cshtml", news);
             }
 
-            if (news.PublishedAt == default)
-                news.PublishedAt = DateTime.Now;
-
-            if (news.ExpiredAt == null)
-                news.ExpiredAt = news.PublishedAt.AddMonths(1);
+            news.PublishedAt = DateTime.Now;
+            news.ExpiredAt = news.PublishedAt.AddMonths(1);
 
             if (photo != null)
             {
@@ -233,7 +230,6 @@ namespace GameStore.Controllers.Admin
             ViewBag.Status = status;
             ViewBag.CurrentPage = page;
 
-            // đọc thẳng từ form để tránh bind lỗi
             var postedNewsType = Request.Form["NewsType"].ToString();
             var postedStatus = Request.Form["Status"].ToString();
 
@@ -274,6 +270,35 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/News/Edit.cshtml", current);
             }
 
+            // giữ thời gian cũ nếu form không gửi lên
+            if (news.PublishedAt == default)
+                news.PublishedAt = current.PublishedAt;
+
+            if (!news.ExpiredAt.HasValue)
+                news.ExpiredAt = current.ExpiredAt;
+
+            // validate thời gian: không cho chọn quá khứ
+            if (news.PublishedAt < DateTime.Now)
+            {
+                TempData["Msg"] = "❌ Published At không được nhỏ hơn thời điểm hiện tại!";
+                TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/News/Edit.cshtml", current);
+            }
+
+            if (news.ExpiredAt.HasValue && news.ExpiredAt.Value < DateTime.Now)
+            {
+                TempData["Msg"] = "❌ Expired At không được nhỏ hơn thời điểm hiện tại!";
+                TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/News/Edit.cshtml", current);
+            }
+
+            if (news.ExpiredAt.HasValue && news.ExpiredAt.Value <= news.PublishedAt)
+            {
+                TempData["Msg"] = "❌ Expired At phải lớn hơn Published At!";
+                TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/News/Edit.cshtml", current);
+            }
+
             if (photo != null && photo.Length > 0)
             {
                 var savedFile = SaveNewsImage(photo);
@@ -293,13 +318,6 @@ namespace GameStore.Controllers.Admin
             }
 
             // giữ lại các field không sửa trực tiếp
-            if (news.PublishedAt == default)
-                news.PublishedAt = current.PublishedAt;
-
-            if (news.ExpiredAt == null)
-                news.ExpiredAt = current.ExpiredAt;
-
-            news.RelatedGameId = news.RelatedGameId;
             news.AuthorUserId = current.AuthorUserId;
             news.ViewCount = current.ViewCount;
             news.CreatedAt = current.CreatedAt;
@@ -313,7 +331,6 @@ namespace GameStore.Controllers.Admin
 
             TempData["Msg"] = "❌ Cập nhật bài viết thất bại!";
             TempData["MsgType"] = "danger";
-
             return View("~/Views/Admin/News/Edit.cshtml", current);
         }
 

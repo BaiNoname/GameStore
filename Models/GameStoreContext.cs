@@ -99,6 +99,7 @@ namespace GameStore.Models
 
                 entity.Property(e => e.MaGD).HasColumnName("magd");
                 entity.Property(e => e.MaNguoiDung).HasColumnName("manguoidung");
+                entity.Property(e => e.EventId).HasColumnName("eventid");
                 entity.Property(e => e.NgayMua).HasColumnName("ngaymua").HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(e => e.ThanhTien).HasColumnName("thanhtien");
 
@@ -121,11 +122,16 @@ namespace GameStore.Models
                 entity.HasIndex(e => e.MaNguoiDung);
                 entity.HasIndex(e => e.TrangThai);
                 entity.HasIndex(e => e.LoaiGiaoDich);
+                entity.HasIndex(e => e.EventId);
 
                 entity.HasOne(e => e.NguoiDung)
                       .WithMany(n => n.GiaoDiches)
                       .HasForeignKey(e => e.MaNguoiDung)
                       .HasConstraintName("fk_giaodich_nguoidung");
+                entity.HasOne(e => e.Event)
+                      .WithMany()
+                      .HasForeignKey(e => e.EventId)
+                      .HasConstraintName("fk_giaodich_event");
             });
 
             // =========================
@@ -346,6 +352,8 @@ namespace GameStore.Models
                 entity.Property(e => e.JoinStatus).HasColumnName("joinstatus").HasDefaultValue("Joined");
                 entity.Property(e => e.PaidAmount).HasColumnName("paidamount");
                 entity.Property(e => e.JoinedAt).HasColumnName("joinedat").HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.IsCheckedIn).HasColumnName("ischeckedin").HasDefaultValue(false);
+                entity.Property(e => e.CheckedInAt).HasColumnName("checkedinat");
 
                 entity.HasIndex(e => new { e.EventId, e.UserId }).IsUnique();
 

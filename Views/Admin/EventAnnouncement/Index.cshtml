@@ -1,0 +1,104 @@
+﻿@model GameStore.Models.EventAnnouncement
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Event Announcements";
+
+    var ev = ViewBag.Event as GameStore.Models.Event;
+    var announcements = ViewBag.Announcements as List<GameStore.Models.EventAnnouncement> ?? new List<GameStore.Models.EventAnnouncement>();
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <div>
+            <h3 class="mb-1">📢 Event Announcements</h3>
+            <p class="text-muted mb-0">
+                Event: <strong>@(ev?.Title ?? "Unknown Event")</strong>
+            </p>
+        </div>
+
+        <a href="/admin/event/index" class="btn btn-secondary">
+            ← Back to Events
+        </a>
+    </div>
+
+    @if (TempData["Msg"] != null)
+    {
+        var msgType = TempData["MsgType"]?.ToString() ?? "info";
+        <div class="alert alert-@msgType fw-bold">@TempData["Msg"]</div>
+    }
+
+    <div class="row g-4">
+        <!-- LEFT: ADD FORM -->
+        <div class="col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">➕ Add Announcement</h5>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" action="/admin/event-announcement/add">
+                        <input type="hidden" asp-for="EventId" value="@Model.EventId" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input class="form-control" asp-for="Title" placeholder="Enter announcement title..." />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Content</label>
+                            <textarea class="form-control" asp-for="Content" rows="6" placeholder="Enter announcement content..."></textarea>
+                        </div>
+
+                        <button class="btn btn-primary w-100" type="submit">
+                            Add Announcement
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: LIST -->
+        <div class="col-lg-7">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">📋 Announcement List</h5>
+                </div>
+
+                <div class="card-body">
+                    @if (announcements.Any())
+                    {
+                        @foreach (var item in announcements)
+                        {
+                            <div class="border rounded-4 p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">@item.Title</h6>
+                                        <div class="text-muted small mb-2">
+                                            By: @(item.NguoiDung?.TenNguoiDung ?? item.NguoiDung?.Email ?? "Admin")
+                                            · @item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                        </div>
+                                    </div>
+
+                                    <a href="/admin/event-announcement/delete/@item.AnnouncementId"
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Bạn có chắc muốn xóa announcement này?');">
+                                        Delete
+                                    </a>
+                                </div>
+
+                                <div class="mt-2 text-dark" style="white-space: pre-line;">
+                                    @item.Content
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-muted">Chưa có announcement nào cho event này.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

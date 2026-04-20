@@ -12,12 +12,15 @@ namespace GameStore.Services
         private GameStoreContext db;
         private readonly ILogger<PaymentServiceImpl> logger;
         private readonly IHubContext<Hubs.GameHub> hub;
+        private readonly EventParticipantService eventParticipantService;
 
-        public PaymentServiceImpl(GameStoreContext _db, ILogger<PaymentServiceImpl> _logger, IHubContext<Hubs.GameHub> _hub)
+        public PaymentServiceImpl(GameStoreContext _db, ILogger<PaymentServiceImpl> _logger, 
+            IHubContext<Hubs.GameHub> _hub, EventParticipantService _eventParticipantService)
         {
             db = _db;
             logger = _logger;
             hub = _hub;
+            eventParticipantService = _eventParticipantService;
         }
 
         public List<GiaoDich> findAll()
@@ -337,6 +340,89 @@ namespace GameStore.Services
 
             logger.LogInformation("Topup success: UserId={UserId}, Amount={Amount}, NewBalance={Balance}",
                 userId, amount, user.SoDu);
+        }
+
+        // =========================
+        // EVENT PAYMENT
+        // =========================
+        public string CreatePendingEventBalance(int userId, int eventId)
+        {
+            var ev = db.Events.FirstOrDefault(x => x.EventId == eventId);
+            if (ev == null) throw new Exception("Event not found");
+
+            var maGD = Guid.NewGuid().ToString();
+
+            var giaoDich = new GiaoDich
+            {
+                MaGD = maGD,
+                MaNguoiDung = userId,
+                EventId = eventId,
+                NgayMua = DateTime.UtcNow,
+                TrangThai = "Pending",
+                PhuongThuc = "Balance",
+                LoaiGiaoDich = "EventJoin",
+                ThanhTien = ev.Price,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            db.GiaoDiches.Add(giaoDich);
+            db.SaveChanges();
+
+            return maGD;
+        }
+
+        public async Task<bool> CompleteEventBalance(string maGD)
+        {
+            using var transaction = db.Database.BeginTransaction();
+
+            try
+            {
+                var gd = db.GiaoDiches
+                    .Include(x => x.Event)
+                    .FirstOrDefault(x => x.MaGD == maGD);
+
+                if (gd == null) return false;
+                if (gd.LoaiGiaoDich != "EventJoin") return false;
+                if (gd.TrangThai == "Success") return true;
+                if (!gd.EventId.HasValue) return false;
+
+                var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == gd.MaNguoiDung);
+                if (user == null) return false;
+
+                db.Entry(user).Reload();
+
+                if (user.SoDu < gd.ThanhTien)
+                    return false;
+
+                if (eventParticipantService.IsJoined(gd.EventId.Value, gd.MaNguoiDung))
+                {
+                    gd.TrangThai = "Success";
+                    db.SaveChanges();
+                    transaction.Commit();
+                    return true;
+                }
+
+                user.SoDu -= gd.ThanhTien;
+
+                var joined = eventParticipantService.JoinPaid(gd.EventId.Value, gd.MaNguoiDung, gd.ThanhTien);
+                if (!joined)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+
+                gd.TrangThai = "Success";
+                db.SaveChanges();
+                transaction.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                logger.LogError(ex, "CompleteEventBalance error");
+                return false;
+            }
         }
 
     }

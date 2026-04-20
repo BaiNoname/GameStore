@@ -1,0 +1,260 @@
+﻿@model GameStore.Models.Event
+
+@{
+    ViewData["Title"] = Model.Title;
+    bool isJoined = ViewBag.IsJoined != null && (bool)ViewBag.IsJoined;
+
+    string GetImage(string? image)
+    {
+        if (string.IsNullOrWhiteSpace(image))
+            return "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1600&q=80";
+
+        if (image.StartsWith("http://") || image.StartsWith("https://"))
+            return image;
+
+        return Url.Content("~/images/events/" + image);
+    }
+}
+
+<main class="gs-page">
+    <div class="container-xxl">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <article class="gs-article-card">
+                    <div class="gs-breadcrumb mb-3">
+                        <a href="/">Home</a>
+                        <span>/</span>
+                        <a href="/event">Event</a>
+                        <span>/</span>
+                        <span class="active">@Model.Title</span>
+                    </div>
+
+                    <h1 class="gs-article-title">@Model.Title</h1>
+
+                    <div class="gs-meta mb-4">
+                        <span>📅 @Model.StartAt.ToString("dd/MM/yyyy HH:mm")</span>
+                        <span>🏁 @Model.EndAt.ToString("dd/MM/yyyy HH:mm")</span>
+                        <span>👥 @Model.CurrentParticipants / @(Model.MaxParticipants?.ToString() ?? "∞")</span>
+                        <span>💰 @Model.Price.ToString("N0") VND</span>
+                        <span>🎮 @(Model.Game?.TenGame ?? "GameStore Event")</span>
+                    </div>
+
+                    <div class="gs-hero-image-wrap mb-4">
+                        <img src="@GetImage(Model.Banner)" alt="@Model.Title" class="gs-hero-image" />
+                    </div>
+
+                    <div class="gs-summary-box mb-4">
+                        @(string.IsNullOrWhiteSpace(Model.Summary) ? "Thông tin sự kiện đang được cập nhật." : Model.Summary)
+                    </div>
+
+                    <div class="gs-article-content">
+                        @Html.Raw((Model.Content ?? "").Replace("\n", "<br />"))
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2 flex-wrap">
+                        @if (isJoined)
+                        {
+                            <a href="/event/room/@Model.EventId" class="gs-btn-primary">Open Member Area</a>
+                        }
+                        else
+                        {
+                            <form method="post" action="/event/join/@Model.EventId">
+                                <input type="hidden" name="method" value="balance" />
+                                <button class="gs-btn-primary" type="submit">
+                                    @((Model.AccessType ?? "").Trim().ToLower() == "free"
+                                                                    ? "Join Free Event"
+                                                                    : $"Buy Access - {Model.Price.ToString("N0")} VND")
+                            </button>
+                        </form>
+                                                }
+
+                        <a href="/event" class="gs-btn-outline">Back to Events</a>
+                    </div>
+                </article>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="gs-side-panel mb-4">
+                    <div class="gs-kicker">Access</div>
+                    <h3 class="gs-side-title">Participation Info</h3>
+                    <p class="gs-side-text"><strong>Type:</strong> @Model.EventType</p>
+                    <p class="gs-side-text"><strong>Access:</strong> @Model.AccessType</p>
+                    <p class="gs-side-text"><strong>Status:</strong> @Model.Status</p>
+                    <p class="gs-side-text"><strong>Prize:</strong> @(string.IsNullOrWhiteSpace(Model.PrizeInfo) ? "Updating" : Model.PrizeInfo)</p>
+                </div>
+
+                <div class="gs-side-panel">
+                    <div class="gs-kicker">Announcements</div>
+                    <h3 class="gs-side-title">Latest Announcements</h3>
+
+                    @{
+                        var announcements = ViewBag.Announcements as List<GameStore.Models.EventAnnouncement> ?? new List<GameStore.Models.EventAnnouncement>();
+                    }
+
+                    @if (announcements.Any())
+                    {
+                        @foreach (var item in announcements.Take(5))
+                        {
+                            <div class="gs-announce-item">
+                                <div class="fw-bold text-light">@item.Title</div>
+                                <div class="text-secondary small">@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-secondary">Chưa có thông báo nào.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+    :root {
+        --gs-bg: #07111f;
+        --gs-bg-2: #0b1728;
+        --gs-card: rgba(14, 25, 43, 0.88);
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-text: #f3f7ff;
+        --gs-muted: #94a3b8;
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+    }
+
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+
+    body {
+        background: radial-gradient(circle at top left, rgba(124,58,237,0.18), transparent 24%), radial-gradient(circle at top right, rgba(37,99,235,0.14), transparent 22%), linear-gradient(180deg, #050b16 0%, #07111f 40%, #091626 100%);
+        color: var(--gs-text);
+        min-height: 100vh;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .gs-page {
+        padding: 48px 0 70px;
+    }
+
+    .gs-breadcrumb {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        color: var(--gs-muted);
+        font-size: 0.95rem;
+    }
+
+        .gs-breadcrumb .active {
+            color: #fff;
+        }
+
+    .gs-article-card, .gs-side-panel, .gs-summary-box {
+        background: linear-gradient(180deg, rgba(14,25,43,0.94), rgba(9,18,33,0.94));
+        border: 1px solid var(--gs-line);
+        border-radius: 28px;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+    }
+
+    .gs-article-card, .gs-side-panel {
+        padding: 28px;
+    }
+
+    .gs-article-title {
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1.15;
+        color: #fff;
+        margin-bottom: 18px;
+        font-weight: 800;
+    }
+
+    .gs-meta {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        color: #a9b7c9;
+        font-size: .95rem;
+    }
+
+    .gs-hero-image-wrap {
+        overflow: hidden;
+        border-radius: 24px;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .gs-hero-image {
+        width: 100%;
+        min-height: 360px;
+        max-height: 520px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .gs-summary-box {
+        padding: 18px 20px;
+        color: #dbe6f7;
+        line-height: 1.75;
+    }
+
+    .gs-article-content {
+        color: #dbe6f7;
+        line-height: 1.9;
+        font-size: 1rem;
+    }
+
+    .gs-btn-primary, .gs-btn-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 20px;
+        border-radius: 999px;
+        font-weight: 700;
+    }
+
+    .gs-btn-primary {
+        background: var(--gs-primary);
+        color: #fff;
+        border: none;
+    }
+
+    .gs-btn-outline {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #fff;
+    }
+
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: #7dd3fc;
+        margin-bottom: 8px;
+    }
+
+    .gs-side-title {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 18px;
+    }
+
+    .gs-side-text {
+        color: #dbe6f7;
+        margin-bottom: 10px;
+    }
+
+    .gs-announce-item {
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+        .gs-announce-item:last-child {
+            border-bottom: none;
+        }
+</style>

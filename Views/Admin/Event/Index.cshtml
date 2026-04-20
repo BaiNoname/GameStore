@@ -1,0 +1,145 @@
+﻿@model List<GameStore.Models.Event>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Manage Events";
+
+    string keyword = ViewBag.Keyword?.ToString() ?? "";
+    string eventType = ViewBag.EventType?.ToString() ?? "";
+    string status = ViewBag.Status?.ToString() ?? "";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+}
+
+<div class="card admin-list-card">
+    <div class="card-body">
+        <h4 class="card-title">Danh sách Event</h4>
+        <p class="card-subtitle mb-3">Quản lý toàn bộ sự kiện cộng đồng trong hệ thống</p>
+
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+            <form method="get" action="/admin/event/index" class="d-flex gap-2 flex-wrap">
+                <input type="text" name="keyword" value="@keyword" class="form-control" placeholder="Search title..." />
+
+                <select name="eventType" class="form-control">
+                    <option value="">-- All Types --</option>
+                    <option value="Tournament" selected="@(eventType == "Tournament")">Tournament</option>
+                    <option value="Community" selected="@(eventType == "Community")">Community</option>
+                    <option value="Special Events" selected="@(eventType == "Special Events")">Special Events</option>
+                </select>
+
+                <select name="status" class="form-control">
+                    <option value="">-- All Status --</option>
+                    <option value="Upcoming" selected="@(status == "Upcoming")">Upcoming</option>
+                    <option value="Live" selected="@(status == "Live")">Live</option>
+                    <option value="Ended" selected="@(status == "Ended")">Ended</option>
+                </select>
+
+                <button class="btn btn-success" type="submit">Search</button>
+            </form>
+
+            <a href="/admin/event/add" class="btn btn-primary">+ Add Event</a>
+        </div>
+
+        @if (TempData["Msg"] != null)
+        {
+            var msgType = TempData["MsgType"]?.ToString() ?? "info";
+            <div class="alert alert-@msgType mb-3 fw-bold">@TempData["Msg"]</div>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Banner</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Price</th>
+                        <th>Participants</th>
+                        <th>Start</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.EventId</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.Banner))
+                                    {
+                                        <img src="@(item.Banner.StartsWith("http") ? item.Banner : Url.Content("~/images/events/" + item.Banner))"
+                                             style="width:90px;height:60px;object-fit:cover;border-radius:10px;border:1px solid #ddd;" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No image</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@item.Title</div>
+                                    <small class="text-muted">@item.Slug</small>
+                                </td>
+                                <td>@item.EventType</td>
+                                <td>@item.Status</td>
+                                <td>@item.Price.ToString("N0")</td>
+                                <td>@item.CurrentParticipants / @(item.MaxParticipants?.ToString() ?? "∞")</td>
+                                <td>@item.StartAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <a href="/admin/event/edit/@item.EventId" class="btn btn-sm btn-warning">Edit</a>
+
+                                        <a href="/admin/event-announcement/index/@item.EventId" class="btn btn-sm btn-info text-white">
+                                            Announcements
+                                        </a>
+
+                                        <a href="/admin/event-participant/index/@item.EventId" class="btn btn-sm btn-primary">
+                                            Participants
+                                        </a>
+
+                                        <a href="/admin/event/delete/@item.EventId"
+                                           class="btn btn-sm btn-danger"
+                                           onclick="return confirm('Bạn có chắc muốn xóa event này?');">
+                                            Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted">Chưa có event nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (totalPages > 1)
+            {
+                <nav>
+                    <ul class="pagination justify-content-center mt-4 flex-wrap">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="?keyword=@keyword&eventType=@eventType&status=@status&page=@(currentPage - 1)">Previous</a>
+                        </li>
+
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" href="?keyword=@keyword&eventType=@eventType&status=@status&page=@i">@i</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" href="?keyword=@keyword&eventType=@eventType&status=@status&page=@(currentPage + 1)">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,534 @@
+﻿@using GameStore.Pagination.User
+@model EventPageVM
+
+@{
+    ViewData["Title"] = "Event";
+
+    var featured = Model.FeaturedEvents.FirstOrDefault();
+
+    string GetImage(string? image)
+    {
+        if (string.IsNullOrWhiteSpace(image))
+            return "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1600&q=80";
+
+        if (image.StartsWith("http://") || image.StartsWith("https://"))
+            return image;
+
+        return Url.Content("~/images/events/" + image);
+    }
+
+    string GetBadgeClass(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) return "gs-badge";
+        var s = status.Trim().ToLower();
+        if (s == "live") return "gs-badge live";
+        if (s == "upcoming") return "gs-badge upcoming";
+        return "gs-badge";
+    }
+
+    string GetBadgeText(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) return "OPEN";
+        return status.ToUpper();
+    }
+
+    var tabs = new List<string> { "All", "Tournament", "Community", "Special Events" };
+}
+
+<main class="gs-page">
+    <div class="container-xxl">
+        <div class="mb-4">
+            <div class="gs-kicker">Community Hub</div>
+            <h1 class="gs-title">Event Group</h1>
+            <p class="gs-subtitle">
+                Nơi tập trung các sự kiện nổi bật, giải đấu cộng đồng, hoạt động nhóm và lịch trình sắp diễn ra trên GameStore.
+            </p>
+        </div>
+
+        @if (featured != null)
+        {
+            <section class="gs-hero-event">
+                <img src="@GetImage(featured.Banner)" alt="@featured.Title">
+                <div class="gs-hero-overlay">
+                    <div>
+                        <span class="@GetBadgeClass(featured.Status)">@GetBadgeText(featured.Status)</span>
+                        <h2 class="gs-hero-title">@featured.Title</h2>
+                        <p class="gs-hero-desc">
+                            @(string.IsNullOrWhiteSpace(featured.Summary) ? "Sự kiện nổi bật đang được cộng đồng quan tâm." : featured.Summary)
+                        </p>
+                        <div class="gs-meta">
+                            <span>📅 @featured.StartAt.ToString("dd MMM yyyy")</span>
+                            <span>⏰ @featured.StartAt.ToString("HH:mm")</span>
+                            <span>👥 @featured.CurrentParticipants participants</span>
+                            <span>🏆 @(string.IsNullOrWhiteSpace(featured.PrizeInfo) ? "Updating prize info" : featured.PrizeInfo)</span>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="/event/detail/@featured.Slug" class="gs-btn-primary">View Details</a>
+                            <a href="/event?status=Live&page=1" class="gs-btn-outline">Explore Events</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        }
+
+        <div class="gs-pillbar">
+            <a href="/event?eventType=All&status=All&page=1" class="gs-pill @(Model.EventType == "All" ? "active" : "")">All Events</a>
+            <a href="/event?eventType=All&status=Live&page=1" class="gs-pill @(Model.Status == "Live" ? "active" : "")">Live Now</a>
+            <a href="/event?eventType=All&status=Upcoming&page=1" class="gs-pill @(Model.Status == "Upcoming" ? "active" : "")">Upcoming</a>
+
+            @foreach (var t in tabs.Where(x => x != "All"))
+            {
+                <a href="/event?eventType=@Uri.EscapeDataString(t)&status=All&page=1"
+                   class="gs-pill @(Model.EventType == t ? "active" : "")">
+                    @t
+                </a>
+            }
+        </div>
+
+        <section class="mb-5">
+            <h3 class="gs-section-title">Featured Events</h3>
+            <p class="gs-section-subtitle">Các sự kiện nổi bật được đề xuất cho cộng đồng.</p>
+
+            <div class="row g-4">
+                @foreach (var item in Model.Events)
+                {
+                    <div class="col-md-6 col-xl-4">
+                        <article class="gs-event-card h-100">
+                            <img src="@GetImage(item.Banner)" alt="@item.Title">
+                            <div class="gs-event-body">
+                                <span class="@GetBadgeClass(item.Status)">@GetBadgeText(item.Status)</span>
+                                <div class="gs-event-title">@item.Title</div>
+                                <div class="gs-event-desc">
+                                    @(string.IsNullOrWhiteSpace(item.Summary) ? "Thông tin sự kiện đang được cập nhật." : item.Summary)
+                                </div>
+                                <div class="gs-mini-stat">
+                                    <span>📅 @item.StartAt.ToString("dd MMM")</span>
+                                    <span>👥 @item.CurrentParticipants joined</span>
+                                </div>
+                                <a href="/event/detail/@item.Slug" class="gs-btn-primary w-100">View Event</a>
+                            </div>
+                        </article>
+                    </div>
+                }
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="mt-5">
+                    <ul class="pagination justify-content-center gs-pagination flex-wrap">
+                        <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               href="/event?eventType=@Uri.EscapeDataString(Model.EventType)&status=@Uri.EscapeDataString(Model.Status)&page=@(Model.CurrentPage - 1)">
+                                Previous
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   href="/event?eventType=@Uri.EscapeDataString(Model.EventType)&status=@Uri.EscapeDataString(Model.Status)&page=@i">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               href="/event?eventType=@Uri.EscapeDataString(Model.EventType)&status=@Uri.EscapeDataString(Model.Status)&page=@(Model.CurrentPage + 1)">
+                                Next
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </section>
+
+        <section class="mb-5">
+            <h3 class="gs-section-title">Event Schedule</h3>
+            <p class="gs-section-subtitle">Lịch trình hoạt động trong tuần dành cho cộng đồng và giải đấu.</p>
+
+            <div class="gs-schedule-card">
+                @foreach (var item in Model.UpcomingEvents.Take(4))
+                {
+                    <div class="gs-schedule-item">
+                        <div class="gs-schedule-time">@item.StartAt.ToString("dd MMM · HH:mm")</div>
+                        <div>
+                            <div class="gs-schedule-name">@item.Title</div>
+                            <div class="gs-schedule-meta">@item.EventType · @(item.Game?.TenGame ?? "GameStore Event")</div>
+                        </div>
+                        <span class="@GetBadgeClass(item.Status) mb-0">@GetBadgeText(item.Status)</span>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section class="gs-cta-box">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <div class="gs-kicker">Join the Community</div>
+                    <h3>Stay connected with every event and group activity</h3>
+                    <p>From live tournaments to community meetups, GameStore Event Group helps players discover the most exciting moments on the platform.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="/event?eventType=All&status=All&page=1" class="gs-btn-primary">Explore Events</a>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<style>
+    :root {
+        --gs-bg: #07111f;
+        --gs-bg-2: #0b1728;
+        --gs-card: rgba(14, 25, 43, 0.88);
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-text: #f3f7ff;
+        --gs-muted: #94a3b8;
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+        --gs-accent: #7dd3fc;
+        --gs-live: #22c55e;
+        --gs-warning: #f59e0b;
+    }
+
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+
+    body {
+        background: radial-gradient(circle at top left, rgba(124,58,237,0.18), transparent 24%), radial-gradient(circle at top right, rgba(37,99,235,0.14), transparent 22%), linear-gradient(180deg, #050b16 0%, #07111f 40%, #091626 100%);
+        color: var(--gs-text);
+        min-height: 100vh;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .gs-page {
+        padding: 48px 0 70px;
+    }
+
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: var(--gs-accent);
+        margin-bottom: 8px;
+    }
+
+    .gs-title {
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: #fff;
+        margin-bottom: 10px;
+    }
+
+    .gs-subtitle {
+        color: var(--gs-muted);
+        max-width: 760px;
+        margin-bottom: 0;
+    }
+
+    .gs-hero-event {
+        overflow: hidden;
+        border-radius: 32px;
+        border: 1px solid var(--gs-line);
+        box-shadow: 0 22px 48px rgba(0,0,0,0.28);
+        margin: 34px 0 36px;
+        position: relative;
+        min-height: 460px;
+        background: #0b1220;
+    }
+
+        .gs-hero-event img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.60);
+        }
+
+    .gs-hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, rgba(3,7,18,0.92) 0%, rgba(3,7,18,0.58) 45%, rgba(3,7,18,0.22) 100%), linear-gradient(180deg, rgba(15,23,42,0.08) 0%, rgba(15,23,42,0.82) 100%);
+        display: flex;
+        align-items: end;
+        padding: 34px;
+    }
+
+    .gs-hero-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: clamp(1.9rem, 4vw, 3rem);
+        line-height: 1.1;
+        margin-bottom: 14px;
+        color: #fff;
+    }
+
+    .gs-hero-desc {
+        color: #dbe6f7;
+        line-height: 1.75;
+        max-width: 780px;
+        margin-bottom: 18px;
+    }
+
+    .gs-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(15,23,42,0.72);
+        color: #fff;
+    }
+
+        .gs-badge.live {
+            background: rgba(34,197,94,0.14);
+            color: #bbf7d0;
+            border-color: rgba(34,197,94,0.18);
+        }
+
+        .gs-badge.upcoming {
+            background: rgba(245,158,11,0.14);
+            color: #fde68a;
+            border-color: rgba(245,158,11,0.18);
+        }
+
+    .gs-meta {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        color: #a9b7c9;
+        font-size: .95rem;
+        margin-bottom: 20px;
+    }
+
+    .gs-btn-primary, .gs-btn-outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 20px;
+        border-radius: 999px;
+        font-weight: 700;
+    }
+
+    .gs-btn-primary {
+        background: var(--gs-primary);
+        color: #fff;
+        border: none;
+        box-shadow: 0 14px 28px rgba(37,99,235,0.25);
+    }
+
+        .gs-btn-primary:hover {
+            color: #fff;
+        }
+
+    .gs-btn-outline {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #fff;
+    }
+
+        .gs-btn-outline:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.12);
+        }
+
+    .gs-pillbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 36px;
+    }
+
+    .gs-pill {
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.05);
+        color: #e2e8f0;
+        border-radius: 999px;
+        padding: 10px 18px;
+        font-weight: 600;
+        transition: .25s ease;
+    }
+
+        .gs-pill.active, .gs-pill:hover {
+            background: var(--gs-primary);
+            color: #fff;
+            border-color: transparent;
+        }
+
+    .gs-section-title {
+        font-size: clamp(1.4rem, 2vw, 2rem);
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 6px;
+    }
+
+    .gs-section-subtitle {
+        color: var(--gs-muted);
+        margin-bottom: 24px;
+    }
+
+    .gs-event-card, .gs-schedule-card, .gs-cta-box {
+        background: linear-gradient(180deg, rgba(14,25,43,0.94), rgba(9,18,33,0.94));
+        border: 1px solid var(--gs-line);
+        border-radius: 28px;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+        overflow: hidden;
+        transition: .25s ease;
+    }
+
+        .gs-event-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 28px 50px rgba(0,0,0,0.32);
+        }
+
+        .gs-event-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+        }
+
+    .gs-event-body {
+        padding: 22px;
+    }
+
+    .gs-event-title {
+        color: #fff;
+        font-weight: 800;
+        line-height: 1.45;
+        margin-bottom: 12px;
+        min-height: 52px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .gs-event-desc {
+        color: #cbd5e1;
+        line-height: 1.7;
+        margin-bottom: 16px;
+        min-height: 72px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .gs-mini-stat {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        color: #9fb1c7;
+        font-size: .95rem;
+        margin-bottom: 16px;
+    }
+
+    .gs-schedule-card {
+        padding: 24px;
+    }
+
+    .gs-schedule-item {
+        display: grid;
+        grid-template-columns: 120px 1fr auto;
+        gap: 16px;
+        align-items: center;
+        padding: 18px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+        .gs-schedule-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+    .gs-schedule-time {
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .gs-schedule-name {
+        color: #fff;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .gs-schedule-meta {
+        color: #94a3b8;
+        font-size: .95rem;
+    }
+
+    .gs-cta-box {
+        padding: 30px;
+        background: linear-gradient(135deg, rgba(124,58,237,0.16), rgba(37,99,235,0.16), rgba(6,182,212,0.10));
+    }
+
+        .gs-cta-box h3 {
+            color: #fff;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .gs-cta-box p {
+            color: #dbe6f7;
+            line-height: 1.7;
+            margin-bottom: 0;
+        }
+
+    .gs-pagination .page-link {
+        background: rgba(255,255,255,0.04);
+        color: #dbe6f7;
+        border: 1px solid rgba(255,255,255,0.08);
+        margin: 0 4px;
+        border-radius: 14px !important;
+        min-width: 44px;
+        text-align: center;
+        box-shadow: none;
+    }
+
+        .gs-pagination .page-link:hover {
+            background: rgba(255,255,255,0.10);
+            color: #fff;
+        }
+
+    .gs-pagination .page-item.active .page-link {
+        background: var(--gs-primary);
+        border-color: transparent;
+        color: #fff;
+    }
+
+    @@media (max-width: 991.98px) {
+        .gs-hero-event {
+            min-height: 360px;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .gs-schedule-item {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .gs-page {
+            padding: 30px 0 50px;
+        }
+
+        .gs-hero-overlay, .gs-event-body, .gs-schedule-card, .gs-cta-box {
+            padding: 18px;
+        }
+    }
+</style>

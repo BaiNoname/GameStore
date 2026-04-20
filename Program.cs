@@ -125,6 +125,10 @@ public class Program
         builder.Services.AddScoped<CartService, CartServiceImpl>();
         builder.Services.AddScoped<ReviewService, ReviewServiceImpl>();
         builder.Services.AddScoped<NewsService, NewsServiceImpl>();
+        builder.Services.AddScoped<EventService, EventServiceImpl>();
+        builder.Services.AddScoped<EventParticipantService, EventParticipantServiceImpl>();
+        builder.Services.AddScoped<EventAnnouncementService, EventAnnouncementServiceImpl>();
+        builder.Services.AddScoped<EventMessageService, EventMessageServiceImpl>();
 
         // Register Vnpay service implementation
         builder.Services.AddScoped<VnpayService, VnpayServiceImpl>();
