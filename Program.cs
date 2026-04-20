@@ -168,6 +168,7 @@ public class Program
                      path.StartsWith("/home") ||
                      path.StartsWith("/account") ||
                      path.StartsWith("/news") ||
+                     path.StartsWith("/event") ||
                      path.StartsWith("/checkout")))
                 {
                     context.Response.Redirect("/admin");

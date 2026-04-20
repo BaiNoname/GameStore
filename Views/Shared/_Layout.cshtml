@@ -482,6 +482,134 @@
                 font-size: 18px;
                 line-height: 1;
             }
+
+        .gs-user-dropdown {
+            min-width: 0;
+        }
+
+        .gs-user-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 220px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .gs-user-icon {
+            flex: 0 0 auto;
+        }
+
+        .gs-user-name {
+            display: inline-block;
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: bottom;
+        }
+
+        .gs-user-menu {
+            min-width: 250px;
+            max-width: min(92vw, 320px);
+            padding: 10px;
+        }
+
+            .gs-user-menu .dropdown-item,
+            .gs-user-menu .dropdown-item-text {
+                white-space: normal;
+                word-break: break-word;
+                line-height: 1.45;
+            }
+
+        .gs-balance-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .gs-balance-label {
+            color: #cbd5e1;
+            font-size: 0.86rem;
+            font-weight: 600;
+        }
+
+        .gs-balance-value {
+            color: #facc15;
+            font-weight: 800;
+        }
+
+        @@media (max-width: 991.98px) {
+            .navbar-collapse .ms-auto.d-flex
+
+        {
+            width: 100%;
+            align-items: stretch !important;
+            gap: 10px !important;
+            margin-top: 12px;
+        }
+
+        .gs-user-dropdown,
+        .gs-user-dropdown .dropdown-toggle,
+        .navbar-collapse .btn-outline-light,
+        .navbar-collapse .gs-accent {
+            width: 100%;
+        }
+
+        .gs-user-toggle {
+            justify-content: center;
+            max-width: 100%;
+        }
+
+        .gs-user-name {
+            max-width: 180px;
+        }
+
+        .gs-user-menu {
+            width: 100%;
+            min-width: 100%;
+            max-width: 100%;
+        }
+
+        }
+
+        @@media (max-width: 575.98px) {
+            .gs-user-toggle
+
+        {
+            min-height: 44px;
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
+        .gs-user-name {
+            max-width: 120px;
+        }
+
+        .gs-user-menu {
+            padding: 8px;
+            border-radius: 14px;
+        }
+
+            .gs-user-menu .dropdown-item,
+            .gs-user-menu .dropdown-item-text {
+                font-size: 0.92rem;
+            }
+
+        .gs-balance-value {
+            font-size: 0.95rem;
+        }
+
+        }
+
+        @@media (max-width: 575.98px) {
+            .gs-user-name
+
+        {
+            max-width: 90px;
+        }
+
+        }
     </style>
 </head>
 <body>
@@ -526,13 +654,14 @@
                         }
                         else
                         {
-                            <div class="dropdown">
-                                <button class="btn btn-outline-light dropdown-toggle"
+                            <div class="dropdown gs-user-dropdown">
+                                <button class="btn btn-outline-light dropdown-toggle gs-user-toggle"
                                         data-bs-toggle="dropdown">
-                                    👤 @User.Identity.Name
+                                    <span class="gs-user-icon">👤</span>
+                                    <span class="gs-user-name">@User.Identity.Name</span>
                                 </button>
 
-                                <ul class="dropdown-menu dropdown-menu-end">
+                                <ul class="dropdown-menu dropdown-menu-end gs-user-menu">
 
                                     <li>
                                         <a class="dropdown-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Library" ? "active" : "")"
@@ -558,8 +687,9 @@
                                     }
 
                                     <li>
-                                        <span class="dropdown-item-text text-warning fw-bold">
-                                            My Balance: 💰 @((currentUser?.SoDu ?? 0).ToString("N0")) VND
+                                        <span class="dropdown-item-text text-warning fw-bold gs-balance-text">
+                                            <span class="gs-balance-label">My Balance:</span>
+                                            <span class="gs-balance-value">💰 @((currentUser?.SoDu ?? 0).ToString("N0")) VND</span>
                                         </span>
                                     </li>
 
