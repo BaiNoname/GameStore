@@ -183,5 +183,16 @@ namespace GameStore.Services
             }
         }
 
+        public List<EventParticipant> GetMyEvents(int userId)
+        {
+            return db.EventParticipants
+                .Include(x => x.Event)
+                    .ThenInclude(e => e.Game)
+                .Include(x => x.NguoiDung)
+                .Where(x => x.UserId == userId)
+                .OrderByDescending(x => x.JoinedAt)
+                .ToList();
+        }
+
     }
 }

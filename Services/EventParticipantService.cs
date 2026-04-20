@@ -15,5 +15,7 @@ namespace GameStore.Services
 
         EventParticipant? FindById(int participantId);
         bool RemoveParticipant(int participantId);
+
+        List<EventParticipant> GetMyEvents(int userId);
     }
 }
