@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = Model.Title;
     bool isJoined = ViewBag.IsJoined != null && (bool)ViewBag.IsJoined;
+    bool isFull = Model.MaxParticipants.HasValue && Model.CurrentParticipants >= Model.MaxParticipants.Value;
 
     string GetImage(string? image)
     {
@@ -56,6 +57,14 @@
                         {
                             <a href="/event/room/@Model.EventId" class="gs-btn-primary">Open Member Area</a>
                         }
+                        else if (isFull)
+                        {
+                            <button type="button"
+                                    class="gs-btn-disabled"
+                                    onclick="showEventFullToast()">
+                                Event Full
+                            </button>
+                        }
                         else
                         {
                             if ((Model.AccessType ?? "").Trim().ToLower() == "free")
@@ -81,9 +90,12 @@
 
                         <a href="/event" class="gs-btn-outline">Back to Events</a>
                     </div>
+                    <div id="eventFullToast" class="gs-inline-toast">
+                        Sự kiện này đã đủ số lượng người tham gia.
+                    </div>
 
                     @* xac nhan khi freee *@
-                    @if (!isJoined && (Model.AccessType ?? "").Trim().ToLower() == "free")
+                    @if (!isJoined && !isFull && (Model.AccessType ?? "").Trim().ToLower() == "free")
                     {
                         <div class="modal fade" id="confirmJoinFreeEventModal" tabindex="-1" aria-labelledby="confirmJoinFreeEventModalLabel" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
@@ -129,7 +141,7 @@
                     }
 
                     @* xac nhan khi thanh toan phi *@
-                    @if (!isJoined && (Model.AccessType ?? "").Trim().ToLower() != "free")
+                    @if (!isJoined && !isFull && (Model.AccessType ?? "").Trim().ToLower() != "free")
                     {
                         <div class="modal fade" id="confirmBuyEventModal" tabindex="-1" aria-labelledby="confirmBuyEventModalLabel" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
@@ -430,25 +442,74 @@
         box-shadow: 0 20px 50px rgba(0,0,0,0.35);
     }
 
-    .gs-confirm-box {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 18px;
-        padding: 14px 16px;
-    }
-
         .gs-confirm-box.free {
             border-color: rgba(34,197,94,0.18);
             background: rgba(34,197,94,0.08);
         }
 
-    .gs-confirm-modal .modal-header,
-    .gs-confirm-modal .modal-footer {
-        padding-left: 24px;
-        padding-right: 24px;
+    .gs-btn-disabled {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 20px;
+        border-radius: 999px;
+        font-weight: 700;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.08);
+        color: #94a3b8;
+        cursor: not-allowed;
+        opacity: 0.95;
     }
 
-    .gs-confirm-modal .modal-body {
-        padding: 0 24px 8px;
+    .gs-inline-toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 2000;
+        background: rgba(15, 23, 42, 0.96);
+        color: #fff;
+        border: 1px solid rgba(248, 113, 113, 0.28);
+        box-shadow: 0 16px 40px rgba(0,0,0,0.28);
+        border-radius: 16px;
+        padding: 14px 18px;
+        min-width: 280px;
+        max-width: 360px;
+        transform: translateY(20px);
+        opacity: 0;
+        pointer-events: none;
+        transition: all .25s ease;
     }
+
+        .gs-inline-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+    @@media (max-width: 575.98px) {
+        .gs-inline-toast
+
+    {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        min-width: unset;
+        max-width: unset;
+    }
+
+    }
+
 </style>
+<script>
+    function showEventFullToast() {
+        const toast = document.getElementById("eventFullToast");
+        if (!toast) return;
+
+        toast.classList.add("show");
+        clearTimeout(window.__eventFullToastTimer);
+
+        window.__eventFullToastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2500);
+    }
+</script>

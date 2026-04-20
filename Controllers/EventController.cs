@@ -107,6 +107,13 @@ namespace GameStore.Controllers
                 return RedirectToAction("Index");
             }
 
+            if (ev.MaxParticipants.HasValue && ev.CurrentParticipants >= ev.MaxParticipants.Value)
+            {
+                TempData["ToastMessage"] = "Sự kiện đã đủ số lượng người tham gia";
+                TempData["ToastType"] = "error";
+                return RedirectToAction("Detail", new { slug = ev.Slug });
+            }
+
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
                 var returnUrl = Url.Action("Detail", "Event", new { slug = ev.Slug }) ?? "/event";
@@ -114,6 +121,7 @@ namespace GameStore.Controllers
             }
 
             int userId = int.Parse(User.FindFirst("UserId")!.Value);
+
 
             if (participantService.IsJoined(id, userId))
             {
