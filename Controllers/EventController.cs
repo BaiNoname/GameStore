@@ -1,6 +1,8 @@
 ﻿using GameStore.Pagination.User;
 using GameStore.Services;
 using Microsoft.AspNetCore.Mvc;
+using GameStore.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace GameStore.Controllers
 {
@@ -13,19 +15,27 @@ namespace GameStore.Controllers
         private readonly EventAnnouncementService announcementService;
         private readonly EventMessageService messageService;
         private readonly PaymentService paymentService;
+        private readonly IHubContext<EventChatHub> eventChatHub;
 
         public EventController(
             EventService _eventService,
             EventParticipantService _participantService,
             EventAnnouncementService _announcementService,
             EventMessageService _messageService,
-            PaymentService _paymentService)
+            PaymentService _paymentService,
+            IHubContext<EventChatHub> _eventChatHub)
         {
             eventService = _eventService;
             participantService = _participantService;
             announcementService = _announcementService;
             messageService = _messageService;
             paymentService = _paymentService;
+            eventChatHub = _eventChatHub;
+        }
+
+        private IActionResult RedirectToLoginWithReturnUrl(string returnUrl)
+        {
+            return Redirect($"/auth/login?returnUrl={Uri.EscapeDataString(returnUrl)}");
         }
 
         [Route("")]
@@ -89,11 +99,6 @@ namespace GameStore.Controllers
         [Route("join/{id}")]
         public async Task<IActionResult> Join(int id, string method = "balance")
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-                return Redirect("/auth/login");
-
-            int userId = int.Parse(User.FindFirst("UserId")!.Value);
-
             var ev = eventService.FindById(id);
             if (ev == null)
             {
@@ -101,6 +106,14 @@ namespace GameStore.Controllers
                 TempData["ToastType"] = "error";
                 return RedirectToAction("Index");
             }
+
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                var returnUrl = Url.Action("Detail", "Event", new { slug = ev.Slug }) ?? "/event";
+                return RedirectToLoginWithReturnUrl(returnUrl);
+            }
+
+            int userId = int.Parse(User.FindFirst("UserId")!.Value);
 
             if (participantService.IsJoined(id, userId))
             {
@@ -140,8 +153,12 @@ namespace GameStore.Controllers
         public IActionResult Room(int id)
         {
             ViewBag.HideSubBar = true;
+
             if (User.Identity == null || !User.Identity.IsAuthenticated)
-                return Redirect("/auth/login");
+            {
+                var returnUrl = Url.Action("Room", "Event", new { id }) ?? "/event";
+                return RedirectToLoginWithReturnUrl(returnUrl);
+            }
 
             int userId = int.Parse(User.FindFirst("UserId")!.Value);
 
@@ -166,11 +183,13 @@ namespace GameStore.Controllers
 
         [HttpPost]
         [Route("room/{id}/send-message")]
-        public IActionResult SendMessage(int id, string content)
+        public async Task<IActionResult> SendMessage(int id, string content)
         {
-            ViewBag.HideSubBar = true;
             if (User.Identity == null || !User.Identity.IsAuthenticated)
-                return Redirect("/auth/login");
+            {
+                var returnUrl = Url.Action("Room", "Event", new { id }) ?? "/event";
+                return RedirectToLoginWithReturnUrl(returnUrl);
+            }
 
             int userId = int.Parse(User.FindFirst("UserId")!.Value);
 
@@ -185,18 +204,26 @@ namespace GameStore.Controllers
                 return RedirectToAction("Detail", new { slug = ev.Slug });
             }
 
+            content = content?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(content))
+                return RedirectToAction("Room", new { id });
+
             if (messageService.Send(id, userId, content))
             {
-                TempData["ToastMessage"] = "Gửi tin nhắn thành công";
-                TempData["ToastType"] = "success";
-            }
-            else
-            {
-                TempData["ToastMessage"] = "Không thể gửi tin nhắn";
-                TempData["ToastType"] = "error";
+                var latest = messageService.GetLatestMessage(id, userId, content);
+
+                if (latest != null)
+                {
+                    await eventChatHub.Clients.Group($"event-room-{id}").SendAsync("ReceiveEventMessage", new
+                    {
+                        userName = latest.NguoiDung?.TenNguoiDung ?? latest.NguoiDung?.Email ?? "User",
+                        content = latest.Content,
+                        createdAt = latest.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    });
+                }
             }
 
-            return RedirectToAction("Room", new { id });
+            return Ok();
         }
 
         [HttpPost]
@@ -204,8 +231,12 @@ namespace GameStore.Controllers
         public IActionResult CheckIn(int id)
         {
             ViewBag.HideSubBar = true;
+
             if (User.Identity == null || !User.Identity.IsAuthenticated)
-                return Redirect("/auth/login");
+            {
+                var returnUrl = Url.Action("Room", "Event", new { id }) ?? "/event";
+                return RedirectToLoginWithReturnUrl(returnUrl);
+            }
 
             int userId = int.Parse(User.FindFirst("UserId")!.Value);
 

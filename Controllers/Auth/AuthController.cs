@@ -23,16 +23,18 @@ namespace GameStore.Controllers.Auth
         }
 
         [HttpGet("login")]
-        public IActionResult Login()
+        public IActionResult Login(string? returnUrl = null)
         {
             ViewBag.HideSubBar = true;
+            ViewBag.ReturnUrl = returnUrl;
             return View();
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string email, string password)
+        public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
         {
             ViewBag.HideSubBar = true;
+            ViewBag.ReturnUrl = returnUrl;
 
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
@@ -49,12 +51,12 @@ namespace GameStore.Controllers.Auth
             }
 
             var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.TenNguoiDung),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Quyen.ToLower()),
-                new Claim("UserId", user.MaNguoiDung.ToString())
-            };
+    {
+        new Claim(ClaimTypes.Name, user.TenNguoiDung),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Role, user.Quyen.ToLower()),
+        new Claim("UserId", user.MaNguoiDung.ToString())
+    };
 
             var identity = new ClaimsIdentity(
                 claims,
@@ -67,8 +69,15 @@ namespace GameStore.Controllers.Auth
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 principal
             );
+
             TempData["ToastMessage"] = "Đăng nhập thành công!";
             TempData["ToastType"] = "success";
+
+            // Ưu tiên quay lại trang trước đó nếu có
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
 
             if (user.Quyen.Equals("Admin", StringComparison.OrdinalIgnoreCase))
                 return Redirect("/admin");

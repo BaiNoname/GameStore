@@ -35,57 +35,96 @@
                             Bạn đã tham gia event này. Đây là khu vực dành riêng cho thành viên.
                         </p>
 
-                        @if (myParticipant != null)
-                        {
-                            if (myParticipant.IsCheckedIn)
+                        <div class="gs-room-actions">
+                            @if (myParticipant != null)
                             {
-                                <div class="alert alert-success mb-0">
-                                    ✅ Bạn đã check-in lúc @myParticipant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-                                </div>
+                                if (myParticipant.IsCheckedIn)
+                                {
+                                    <div class="gs-status-pill success">
+                                        <span class="gs-status-icon">✓</span>
+                                        <span>Bạn đã check-in lúc @myParticipant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <form method="post" action="/event/room/@Model.EventId/checkin">
+                                        <button type="submit" class="gs-action-btn primary">
+                                            ✅ Check-in Event
+                                        </button>
+                                    </form>
+                                }
                             }
-                            else
-                            {
-                                <form method="post" action="/event/room/@Model.EventId/checkin">
-                                    <button type="submit" class="btn btn-success">
-                                        ✅ Check-in Event
-                                    </button>
-                                </form>
-                            }
-                        }
+
+                            <a href="/event/detail/@Model.Slug" class="gs-action-btn ghost">
+                                ← Event Detail
+                            </a>
+
+                            <a href="/event" class="gs-action-btn ghost">
+                                Event List
+                            </a>
+                        </div>
                     </div>
                 </div>
 
                 <div class="gs-room-card mb-4">
-                    <div class="p-4 border-bottom border-secondary">
-                        <h4 class="mb-0 text-light">Event Chat</h4>
+                    <div class="gs-chat-header">
+                        <div>
+                            <div class="gs-kicker mb-1">Community Chat</div>
+                            <h4 class="mb-0 text-light">Event Chat</h4>
+                        </div>
+                        <div class="gs-chat-count">
+                            <span id="chatCount">@messages.Count</span> message@(messages.Count == 1 ? "" : "s")
+                        </div>
                     </div>
 
-                    <div class="p-4 gs-chat-box">
+                    <div class="p-4 gs-chat-box" id="chatBox">
                         @if (messages.Any())
                         {
                             @foreach (var msg in messages)
                             {
                                 <div class="gs-chat-message">
-                                    <div class="fw-bold text-light">
-                                        @(msg.NguoiDung?.TenNguoiDung ?? msg.NguoiDung?.Email ?? "User")
+                                    <div class="gs-chat-avatar">
+                                        @((msg.NguoiDung?.TenNguoiDung ?? msg.NguoiDung?.Email ?? "U").Substring(0, 1).ToUpper())
                                     </div>
-                                    <div class="text-light">@msg.Content</div>
-                                    <div class="small text-secondary">@msg.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+
+                                    <div class="gs-chat-bubble-wrap">
+                                        <div class="gs-chat-meta">
+                                            <span class="gs-chat-user">
+                                                @(msg.NguoiDung?.TenNguoiDung ?? msg.NguoiDung?.Email ?? "User")
+                                            </span>
+                                            <span class="gs-chat-time">
+                                                @msg.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                            </span>
+                                        </div>
+
+                                        <div class="gs-chat-bubble">
+                                            @msg.Content
+                                        </div>
+                                    </div>
                                 </div>
                             }
                         }
                         else
                         {
-                            <p class="text-secondary mb-0">Chưa có tin nhắn nào.</p>
+                            <div class="gs-empty-chat" id="emptyChat">
+                                <div class="gs-empty-chat-icon">💬</div>
+                                <div class="gs-empty-chat-title">Chưa có tin nhắn nào</div>
+                                <div class="gs-empty-chat-text">Hãy là người đầu tiên bắt đầu cuộc trò chuyện trong event này.</div>
+                            </div>
                         }
                     </div>
 
-                    <div class="p-4 border-top border-secondary">
-                        <form method="post" action="/event/room/@Model.EventId/send-message">
-                            <div class="input-group">
-                                <input type="text" name="content" class="form-control" placeholder="Nhập tin nhắn..." />
-                                <button class="btn btn-primary" type="submit">Send</button>
-                            </div>
+                    <div class="gs-chat-compose-wrap">
+                        <form id="chatForm" class="gs-chat-compose">
+                            <input type="text"
+                                   id="chatInput"
+                                   name="content"
+                                   class="gs-chat-input"
+                                   placeholder="Nhập tin nhắn cho mọi người trong event..." />
+
+                            <button class="gs-chat-send-btn" type="submit">
+                                Send
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -154,12 +193,117 @@
             </div>
         </div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+            const eventId = "@Model.EventId";
+            const currentUserName = "@(User.Identity?.Name ?? "")";
+            const chatBox = document.getElementById("chatBox");
+            const chatForm = document.getElementById("chatForm");
+            const chatInput = document.getElementById("chatInput");
+            const emptyChat = document.getElementById("emptyChat");
+            const chatCount = document.getElementById("chatCount");
+
+            function scrollToBottom() {
+                if (chatBox) {
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            }
+
+            function appendMessage(userName, content, createdAt) {
+                if (emptyChat) {
+                    emptyChat.remove();
+                }
+
+                const firstLetter = (userName || "U").trim().charAt(0).toUpperCase();
+
+                const wrapper = document.createElement("div");
+                wrapper.className = "gs-chat-message";
+                wrapper.innerHTML = `
+                    <div class="gs-chat-avatar">${firstLetter}</div>
+                    <div class="gs-chat-bubble-wrap">
+                        <div class="gs-chat-meta">
+                            <span class="gs-chat-user">${userName}</span>
+                            <span class="gs-chat-time">${createdAt}</span>
+                        </div>
+                        <div class="gs-chat-bubble">${content}</div>
+                    </div>
+                `;
+
+                chatBox.appendChild(wrapper);
+
+                if (chatCount) {
+                    const current = parseInt(chatCount.textContent || "0");
+                    chatCount.textContent = current + 1;
+                }
+
+                scrollToBottom();
+            }
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/eventChatHub")
+                .build();
+
+            connection.on("ReceiveEventMessage", function (message) {
+                appendMessage(message.userName, message.content, message.createdAt);
+            });
+
+            try {
+                await connection.start();
+                await connection.invoke("JoinEventRoom", eventId);
+            } catch (err) {
+                console.error("SignalR connection error:", err);
+            }
+
+            scrollToBottom();
+            if (chatInput) chatInput.focus();
+
+            if (chatForm) {
+                chatForm.addEventListener("submit", async function (e) {
+                    e.preventDefault();
+
+                    const content = chatInput.value.trim();
+                    if (!content) return;
+
+                    try {
+                        const response = await fetch(`/event/room/${eventId}/send-message`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/x-www-form-urlencoded",
+                                "X-Requested-With": "XMLHttpRequest"
+                            },
+                            body: new URLSearchParams({ content })
+                        });
+
+                        if (response.ok) {
+                            chatInput.value = "";
+                            chatInput.focus();
+                        }
+                    } catch (err) {
+                        console.error("Send message error:", err);
+                    }
+                });
+            }
+
+            window.addEventListener("beforeunload", async function () {
+                try {
+                    await connection.invoke("LeaveEventRoom", eventId);
+                } catch {}
+            });
+        });
+    </script>
 </main>
 
 <style>
     :root {
-        --gs-line: rgba(255,255,255,0.08);
+        --gs-line: rgba(255, 255, 255, 0.08);
         --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+        --gs-card: linear-gradient(180deg, rgba(14,25,43,0.94), rgba(9,18,33,0.94));
+        --gs-text: #f8fbff;
+        --gs-muted: #8ea3bd;
+        --gs-success-bg: rgba(34, 197, 94, 0.12);
+        --gs-success-border: rgba(34, 197, 94, 0.22);
+        --gs-success-text: #bbf7d0;
     }
 
     body {
@@ -171,7 +315,7 @@
     }
 
     .gs-room-card {
-        background: linear-gradient(180deg, rgba(14,25,43,0.94), rgba(9,18,33,0.94));
+        background: var(--gs-card);
         border: 1px solid var(--gs-line);
         border-radius: 28px;
         overflow: hidden;
@@ -201,19 +345,291 @@
         margin-bottom: 10px;
     }
 
-    .gs-chat-box {
-        max-height: 500px;
-        overflow-y: auto;
+    .gs-room-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-top: 10px;
     }
 
-    .gs-chat-message,
-    .gs-mini-item {
-        padding: 12px 0;
+    .gs-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0 22px;
+        border-radius: 999px;
+        font-weight: 700;
+        text-decoration: none;
+        border: 1px solid rgba(255,255,255,0.14);
+        transition: all .22s ease;
+        box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+    }
+
+        .gs-action-btn:hover {
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+
+        .gs-action-btn.primary {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .gs-action-btn.ghost {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            backdrop-filter: blur(6px);
+        }
+
+            .gs-action-btn.ghost:hover {
+                background: rgba(255,255,255,0.10);
+                color: #fff;
+            }
+
+    .gs-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 48px;
+        padding: 0 18px;
+        border-radius: 999px;
+        font-weight: 600;
+        border: 1px solid transparent;
+    }
+
+        .gs-status-pill.success {
+            background: var(--gs-success-bg);
+            color: var(--gs-success-text);
+            border-color: var(--gs-success-border);
+        }
+
+    .gs-status-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(34,197,94,0.22);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .gs-chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 22px 24px;
         border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
-        .gs-chat-message:last-child,
+    .gs-chat-count {
+        color: var(--gs-muted);
+        font-size: 0.92rem;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .gs-chat-box {
+        max-height: 500px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .gs-chat-message {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .gs-chat-avatar {
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #7c3aed, #2563eb);
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.95rem;
+        box-shadow: 0 10px 20px rgba(37,99,235,0.18);
+    }
+
+    .gs-chat-bubble-wrap {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .gs-chat-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+
+    .gs-chat-user {
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .gs-chat-time {
+        color: var(--gs-muted);
+        font-size: 0.84rem;
+    }
+
+    .gs-chat-bubble {
+        display: inline-block;
+        max-width: 100%;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #e8eef8;
+        line-height: 1.65;
+        padding: 14px 16px;
+        border-radius: 18px 18px 18px 6px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+        word-break: break-word;
+    }
+
+    .gs-empty-chat {
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--gs-muted);
+        padding: 20px;
+    }
+
+    .gs-empty-chat-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .gs-empty-chat-title {
+        color: #fff;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .gs-empty-chat-text {
+        max-width: 380px;
+        line-height: 1.6;
+    }
+
+    .gs-chat-compose-wrap {
+        padding: 20px 24px 24px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .gs-chat-compose {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .gs-chat-input {
+        flex: 1;
+        height: 52px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.06);
+        color: #fff;
+        padding: 0 20px;
+        outline: none;
+        transition: all .2s ease;
+    }
+
+        .gs-chat-input::placeholder {
+            color: var(--gs-muted);
+        }
+
+        .gs-chat-input:focus {
+            border-color: rgba(125,211,252,0.45);
+            box-shadow: 0 0 0 4px rgba(125,211,252,0.08);
+            background: rgba(255,255,255,0.08);
+        }
+
+    .gs-chat-send-btn {
+        height: 52px;
+        min-width: 110px;
+        border: none;
+        border-radius: 999px;
+        background: var(--gs-primary);
+        color: #fff;
+        font-weight: 700;
+        padding: 0 22px;
+        box-shadow: 0 14px 28px rgba(37,99,235,0.25);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+        .gs-chat-send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 30px rgba(37,99,235,0.32);
+        }
+
+    .gs-mini-item {
+        padding: 14px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
         .gs-mini-item:last-child {
             border-bottom: none;
         }
+
+    @@media (max-width: 575.98px) {
+        .gs-room-actions
+
+    {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .gs-action-btn,
+    .gs-status-pill {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .gs-chat-header,
+    .gs-chat-compose-wrap {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .gs-chat-compose {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .gs-chat-send-btn {
+        width: 100%;
+    }
+
+    .gs-chat-avatar {
+        width: 38px;
+        height: 38px;
+    }
+
+    }
+
+    .gs-chat-box {
+        max-height: 500px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        scroll-behavior: smooth;
+    }
 </style>
