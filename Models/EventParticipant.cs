@@ -27,7 +27,13 @@ namespace GameStore.Models
         public decimal PaidAmount { get; set; } = 0;
 
         [Column("joinedat")]
-        public DateTime JoinedAt { get; set; } = DateTime.Now;
+        public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("ischeckedin")]
+        public bool IsCheckedIn { get; set; } = false;
+
+        [Column("checkedinat")]
+        public DateTime? CheckedInAt { get; set; }
 
         [ForeignKey(nameof(EventId))]
         public virtual Event? Event { get; set; }

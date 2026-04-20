@@ -1,0 +1,148 @@
+﻿@model GameStore.Models.Event
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Edit Event";
+}
+
+<div class="container mt-5">
+    <div class="card bg-light shadow-lg border-0">
+        <div class="card-header border-bottom border-secondary">
+            <h4 class="mb-0">🎮 Edit Event</h4>
+        </div>
+
+        @if (TempData["Msg"] != null)
+        {
+            var msgType = TempData["MsgType"]?.ToString() ?? "info";
+            <div class="alert alert-@msgType mt-2 mx-3 fw-bold">@TempData["Msg"]</div>
+        }
+
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" asp-controller="Event" asp-action="Edit" asp-route-id="@Model.EventId">
+                <input type="hidden" asp-for="EventId" />
+
+                <div class="mb-3">
+                    <label class="form-label">Title</label>
+                    <input class="form-control" asp-for="Title" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Slug</label>
+                    <input class="form-control" asp-for="Slug" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Summary</label>
+                    <textarea class="form-control" asp-for="Summary" rows="3"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-control" asp-for="Content" rows="8"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Current Banner</label>
+                    <div class="mb-2">
+                        @if (!string.IsNullOrWhiteSpace(Model.Banner))
+                        {
+                            <img src="~/images/events/@Model.Banner" style="width:180px;height:110px;object-fit:cover;border-radius:12px;border:1px solid #ddd;" />
+                        }
+                        else
+                        {
+                            <span class="text-muted">Chưa có ảnh</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Change Banner</label>
+                    <input type="file" class="form-control" name="photo" accept="image/*" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Related Game</label>
+                    <select class="form-select" asp-for="RelatedGameId" asp-items="ViewBag.Games">
+                        <option value="">-- Select Game --</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Event Type</label>
+                        <select class="form-select" asp-for="EventType">
+                            <option value="Tournament">Tournament</option>
+                            <option value="Community">Community</option>
+                            <option value="Special Events">Special Events</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Access Type</label>
+                        <select class="form-select" asp-for="AccessType">
+                            <option value="Paid">Paid</option>
+                            <option value="Free">Free</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" asp-for="Status">
+                            <option value="Upcoming">Upcoming</option>
+                            <option value="Live">Live</option>
+                            <option value="Ended">Ended</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Price</label>
+                        <input class="form-control" asp-for="Price" type="number" step="0.01" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Max Participants</label>
+                        <input class="form-control" asp-for="MaxParticipants" type="number" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Current Participants</label>
+                        <input class="form-control" asp-for="CurrentParticipants" readonly />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Prize Info</label>
+                    <input class="form-control" asp-for="PrizeInfo" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start At</label>
+                        <input type="datetime-local" class="form-control" asp-for="StartAt" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">End At</label>
+                        <input type="datetime-local" class="form-control" asp-for="EndAt" />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 flex-wrap">
+                    <a href="/admin/event/index" class="btn btn-secondary">Back</a>
+
+                    <a href="/admin/event-announcement/index/@Model.EventId" class="btn btn-info text-white">
+                        Manage Announcements
+                    </a>
+
+                    <a href="/admin/event-participant/index/@Model.EventId" class="btn btn-primary">
+                        View Participants
+                    </a>
+
+                    <button class="btn btn-success" type="submit">💾 Update Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

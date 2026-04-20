@@ -16,5 +16,9 @@ namespace GameStore.Services
         public Task FailMomo(string maGD);
 
         Task CompleteTopup(int userId, decimal amount);
+
+        // event payment
+        string CreatePendingEventBalance(int userId, int eventId);
+        Task<bool> CompleteEventBalance(string maGD);
     }
 }

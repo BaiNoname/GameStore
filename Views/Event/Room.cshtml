@@ -1,0 +1,219 @@
+﻿@model GameStore.Models.Event
+
+@{
+    ViewData["Title"] = "Event Room";
+
+    var participants = ViewBag.Participants as List<GameStore.Models.EventParticipant> ?? new List<GameStore.Models.EventParticipant>();
+    var announcements = ViewBag.Announcements as List<GameStore.Models.EventAnnouncement> ?? new List<GameStore.Models.EventAnnouncement>();
+    var messages = ViewBag.Messages as List<GameStore.Models.EventMessage> ?? new List<GameStore.Models.EventMessage>();
+    var myParticipant = ViewBag.MyParticipant as GameStore.Models.EventParticipant;
+
+    string GetImage(string? image)
+    {
+        if (string.IsNullOrWhiteSpace(image))
+            return "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1600&q=80";
+
+        if (image.StartsWith("http://") || image.StartsWith("https://"))
+            return image;
+
+        return Url.Content("~/images/events/" + image);
+    }
+}
+
+<main class="gs-page">
+    <div class="container-xxl">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="gs-room-card mb-4">
+                    <div class="gs-room-banner">
+                        <img src="@GetImage(Model.Banner)" alt="@Model.Title" />
+                    </div>
+                    <div class="p-4">
+                        <div class="gs-kicker">Member Area</div>
+                        <h1 class="gs-title-small">@Model.Title</h1>
+                        <p class="text-secondary mb-3">
+                            Bạn đã tham gia event này. Đây là khu vực dành riêng cho thành viên.
+                        </p>
+
+                        @if (myParticipant != null)
+                        {
+                            if (myParticipant.IsCheckedIn)
+                            {
+                                <div class="alert alert-success mb-0">
+                                    ✅ Bạn đã check-in lúc @myParticipant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            }
+                            else
+                            {
+                                <form method="post" action="/event/room/@Model.EventId/checkin">
+                                    <button type="submit" class="btn btn-success">
+                                        ✅ Check-in Event
+                                    </button>
+                                </form>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <div class="gs-room-card mb-4">
+                    <div class="p-4 border-bottom border-secondary">
+                        <h4 class="mb-0 text-light">Event Chat</h4>
+                    </div>
+
+                    <div class="p-4 gs-chat-box">
+                        @if (messages.Any())
+                        {
+                            @foreach (var msg in messages)
+                            {
+                                <div class="gs-chat-message">
+                                    <div class="fw-bold text-light">
+                                        @(msg.NguoiDung?.TenNguoiDung ?? msg.NguoiDung?.Email ?? "User")
+                                    </div>
+                                    <div class="text-light">@msg.Content</div>
+                                    <div class="small text-secondary">@msg.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-secondary mb-0">Chưa có tin nhắn nào.</p>
+                        }
+                    </div>
+
+                    <div class="p-4 border-top border-secondary">
+                        <form method="post" action="/event/room/@Model.EventId/send-message">
+                            <div class="input-group">
+                                <input type="text" name="content" class="form-control" placeholder="Nhập tin nhắn..." />
+                                <button class="btn btn-primary" type="submit">Send</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="gs-room-card mb-4">
+                    <div class="p-4 border-bottom border-secondary">
+                        <h5 class="mb-0 text-light">Announcements</h5>
+                    </div>
+                    <div class="p-4">
+                        @if (announcements.Any())
+                        {
+                            @foreach (var item in announcements)
+                            {
+                                <div class="gs-mini-item">
+                                    <div class="fw-bold text-light">@item.Title</div>
+                                    <div class="small text-secondary">@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                    <div class="text-light small mt-1">@item.Content</div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-secondary mb-0">Chưa có announcement nào.</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="gs-room-card">
+                    <div class="p-4 border-bottom border-secondary">
+                        <h5 class="mb-0 text-light">Participants</h5>
+                    </div>
+                    <div class="p-4">
+                        @if (participants.Any())
+                        {
+                            @foreach (var p in participants)
+                            {
+                                <div class="gs-mini-item">
+                                    <div class="fw-bold text-light">
+                                        @(p.NguoiDung?.TenNguoiDung ?? p.NguoiDung?.Email ?? "Member")
+                                    </div>
+                                    <div class="small text-secondary">
+                                        Joined: @p.JoinedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+
+                                    @if (p.IsCheckedIn)
+                                    {
+                                        <div class="small text-success">
+                                            Checked-in: @p.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="small text-warning">Not checked-in</div>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-secondary mb-0">Chưa có participant nào.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+    :root {
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+    }
+
+    body {
+        background: radial-gradient(circle at top left, rgba(124,58,237,0.18), transparent 24%), radial-gradient(circle at top right, rgba(37,99,235,0.14), transparent 22%), linear-gradient(180deg, #050b16 0%, #07111f 40%, #091626 100%);
+    }
+
+    .gs-page {
+        padding: 48px 0 70px;
+    }
+
+    .gs-room-card {
+        background: linear-gradient(180deg, rgba(14,25,43,0.94), rgba(9,18,33,0.94));
+        border: 1px solid var(--gs-line);
+        border-radius: 28px;
+        overflow: hidden;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+    }
+
+    .gs-room-banner img {
+        width: 100%;
+        height: 260px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: #7dd3fc;
+        margin-bottom: 8px;
+    }
+
+    .gs-title-small {
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+    }
+
+    .gs-chat-box {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .gs-chat-message,
+    .gs-mini-item {
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+        .gs-chat-message:last-child,
+        .gs-mini-item:last-child {
+            border-bottom: none;
+        }
+</style>

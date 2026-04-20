@@ -132,10 +132,4 @@ public class HomeController : Controller
         return View();
     }
 
-    [Route("event")]
-    public IActionResult Event()
-    {
-        ViewBag.HideSubBar = true;
-        return View();
-    }
 }
