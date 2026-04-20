@@ -58,18 +58,124 @@
                         }
                         else
                         {
-                            <form method="post" action="/event/join/@Model.EventId">
-                                <input type="hidden" name="method" value="balance" />
-                                <button class="gs-btn-primary" type="submit">
-                                    @((Model.AccessType ?? "").Trim().ToLower() == "free"
-                                                                    ? "Join Free Event"
-                                                                    : $"Buy Access - {Model.Price.ToString("N0")} VND")
-                            </button>
-                        </form>
-                                                }
+                            if ((Model.AccessType ?? "").Trim().ToLower() == "free")
+                            {
+                                <button type="button"
+                                        class="gs-btn-free"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#confirmJoinFreeEventModal">
+                                    <span class="gs-btn-free-icon">⚡</span>
+                                    <span>Join Free Event</span>
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button"
+                                        class="gs-btn-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#confirmBuyEventModal">
+                                    Buy Access - @Model.Price.ToString("N0") VND
+                                </button>
+                            }
+                        }
 
                         <a href="/event" class="gs-btn-outline">Back to Events</a>
                     </div>
+
+                    @* xac nhan khi freee *@
+                    @if (!isJoined && (Model.AccessType ?? "").Trim().ToLower() == "free")
+                    {
+                        <div class="modal fade" id="confirmJoinFreeEventModal" tabindex="-1" aria-labelledby="confirmJoinFreeEventModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content gs-confirm-modal">
+                                    <div class="modal-header border-0">
+                                        <h5 class="modal-title" id="confirmJoinFreeEventModalLabel">Xác nhận tham gia sự kiện</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <p class="mb-2 text-light">
+                                            Bạn sắp tham gia event miễn phí:
+                                        </p>
+
+                                        <div class="gs-confirm-box mb-3 free">
+                                            <div class="fw-bold text-light">@Model.Title</div>
+                                            <div class="text-info small mt-1">
+                                                Miễn phí tham gia · Truy cập member area sau khi xác nhận
+                                            </div>
+                                        </div>
+
+                                        <p class="text-secondary mb-0">
+                                            Sau khi tham gia, bạn có thể vào room sự kiện, xem announcement, chat cùng thành viên và check-in.
+                                        </p>
+                                    </div>
+
+                                    <div class="modal-footer border-0">
+                                        <button type="button" class="gs-btn-outline" data-bs-dismiss="modal">
+                                            Hủy
+                                        </button>
+
+                                        <form method="post" action="/event/join/@Model.EventId">
+                                            <input type="hidden" name="method" value="balance" />
+                                            <button type="submit" class="gs-btn-free">
+                                                <span class="gs-btn-free-icon">⚡</span>
+                                                <span>Xác nhận tham gia</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @* xac nhan khi thanh toan phi *@
+                    @if (!isJoined && (Model.AccessType ?? "").Trim().ToLower() != "free")
+                    {
+                        <div class="modal fade" id="confirmBuyEventModal" tabindex="-1" aria-labelledby="confirmBuyEventModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content gs-confirm-modal">
+                                    <div class="modal-header border-0">
+                                        <h5 class="modal-title" id="confirmBuyEventModalLabel">Xác nhận mua quyền tham gia</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <p class="mb-2 text-light">
+                                            Bạn sắp mua quyền tham gia event:
+                                        </p>
+
+                                        <div class="gs-confirm-box mb-3">
+                                            <div class="fw-bold text-light">@Model.Title</div>
+                                            <div class="text-secondary small mt-1">
+                                                Giá tham gia:
+                                                <span class="text-warning fw-semibold">@Model.Price.ToString("N0") VND</span>
+                                            </div>
+                                        </div>
+
+                                        <p class="text-secondary mb-0">
+                                            Số dư tài khoản của bạn sẽ bị trừ ngay sau khi xác nhận. Bạn có chắc muốn tiếp tục không?
+                                        </p>
+                                    </div>
+
+                                    <div class="modal-footer border-0">
+                                        <button type="button" class="gs-btn-outline" data-bs-dismiss="modal">
+                                            Hủy
+                                        </button>
+
+                                        <form method="post" action="/event/join/@Model.EventId">
+                                            <input type="hidden" name="method" value="balance" />
+                                            <button type="submit" class="gs-btn-primary">
+                                                Xác nhận mua
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+
+
                 </article>
             </div>
 
@@ -257,4 +363,92 @@
         .gs-announce-item:last-child {
             border-bottom: none;
         }
+
+    .gs-confirm-modal {
+        background: linear-gradient(180deg, rgba(14,25,43,0.98), rgba(9,18,33,0.98));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        color: #fff;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+
+    .gs-confirm-box {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: 14px 16px;
+    }
+
+    .gs-confirm-modal .modal-header,
+    .gs-confirm-modal .modal-footer {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+    .gs-confirm-modal .modal-body {
+        padding: 0 24px 8px;
+    }
+
+    .gs-btn-free {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 46px;
+        padding: 0 20px;
+        border-radius: 999px;
+        font-weight: 700;
+        border: 1px solid rgba(34,197,94,0.28);
+        background: linear-gradient(135deg, rgba(34,197,94,0.20), rgba(6,182,212,0.18));
+        color: #d1fae5;
+        box-shadow: 0 14px 28px rgba(6,182,212,0.12);
+        transition: all .22s ease;
+    }
+
+        .gs-btn-free:hover {
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 18px 32px rgba(6,182,212,0.18);
+        }
+
+    .gs-btn-free-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.12);
+        font-size: 13px;
+    }
+
+    .gs-confirm-modal {
+        background: linear-gradient(180deg, rgba(14,25,43,0.98), rgba(9,18,33,0.98));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        color: #fff;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+
+    .gs-confirm-box {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: 14px 16px;
+    }
+
+        .gs-confirm-box.free {
+            border-color: rgba(34,197,94,0.18);
+            background: rgba(34,197,94,0.08);
+        }
+
+    .gs-confirm-modal .modal-header,
+    .gs-confirm-modal .modal-footer {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+    .gs-confirm-modal .modal-body {
+        padding: 0 24px 8px;
+    }
 </style>

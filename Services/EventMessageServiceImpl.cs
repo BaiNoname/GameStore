@@ -54,5 +54,19 @@ namespace GameStore.Services
                 return false;
             }
         }
+
+        public EventMessage? GetLatestMessage(int eventId, int userId, string content)
+        {
+            content = content?.Trim() ?? "";
+
+            return db.EventMessages
+                .Include(x => x.NguoiDung)
+                .Where(x => x.EventId == eventId
+                         && x.UserId == userId
+                         && x.Content == content
+                         && !x.IsDeleted)
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstOrDefault();
+        }
     }
 }

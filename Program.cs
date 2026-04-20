@@ -188,6 +188,7 @@ public class Program
         app.MapHub<GameStore.Hubs.GameHub>("/gameHub"); 
         app.MapHub<GameStore.Hubs.AiChatHub>("/aiChatHub");
         app.MapHub<GameStore.Hubs.ChatHub>("/chatHub");
+        app.MapHub<GameStore.Hubs.EventChatHub>("/eventChatHub");
 
         app.MapControllers();
 
