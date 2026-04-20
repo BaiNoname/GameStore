@@ -672,6 +672,14 @@
                                     </li>
 
                                     <li>
+                                        <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "MyEvents" ? "active" : "")"
+                                           asp-controller="Event"
+                                           asp-action="MyEvents">
+                                            🗓️ My Events
+                                        </a>
+                                    </li>
+
+                                    <li>
                                         <a class="dropdown-item"
                                            asp-controller="Account"
                                            asp-action="Profile">

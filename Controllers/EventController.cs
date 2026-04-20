@@ -272,5 +272,23 @@ namespace GameStore.Controllers
 
             return RedirectToAction("Room", new { id });
         }
+
+        [Route("my-events")]
+        public IActionResult MyEvents()
+        {
+            ViewBag.HideSubBar = true;
+
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                var returnUrl = Url.Action("MyEvents", "Event") ?? "/event";
+                return RedirectToLoginWithReturnUrl(returnUrl);
+            }
+
+            int userId = int.Parse(User.FindFirst("UserId")!.Value);
+
+            var myEvents = participantService.GetMyEvents(userId);
+
+            return View("~/Views/Event/MyEvents.cshtml", myEvents);
+        }
     }
 }
