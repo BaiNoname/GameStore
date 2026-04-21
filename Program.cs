@@ -129,6 +129,7 @@ public class Program
         builder.Services.AddScoped<EventParticipantService, EventParticipantServiceImpl>();
         builder.Services.AddScoped<EventAnnouncementService, EventAnnouncementServiceImpl>();
         builder.Services.AddScoped<EventMessageService, EventMessageServiceImpl>();
+        builder.Services.AddHostedService<GameStore.Services.EventStatusBackgroundService>();
 
         // Register Vnpay service implementation
         builder.Services.AddScoped<VnpayService, VnpayServiceImpl>();
