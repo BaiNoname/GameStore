@@ -7,6 +7,7 @@
     var announcements = ViewBag.Announcements as List<GameStore.Models.EventAnnouncement> ?? new List<GameStore.Models.EventAnnouncement>();
     var messages = ViewBag.Messages as List<GameStore.Models.EventMessage> ?? new List<GameStore.Models.EventMessage>();
     var myParticipant = ViewBag.MyParticipant as GameStore.Models.EventParticipant;
+    bool isArchivedRoom = ViewBag.IsArchivedRoom != null && (bool)ViewBag.IsArchivedRoom;
 
     string GetImage(string? image)
     {
@@ -35,6 +36,17 @@
                             Bạn đã tham gia event này. Đây là khu vực dành riêng cho thành viên.
                         </p>
 
+                        @if (isArchivedRoom)
+                        {
+                            <div class="gs-archived-banner">
+                                <div class="gs-archived-title">📁 Archived Event Room</div>
+                                <div class="gs-archived-text">
+                                    Sự kiện này đã kết thúc. Bạn vẫn có thể xem announcement, participants và lịch sử chat,
+                                    nhưng không thể gửi tin nhắn mới hoặc check-in.
+                                </div>
+                            </div>
+                        }
+
                         <div class="gs-room-actions">
                             @if (myParticipant != null)
                             {
@@ -44,6 +56,12 @@
                                         <span class="gs-status-icon">✓</span>
                                         <span>Bạn đã check-in lúc @myParticipant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
                                     </div>
+                                }
+                                else if (isArchivedRoom)
+                                {
+                                    <button type="button" class="gs-action-btn disabled-btn" onclick="showArchivedRoomToast()">
+                                        Check-in Closed
+                                    </button>
                                 }
                                 else
                                 {
@@ -115,17 +133,33 @@
                     </div>
 
                     <div class="gs-chat-compose-wrap">
-                        <form id="chatForm" class="gs-chat-compose">
-                            <input type="text"
-                                   id="chatInput"
-                                   name="content"
-                                   class="gs-chat-input"
-                                   placeholder="Nhập tin nhắn cho mọi người trong event..." />
+                        @if (isArchivedRoom)
+                        {
+                            <div class="gs-chat-compose archived">
+                                <input type="text"
+                                       class="gs-chat-input"
+                                       value="Event ended - chat is closed"
+                                       disabled />
 
-                            <button class="gs-chat-send-btn" type="submit">
-                                Send
-                            </button>
-                        </form>
+                                <button class="gs-chat-send-btn" type="button" disabled>
+                                    Locked
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <form id="chatForm" class="gs-chat-compose">
+                                <input type="text"
+                                       id="chatInput"
+                                       name="content"
+                                       class="gs-chat-input"
+                                       placeholder="Nhập tin nhắn cho mọi người trong event..." />
+
+                                <button class="gs-chat-send-btn" type="submit">
+                                    Send
+                                </button>
+                            </form>
+                        }
                     </div>
                 </div>
             </div>
@@ -142,7 +176,7 @@
                             {
                                 <div class="gs-mini-item">
                                     <div class="fw-bold text-light">@item.Title</div>
-                                    <div class="small text-secondary">@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                    <div class="small text-secondary">@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
                                     <div class="text-light small mt-1">@item.Content</div>
                                 </div>
                             }
@@ -193,105 +227,113 @@
             </div>
         </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", async function () {
-            const eventId = "@Model.EventId";
-            const currentUserName = "@(User.Identity?.Name ?? "")";
-            const chatBox = document.getElementById("chatBox");
-            const chatForm = document.getElementById("chatForm");
-            const chatInput = document.getElementById("chatInput");
-            const emptyChat = document.getElementById("emptyChat");
-            const chatCount = document.getElementById("chatCount");
 
-            function scrollToBottom() {
-                if (chatBox) {
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }
-            }
+    @if (!isArchivedRoom)
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", async function () {
+                const eventId = "@Model.EventId";
+                const chatBox = document.getElementById("chatBox");
+                const chatForm = document.getElementById("chatForm");
+                const chatInput = document.getElementById("chatInput");
+                const emptyChat = document.getElementById("emptyChat");
+                const chatCount = document.getElementById("chatCount");
 
-            function appendMessage(userName, content, createdAt) {
-                if (emptyChat) {
-                    emptyChat.remove();
+                function scrollToBottom() {
+                    if (chatBox) {
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
                 }
 
-                const firstLetter = (userName || "U").trim().charAt(0).toUpperCase();
+                function appendMessage(userName, content, createdAt) {
+                    const empty = document.getElementById("emptyChat");
+                    if (empty) {
+                        empty.remove();
+                    }
 
-                const wrapper = document.createElement("div");
-                wrapper.className = "gs-chat-message";
-                wrapper.innerHTML = `
-                    <div class="gs-chat-avatar">${firstLetter}</div>
-                    <div class="gs-chat-bubble-wrap">
-                        <div class="gs-chat-meta">
-                            <span class="gs-chat-user">${userName}</span>
-                            <span class="gs-chat-time">${createdAt}</span>
+                    const firstLetter = (userName || "U").trim().charAt(0).toUpperCase();
+
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "gs-chat-message";
+                    wrapper.innerHTML = `
+                        <div class="gs-chat-avatar">${firstLetter}</div>
+                        <div class="gs-chat-bubble-wrap">
+                            <div class="gs-chat-meta">
+                                <span class="gs-chat-user">${userName}</span>
+                                <span class="gs-chat-time">${createdAt}</span>
+                            </div>
+                            <div class="gs-chat-bubble">${content}</div>
                         </div>
-                        <div class="gs-chat-bubble">${content}</div>
-                    </div>
-                `;
+                    `;
 
-                chatBox.appendChild(wrapper);
+                    chatBox.appendChild(wrapper);
 
-                if (chatCount) {
-                    const current = parseInt(chatCount.textContent || "0");
-                    chatCount.textContent = current + 1;
+                    if (chatCount) {
+                        const current = parseInt(chatCount.textContent || "0");
+                        chatCount.textContent = current + 1;
+                    }
+
+                    scrollToBottom();
+                }
+
+                const connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/eventChatHub")
+                    .build();
+
+                connection.on("ReceiveEventMessage", function (message) {
+                    appendMessage(message.userName, message.content, message.createdAt);
+                });
+
+                try {
+                    await connection.start();
+                    await connection.invoke("JoinEventRoom", eventId);
+                } catch (err) {
+                    console.error("SignalR connection error:", err);
                 }
 
                 scrollToBottom();
-            }
+                if (chatInput) chatInput.focus();
 
-            const connection = new signalR.HubConnectionBuilder()
-                .withUrl("/eventChatHub")
-                .build();
+                if (chatForm) {
+                    chatForm.addEventListener("submit", async function (e) {
+                        e.preventDefault();
 
-            connection.on("ReceiveEventMessage", function (message) {
-                appendMessage(message.userName, message.content, message.createdAt);
-            });
+                        const content = chatInput.value.trim();
+                        if (!content) return;
 
-            try {
-                await connection.start();
-                await connection.invoke("JoinEventRoom", eventId);
-            } catch (err) {
-                console.error("SignalR connection error:", err);
-            }
+                        try {
+                            const response = await fetch(`/event/room/${eventId}/send-message`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/x-www-form-urlencoded",
+                                    "X-Requested-With": "XMLHttpRequest"
+                                },
+                                body: new URLSearchParams({ content })
+                            });
 
-            scrollToBottom();
-            if (chatInput) chatInput.focus();
-
-            if (chatForm) {
-                chatForm.addEventListener("submit", async function (e) {
-                    e.preventDefault();
-
-                    const content = chatInput.value.trim();
-                    if (!content) return;
-
-                    try {
-                        const response = await fetch(`/event/room/${eventId}/send-message`, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/x-www-form-urlencoded",
-                                "X-Requested-With": "XMLHttpRequest"
-                            },
-                            body: new URLSearchParams({ content })
-                        });
-
-                        if (response.ok) {
-                            chatInput.value = "";
-                            chatInput.focus();
+                            if (response.ok) {
+                                chatInput.value = "";
+                                chatInput.focus();
+                            } else {
+                                if (typeof showToast === "function") {
+                                    showToast("Sự kiện đã kết thúc, chat đã bị khóa.", "error");
+                                }
+                            }
+                        } catch (err) {
+                            console.error("Send message error:", err);
                         }
-                    } catch (err) {
-                        console.error("Send message error:", err);
-                    }
-                });
-            }
+                    });
+                }
 
-            window.addEventListener("beforeunload", async function () {
-                try {
-                    await connection.invoke("LeaveEventRoom", eventId);
-                } catch {}
+                window.addEventListener("beforeunload", async function () {
+                    try {
+                        await connection.invoke("LeaveEventRoom", eventId);
+                    } catch {}
+                });
             });
-        });
-    </script>
+        </script>
+    }
 </main>
 
 <style>
@@ -418,6 +460,34 @@
         font-weight: 800;
     }
 
+    .gs-archived-banner {
+        margin-top: 16px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: rgba(148,163,184,0.10);
+        border: 1px solid rgba(148,163,184,0.18);
+        color: #dbe6f7;
+    }
+
+    .gs-archived-title {
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 6px;
+    }
+
+    .gs-archived-text {
+        color: #aebed3;
+        line-height: 1.6;
+    }
+
+    .disabled-btn {
+        background: rgba(255,255,255,0.06) !important;
+        color: #94a3b8 !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        cursor: not-allowed;
+        box-shadow: none !important;
+    }
+
     .gs-chat-header {
         display: flex;
         justify-content: space-between;
@@ -442,6 +512,7 @@
         display: flex;
         flex-direction: column;
         gap: 18px;
+        scroll-behavior: smooth;
     }
 
     .gs-chat-message {
@@ -539,6 +610,12 @@
         align-items: center;
     }
 
+        .gs-chat-compose.archived {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
     .gs-chat-input {
         flex: 1;
         height: 52px;
@@ -560,6 +637,12 @@
             box-shadow: 0 0 0 4px rgba(125,211,252,0.08);
             background: rgba(255,255,255,0.08);
         }
+
+    .gs-chat-compose.archived .gs-chat-input,
+    .gs-chat-compose.archived .gs-chat-send-btn {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
 
     .gs-chat-send-btn {
         height: 52px;
@@ -623,13 +706,14 @@
     }
 
     }
-
-    .gs-chat-box {
-        max-height: 500px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-        scroll-behavior: smooth;
-    }
 </style>
+
+<script>
+    function showArchivedRoomToast() {
+        if (typeof showToast === "function") {
+            showToast("Sự kiện đã kết thúc. Phòng hiện ở chế độ lưu trữ.", "error");
+        } else {
+            alert("Sự kiện đã kết thúc. Phòng hiện ở chế độ lưu trữ.");
+        }
+    }
+</script>
