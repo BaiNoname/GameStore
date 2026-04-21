@@ -140,14 +140,14 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/Event/Add.cshtml", ev);
             }
 
-            if (ev.StartAt < DateTime.Now)
+            if (ev.StartAt.ToUniversalTime() < DateTime.UtcNow)
             {
                 TempData["Msg"] = "❌ Start At không được ở quá khứ!";
                 TempData["MsgType"] = "danger";
                 return View("~/Views/Admin/Event/Add.cshtml", ev);
             }
 
-            if (ev.EndAt < DateTime.Now)
+            if (ev.EndAt.ToUniversalTime() < DateTime.UtcNow)
             {
                 TempData["Msg"] = "❌ End At không được ở quá khứ!";
                 TempData["MsgType"] = "danger";
@@ -289,17 +289,9 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/Event/Edit.cshtml", current);
             }
 
-            bool changedStartAt = ev.StartAt != current.StartAt;
-            bool changedEndAt = ev.EndAt != current.EndAt;
+            ev.StartAt = current.StartAt;
 
-            if (changedStartAt && ev.StartAt < DateTime.Now)
-            {
-                TempData["Msg"] = "❌ Không được sửa Start At về quá khứ!";
-                TempData["MsgType"] = "danger";
-                return View("~/Views/Admin/Event/Edit.cshtml", current);
-            }
-
-            if (changedEndAt && ev.EndAt < DateTime.Now)
+            if (ev.EndAt.ToUniversalTime() < DateTime.UtcNow)
             {
                 TempData["Msg"] = "❌ Không được sửa End At về quá khứ!";
                 TempData["MsgType"] = "danger";
