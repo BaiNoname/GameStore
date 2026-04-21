@@ -68,5 +68,14 @@ namespace GameStore.Services
                 .OrderByDescending(x => x.CreatedAt)
                 .FirstOrDefault();
         }
+
+        public EventMessage? GetLatestByEvent(int eventId)
+        {
+            return db.EventMessages
+                .Include(x => x.NguoiDung)
+                .Where(x => x.EventId == eventId && !x.IsDeleted)
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstOrDefault();
+        }
     }
 }

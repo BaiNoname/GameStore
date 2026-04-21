@@ -6,6 +6,7 @@ namespace GameStore.Services
     {
         List<EventAnnouncement> GetByEvent(int eventId);
         EventAnnouncement? FindById(int id);
+        EventAnnouncement? GetLatestByEvent(int eventId);
         bool Create(EventAnnouncement announcement);
         bool Delete(int id);
     }

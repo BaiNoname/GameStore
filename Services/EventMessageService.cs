@@ -7,5 +7,6 @@ namespace GameStore.Services
         List<EventMessage> GetByEvent(int eventId, int take = 100);
         bool Send(int eventId, int userId, string content);
         EventMessage? GetLatestMessage(int eventId, int userId, string content);
+        EventMessage? GetLatestByEvent(int eventId);
     }
 }

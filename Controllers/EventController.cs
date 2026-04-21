@@ -286,9 +286,17 @@ namespace GameStore.Controllers
 
             int userId = int.Parse(User.FindFirst("UserId")!.Value);
 
-            var myEvents = participantService.GetMyEvents(userId);
+            var myParticipants = participantService.GetMyEvents(userId);
 
-            return View("~/Views/Event/MyEvents.cshtml", myEvents);
+            var model = myParticipants.Select(x => new MyEventCardVM
+            {
+                Participant = x,
+                Event = x.Event,
+                LatestAnnouncement = x.Event != null ? announcementService.GetLatestByEvent(x.Event.EventId) : null,
+                LatestMessage = x.Event != null ? messageService.GetLatestByEvent(x.Event.EventId) : null
+            }).ToList();
+
+            return View("~/Views/Event/MyEvents.cshtml", model);
         }
     }
 }

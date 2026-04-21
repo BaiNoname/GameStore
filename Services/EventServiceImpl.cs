@@ -25,42 +25,46 @@ namespace GameStore.Services
             if (value.Kind == DateTimeKind.Local)
                 return value.ToUniversalTime();
 
-            return DateTime.SpecifyKind(value, DateTimeKind.Utc);
+            return DateTime.SpecifyKind(value, DateTimeKind.Local).ToUniversalTime();
         }
 
-        private DateTime? EnsureUtc(DateTime? value)
+        private string CalculateStatus(DateTime startAt, DateTime endAt)
         {
-            if (!value.HasValue) return null;
-            return EnsureUtc(value.Value);
+            var now = UtcNow();
+            var startUtc = EnsureUtc(startAt);
+            var endUtc = EnsureUtc(endAt);
+
+            if (now < startUtc)
+                return "Upcoming";
+
+            if (now > endUtc)
+                return "Ended";
+
+            return "Live";
         }
 
         public void RefreshEventStatuses()
         {
             try
             {
-                var now = DateTime.UtcNow;
-
                 var events = db.Events.ToList();
+                bool hasChanges = false;
 
                 foreach (var ev in events)
                 {
-                    if (ev.StartAt > now)
-                    {
-                        ev.Status = "Upcoming";
-                    }
-                    else if (ev.StartAt <= now && ev.EndAt >= now)
-                    {
-                        ev.Status = "Live";
-                    }
-                    else if (ev.EndAt < now)
-                    {
-                        ev.Status = "Ended";
-                    }
+                    var newStatus = CalculateStatus(ev.StartAt, ev.EndAt);
 
-                    ev.UpdatedAt = now;
+                    if (!string.Equals(ev.Status, newStatus, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ev.Status = newStatus;
+                        hasChanges = true;
+                    }
                 }
 
-                db.SaveChanges();
+                if (hasChanges)
+                {
+                    db.SaveChanges();
+                }
             }
             catch (Exception ex)
             {
@@ -218,18 +222,33 @@ namespace GameStore.Services
         {
             try
             {
-                var now = UtcNow();
+                var nowUtc = UtcNow();
 
                 ev.Title = ev.Title?.Trim() ?? "";
                 ev.Slug = ev.Slug?.Trim().ToLower() ?? "";
                 ev.Summary = ev.Summary?.Trim();
+                ev.Content = ev.Content?.Trim() ?? "";
                 ev.EventType = string.IsNullOrWhiteSpace(ev.EventType) ? "Tournament" : ev.EventType.Trim();
                 ev.AccessType = string.IsNullOrWhiteSpace(ev.AccessType) ? "Paid" : ev.AccessType.Trim();
-                ev.Status = string.IsNullOrWhiteSpace(ev.Status) ? "Upcoming" : ev.Status.Trim();
-                ev.CreatedAt = now;
+                ev.PrizeInfo = ev.PrizeInfo?.Trim();
+
+                var startUtc = EnsureUtc(ev.StartAt);
+                var endUtc = EnsureUtc(ev.EndAt);
+
+                if (startUtc < nowUtc)
+                    return false;
+
+                if (endUtc < nowUtc)
+                    return false;
+
+                if (endUtc <= startUtc)
+                    return false;
+
+                ev.StartAt = startUtc;
+                ev.EndAt = endUtc;
+                ev.Status = CalculateStatus(ev.StartAt, ev.EndAt);
+                ev.CreatedAt = nowUtc;
                 ev.UpdatedAt = null;
-                ev.StartAt = EnsureUtc(ev.StartAt);
-                ev.EndAt = EnsureUtc(ev.EndAt);
 
                 db.Events.Add(ev);
                 return db.SaveChanges() > 0;
@@ -245,15 +264,30 @@ namespace GameStore.Services
         {
             try
             {
-                var now = UtcNow();
+                var nowUtc = UtcNow();
 
                 var current = db.Events.FirstOrDefault(x => x.EventId == ev.EventId);
                 if (current == null) return false;
 
+                var startUtc = EnsureUtc(ev.StartAt);
+                var endUtc = EnsureUtc(ev.EndAt);
+
+                bool changedStartAt = startUtc != current.StartAt;
+                bool changedEndAt = endUtc != current.EndAt;
+
+                if (changedStartAt && startUtc < nowUtc)
+                    return false;
+
+                if (changedEndAt && endUtc < nowUtc)
+                    return false;
+
+                if (endUtc <= startUtc)
+                    return false;
+
                 current.Title = string.IsNullOrWhiteSpace(ev.Title) ? current.Title : ev.Title.Trim();
                 current.Slug = string.IsNullOrWhiteSpace(ev.Slug) ? current.Slug : ev.Slug.Trim().ToLower();
                 current.Summary = ev.Summary?.Trim();
-                current.Content = ev.Content;
+                current.Content = string.IsNullOrWhiteSpace(ev.Content) ? current.Content : ev.Content.Trim();
                 current.Banner = ev.Banner;
                 current.RelatedGameId = ev.RelatedGameId;
                 current.EventType = string.IsNullOrWhiteSpace(ev.EventType) ? current.EventType : ev.EventType.Trim();
@@ -261,10 +295,11 @@ namespace GameStore.Services
                 current.Price = ev.Price;
                 current.MaxParticipants = ev.MaxParticipants;
                 current.PrizeInfo = ev.PrizeInfo?.Trim();
-                current.Status = string.IsNullOrWhiteSpace(ev.Status) ? current.Status : ev.Status.Trim();
-                current.StartAt = EnsureUtc(ev.StartAt);
-                current.EndAt = EnsureUtc(ev.EndAt);
-                current.UpdatedAt = now;
+
+                current.StartAt = startUtc;
+                current.EndAt = endUtc;
+                current.Status = CalculateStatus(current.StartAt, current.EndAt);
+                current.UpdatedAt = nowUtc;
 
                 return db.SaveChanges() > 0;
             }
