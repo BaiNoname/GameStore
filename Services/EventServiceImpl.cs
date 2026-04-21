@@ -269,16 +269,10 @@ namespace GameStore.Services
                 var current = db.Events.FirstOrDefault(x => x.EventId == ev.EventId);
                 if (current == null) return false;
 
-                var startUtc = EnsureUtc(ev.StartAt);
+                var startUtc = current.StartAt;
                 var endUtc = EnsureUtc(ev.EndAt);
 
-                bool changedStartAt = startUtc != current.StartAt;
-                bool changedEndAt = endUtc != current.EndAt;
-
-                if (changedStartAt && startUtc < nowUtc)
-                    return false;
-
-                if (changedEndAt && endUtc < nowUtc)
+                if (endUtc < nowUtc)
                     return false;
 
                 if (endUtc <= startUtc)
@@ -296,7 +290,6 @@ namespace GameStore.Services
                 current.MaxParticipants = ev.MaxParticipants;
                 current.PrizeInfo = ev.PrizeInfo?.Trim();
 
-                current.StartAt = startUtc;
                 current.EndAt = endUtc;
                 current.Status = CalculateStatus(current.StartAt, current.EndAt);
                 current.UpdatedAt = nowUtc;
