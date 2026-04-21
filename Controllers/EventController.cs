@@ -107,6 +107,13 @@ namespace GameStore.Controllers
                 return RedirectToAction("Index");
             }
 
+            if ((ev.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["ToastMessage"] = "Sự kiện đã kết thúc, không thể tham gia mới.";
+                TempData["ToastType"] = "error";
+                return RedirectToAction("Detail", new { slug = ev.Slug });
+            }
+
             if (ev.MaxParticipants.HasValue && ev.CurrentParticipants >= ev.MaxParticipants.Value)
             {
                 TempData["ToastMessage"] = "Sự kiện đã đủ số lượng người tham gia";
@@ -185,6 +192,7 @@ namespace GameStore.Controllers
             ViewBag.Announcements = announcementService.GetByEvent(id);
             ViewBag.Messages = messageService.GetByEvent(id, 100);
             ViewBag.MyParticipant = participantService.FindParticipant(id, userId);
+            ViewBag.IsArchivedRoom = (ev.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase);
 
             return View("~/Views/Event/Room.cshtml", ev);
         }
@@ -204,6 +212,13 @@ namespace GameStore.Controllers
             var ev = eventService.FindById(id);
             if (ev == null)
                 return RedirectToAction("Index");
+
+            if ((ev.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["ToastMessage"] = "Sự kiện đã kết thúc, chat đã bị khóa.";
+                TempData["ToastType"] = "error";
+                return BadRequest();
+            }
 
             if (!participantService.IsJoined(id, userId))
             {
@@ -251,6 +266,13 @@ namespace GameStore.Controllers
             var ev = eventService.FindById(id);
             if (ev == null)
                 return RedirectToAction("Index");
+
+            if ((ev.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["ToastMessage"] = "Sự kiện đã kết thúc, check-in đã đóng.";
+                TempData["ToastType"] = "error";
+                return RedirectToAction("Room", new { id });
+            }
 
             if (!participantService.IsJoined(id, userId))
             {
