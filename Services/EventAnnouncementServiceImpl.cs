@@ -71,5 +71,14 @@ namespace GameStore.Services
                 return false;
             }
         }
+
+        public EventAnnouncement? GetLatestByEvent(int eventId)
+        {
+            return db.EventAnnouncements
+                .Include(x => x.NguoiDung)
+                .Where(x => x.EventId == eventId)
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstOrDefault();
+        }
     }
 }

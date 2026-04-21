@@ -1,4 +1,4 @@
-﻿@model List<GameStore.Models.EventParticipant>
+﻿@model List<GameStore.Pagination.User.MyEventCardVM>
 
 @{
     ViewData["Title"] = "My Events";
@@ -35,7 +35,7 @@
             <div class="gs-kicker">Personal Area</div>
             <h1 class="gs-page-title">My Events</h1>
             <p class="gs-page-subtitle">
-                Theo dõi tất cả sự kiện bạn đã tham gia, trạng thái check-in và truy cập nhanh vào member area.
+                Theo dõi các event bạn đã join, trạng thái check-in, announcement mới nhất và chat mới nhất từ room sự kiện.
             </p>
         </div>
 
@@ -66,19 +66,52 @@
                                     <div class="gs-event-meta">
                                         <div>🎮 @(ev.Game?.TenGame ?? "GameStore Event")</div>
                                         <div>📅 @ev.StartAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
-                                        <div>💰 @(item.PaidAmount > 0 ? item.PaidAmount.ToString("N0") + " VND" : "Free")</div>
+                                        <div>💰 @(item.Participant.PaidAmount > 0 ? item.Participant.PaidAmount.ToString("N0") + " VND" : "Free")</div>
                                     </div>
 
                                     <div class="gs-checkin-row">
-                                        @if (item.IsCheckedIn)
+                                        @if (item.Participant.IsCheckedIn)
                                         {
                                             <span class="gs-checkin checked">
-                                                ✅ Checked-in @item.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                                ✅ Checked-in @item.Participant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                                             </span>
                                         }
                                         else
                                         {
                                             <span class="gs-checkin waiting">⏳ Not checked-in</span>
+                                        }
+                                    </div>
+
+                                    <div class="gs-notify-box">
+                                        <div class="gs-notify-title">📢 Latest Announcement</div>
+                                        @if (item.LatestAnnouncement != null)
+                                        {
+                                            <div class="gs-notify-item">
+                                                <div class="gs-notify-item-title">@item.LatestAnnouncement.Title</div>
+                                                <div class="gs-notify-time">@item.LatestAnnouncement.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="gs-notify-empty">Chưa có announcement nào</div>
+                                        }
+                                    </div>
+
+                                    <div class="gs-notify-box">
+                                        <div class="gs-notify-title">💬 Latest Chat</div>
+                                        @if (item.LatestMessage != null)
+                                        {
+                                            <div class="gs-notify-item">
+                                                <div class="gs-notify-item-title">
+                                                    @(item.LatestMessage.NguoiDung?.TenNguoiDung ?? item.LatestMessage.NguoiDung?.Email ?? "User")
+                                                </div>
+                                                <div class="gs-chat-snippet">@item.LatestMessage.Content</div>
+                                                <div class="gs-notify-time">@item.LatestMessage.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="gs-notify-empty">Chưa có tin nhắn nào</div>
                                         }
                                     </div>
 
@@ -118,19 +151,52 @@
                                     <div class="gs-event-meta">
                                         <div>🎮 @(ev.Game?.TenGame ?? "GameStore Event")</div>
                                         <div>📅 @ev.StartAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
-                                        <div>💰 @(item.PaidAmount > 0 ? item.PaidAmount.ToString("N0") + " VND" : "Free")</div>
+                                        <div>💰 @(item.Participant.PaidAmount > 0 ? item.Participant.PaidAmount.ToString("N0") + " VND" : "Free")</div>
                                     </div>
 
                                     <div class="gs-checkin-row">
-                                        @if (item.IsCheckedIn)
+                                        @if (item.Participant.IsCheckedIn)
                                         {
                                             <span class="gs-checkin checked">
-                                                ✅ Checked-in @item.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                                ✅ Checked-in @item.Participant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                                             </span>
                                         }
                                         else
                                         {
                                             <span class="gs-checkin waiting">Not checked-in</span>
+                                        }
+                                    </div>
+
+                                    <div class="gs-notify-box">
+                                        <div class="gs-notify-title">📢 Latest Announcement</div>
+                                        @if (item.LatestAnnouncement != null)
+                                        {
+                                            <div class="gs-notify-item">
+                                                <div class="gs-notify-item-title">@item.LatestAnnouncement.Title</div>
+                                                <div class="gs-notify-time">@item.LatestAnnouncement.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="gs-notify-empty">Chưa có announcement nào</div>
+                                        }
+                                    </div>
+
+                                    <div class="gs-notify-box">
+                                        <div class="gs-notify-title">💬 Latest Chat</div>
+                                        @if (item.LatestMessage != null)
+                                        {
+                                            <div class="gs-notify-item">
+                                                <div class="gs-notify-item-title">
+                                                    @(item.LatestMessage.NguoiDung?.TenNguoiDung ?? item.LatestMessage.NguoiDung?.Email ?? "User")
+                                                </div>
+                                                <div class="gs-chat-snippet">@item.LatestMessage.Content</div>
+                                                <div class="gs-notify-time">@item.LatestMessage.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="gs-notify-empty">Chưa có tin nhắn nào</div>
                                         }
                                     </div>
 
@@ -289,7 +355,7 @@
         }
 
     .gs-checkin-row {
-        margin-bottom: 18px;
+        margin-bottom: 14px;
     }
 
     .gs-checkin {
@@ -313,6 +379,49 @@
             color: #fde68a;
             border: 1px solid rgba(245,158,11,0.18);
         }
+
+    .gs-notify-box {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: 14px;
+        margin-bottom: 14px;
+    }
+
+    .gs-notify-title {
+        color: #7dd3fc;
+        font-size: .88rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .gs-notify-item-title {
+        color: #fff;
+        font-weight: 700;
+        line-height: 1.45;
+        margin-bottom: 4px;
+    }
+
+    .gs-chat-snippet {
+        color: #dbe6f7;
+        font-size: .92rem;
+        line-height: 1.6;
+        margin-bottom: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .gs-notify-time {
+        color: #94a3b8;
+        font-size: .82rem;
+    }
+
+    .gs-notify-empty {
+        color: #94a3b8;
+        font-size: .9rem;
+    }
 
     .gs-action-row {
         display: flex;

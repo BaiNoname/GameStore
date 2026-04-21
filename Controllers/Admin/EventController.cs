@@ -82,20 +82,19 @@ namespace GameStore.Controllers.Admin
         }
 
         [Route("event/add")]
-        public IActionResult Add(string keyword = "", string eventType = "", string status = "", int page = 1)
+        public IActionResult Add(string filterKeyword = "", string filterEventType = "", string filterStatus = "", int currentPage = 1)
         {
             LoadGameSelectList();
 
-            ViewBag.Keyword = keyword;
-            ViewBag.EventType = eventType;
-            ViewBag.Status = status;
-            ViewBag.CurrentPage = page;
+            ViewBag.Keyword = filterKeyword;
+            ViewBag.EventType = filterEventType;
+            ViewBag.Status = filterStatus;
+            ViewBag.CurrentPage = currentPage;
 
             return View("~/Views/Admin/Event/Add.cshtml", new Event
             {
                 EventType = "Tournament",
                 AccessType = "Paid",
-                Status = "Upcoming",
                 StartAt = DateTime.Now.AddDays(1),
                 EndAt = DateTime.Now.AddDays(1).AddHours(2)
             });
@@ -103,20 +102,22 @@ namespace GameStore.Controllers.Admin
 
         [HttpPost]
         [Route("event/add")]
-        public IActionResult Add(Event ev, IFormFile? photo, string keyword = "", string eventType = "", string status = "", int page = 1)
+        public IActionResult Add(Event ev, IFormFile? photo, string filterKeyword = "", string filterEventType = "", string filterStatus = "", int currentPage = 1)
         {
             LoadGameSelectList(ev.RelatedGameId);
 
-            ViewBag.Keyword = keyword;
-            ViewBag.EventType = eventType;
-            ViewBag.Status = status;
-            ViewBag.CurrentPage = page;
+            ViewBag.Keyword = filterKeyword;
+            ViewBag.EventType = filterEventType;
+            ViewBag.Status = filterStatus;
+            ViewBag.CurrentPage = currentPage;
 
             ev.Title = ev.Title?.Trim() ?? "";
             ev.Slug = ev.Slug?.Trim().ToLower() ?? "";
+            ev.Summary = ev.Summary?.Trim();
+            ev.Content = ev.Content?.Trim() ?? "";
             ev.EventType = Request.Form["EventType"].ToString();
             ev.AccessType = Request.Form["AccessType"].ToString();
-            ev.Status = Request.Form["Status"].ToString();
+            ev.PrizeInfo = ev.PrizeInfo?.Trim();
 
             if (string.IsNullOrWhiteSpace(ev.Title))
             {
@@ -135,6 +136,20 @@ namespace GameStore.Controllers.Admin
             if (string.IsNullOrWhiteSpace(ev.Content))
             {
                 TempData["Msg"] = "❌ Content không được để trống!";
+                TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/Event/Add.cshtml", ev);
+            }
+
+            if (ev.StartAt < DateTime.Now)
+            {
+                TempData["Msg"] = "❌ Start At không được ở quá khứ!";
+                TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/Event/Add.cshtml", ev);
+            }
+
+            if (ev.EndAt < DateTime.Now)
+            {
+                TempData["Msg"] = "❌ End At không được ở quá khứ!";
                 TempData["MsgType"] = "danger";
                 return View("~/Views/Admin/Event/Add.cshtml", ev);
             }
@@ -161,7 +176,7 @@ namespace GameStore.Controllers.Admin
                 ev.CreatedBy = int.Parse(User.FindFirst("UserId")!.Value);
             }
 
-            if (photo != null)
+            if (photo != null && photo.Length > 0)
             {
                 var saved = SaveEventImage(photo);
                 if (saved == null)
@@ -178,62 +193,80 @@ namespace GameStore.Controllers.Admin
             {
                 TempData["Msg"] = "✅ Thêm event thành công!";
                 TempData["MsgType"] = "success";
-                return RedirectToAction("Index", new { keyword, eventType, status, page });
+                return RedirectToAction("Index", new
+                {
+                    keyword = filterKeyword,
+                    eventType = filterEventType,
+                    status = filterStatus,
+                    page = currentPage
+                });
             }
 
-            TempData["Msg"] = "❌ Thêm event thất bại!";
+            TempData["Msg"] = "❌ Thêm event thất bại! Thời gian không hợp lệ hoặc dữ liệu chưa đúng.";
             TempData["MsgType"] = "danger";
             return View("~/Views/Admin/Event/Add.cshtml", ev);
         }
 
         [Route("event/edit/{id}")]
-        public IActionResult Edit(int id, string keyword = "", string eventType = "", string status = "", int page = 1)
+        public IActionResult Edit(int id, string filterKeyword = "", string filterEventType = "", string filterStatus = "", int currentPage = 1)
         {
             var ev = eventService.FindById(id);
             if (ev == null)
             {
                 TempData["Msg"] = "❌ Event không tồn tại!";
                 TempData["MsgType"] = "danger";
-                return RedirectToAction("Index", new { keyword, eventType, status, page });
+                return RedirectToAction("Index", new
+                {
+                    keyword = filterKeyword,
+                    eventType = filterEventType,
+                    status = filterStatus,
+                    page = currentPage
+                });
             }
 
             LoadGameSelectList(ev.RelatedGameId);
 
-            ViewBag.Keyword = keyword;
-            ViewBag.EventType = eventType;
-            ViewBag.Status = status;
-            ViewBag.CurrentPage = page;
+            ViewBag.Keyword = filterKeyword;
+            ViewBag.EventType = filterEventType;
+            ViewBag.Status = filterStatus;
+            ViewBag.CurrentPage = currentPage;
 
             return View("~/Views/Admin/Event/Edit.cshtml", ev);
         }
 
         [HttpPost]
         [Route("event/edit/{id}")]
-        public IActionResult Edit(int id, Event ev, IFormFile? photo, string keyword = "", string eventType = "", string status = "", int page = 1)
+        public IActionResult Edit(int id, Event ev, IFormFile? photo, string filterKeyword = "", string filterEventType = "", string filterStatus = "", int currentPage = 1)
         {
             var current = eventService.FindById(id);
             if (current == null)
             {
                 TempData["Msg"] = "❌ Event không tồn tại!";
                 TempData["MsgType"] = "danger";
-                return RedirectToAction("Index", new { keyword, eventType, status, page });
+                return RedirectToAction("Index", new
+                {
+                    keyword = filterKeyword,
+                    eventType = filterEventType,
+                    status = filterStatus,
+                    page = currentPage
+                });
             }
 
-            LoadGameSelectList(current.RelatedGameId);
+            LoadGameSelectList(ev.RelatedGameId ?? current.RelatedGameId);
 
-            ViewBag.Keyword = keyword;
-            ViewBag.EventType = eventType;
-            ViewBag.Status = status;
-            ViewBag.CurrentPage = page;
+            ViewBag.Keyword = filterKeyword;
+            ViewBag.EventType = filterEventType;
+            ViewBag.Status = filterStatus;
+            ViewBag.CurrentPage = currentPage;
 
             ev.EventId = id;
             ev.Title = string.IsNullOrWhiteSpace(ev.Title) ? current.Title : ev.Title.Trim();
             ev.Slug = string.IsNullOrWhiteSpace(ev.Slug) ? current.Slug : ev.Slug.Trim().ToLower();
             ev.Summary = ev.Summary?.Trim();
-            ev.Content = string.IsNullOrWhiteSpace(ev.Content) ? current.Content : ev.Content;
+            ev.Content = string.IsNullOrWhiteSpace(ev.Content) ? current.Content : ev.Content.Trim();
             ev.EventType = string.IsNullOrWhiteSpace(Request.Form["EventType"]) ? current.EventType : Request.Form["EventType"].ToString().Trim();
             ev.AccessType = string.IsNullOrWhiteSpace(Request.Form["AccessType"]) ? current.AccessType : Request.Form["AccessType"].ToString().Trim();
-            ev.Status = string.IsNullOrWhiteSpace(Request.Form["Status"]) ? current.Status : Request.Form["Status"].ToString().Trim();
+            ev.PrizeInfo = ev.PrizeInfo?.Trim();
 
             if (string.IsNullOrWhiteSpace(ev.Title))
             {
@@ -252,6 +285,23 @@ namespace GameStore.Controllers.Admin
             if (string.IsNullOrWhiteSpace(ev.Content))
             {
                 TempData["Msg"] = "❌ Content không được để trống!";
+                TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/Event/Edit.cshtml", current);
+            }
+
+            bool changedStartAt = ev.StartAt != current.StartAt;
+            bool changedEndAt = ev.EndAt != current.EndAt;
+
+            if (changedStartAt && ev.StartAt < DateTime.Now)
+            {
+                TempData["Msg"] = "❌ Không được sửa Start At về quá khứ!";
+                TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/Event/Edit.cshtml", current);
+            }
+
+            if (changedEndAt && ev.EndAt < DateTime.Now)
+            {
+                TempData["Msg"] = "❌ Không được sửa End At về quá khứ!";
                 TempData["MsgType"] = "danger";
                 return View("~/Views/Admin/Event/Edit.cshtml", current);
             }
@@ -299,10 +349,16 @@ namespace GameStore.Controllers.Admin
             {
                 TempData["Msg"] = "✅ Cập nhật event thành công!";
                 TempData["MsgType"] = "success";
-                return RedirectToAction("Index", new { keyword, eventType, status, page });
+                return RedirectToAction("Index", new
+                {
+                    keyword = filterKeyword,
+                    eventType = filterEventType,
+                    status = filterStatus,
+                    page = currentPage
+                });
             }
 
-            TempData["Msg"] = "❌ Cập nhật event thất bại!";
+            TempData["Msg"] = "❌ Cập nhật event thất bại! Không được sửa thời gian về quá khứ.";
             TempData["MsgType"] = "danger";
             return View("~/Views/Admin/Event/Edit.cshtml", current);
         }

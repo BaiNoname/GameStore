@@ -20,6 +20,10 @@
         <div class="card-body">
             <form method="post" enctype="multipart/form-data" asp-controller="Event" asp-action="Edit" asp-route-id="@Model.EventId">
                 <input type="hidden" asp-for="EventId" />
+                <input type="hidden" name="filterKeyword" value="@ViewBag.Keyword" />
+                <input type="hidden" name="filterEventType" value="@ViewBag.EventType" />
+                <input type="hidden" name="filterStatus" value="@ViewBag.Status" />
+                <input type="hidden" name="currentPage" value="@ViewBag.CurrentPage" />
 
                 <div class="mb-3">
                     <label class="form-label">Title</label>
@@ -68,7 +72,7 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Event Type</label>
                         <select class="form-select" asp-for="EventType">
                             <option value="Tournament">Tournament</option>
@@ -77,20 +81,11 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Access Type</label>
                         <select class="form-select" asp-for="AccessType">
                             <option value="Paid">Paid</option>
                             <option value="Free">Free</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Status</label>
-                        <select class="form-select" asp-for="Status">
-                            <option value="Upcoming">Upcoming</option>
-                            <option value="Live">Live</option>
-                            <option value="Ended">Ended</option>
                         </select>
                     </div>
                 </div>
@@ -120,13 +115,29 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Start At</label>
-                        <input type="datetime-local" class="form-control" asp-for="StartAt" />
+                        <input type="datetime-local"
+                               class="form-control"
+                               id="StartAt"
+                               name="StartAt"
+                               step="1"
+                               value="@Model.StartAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss")" />
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label">End At</label>
-                        <input type="datetime-local" class="form-control" asp-for="EndAt" />
+                        <input type="datetime-local"
+                               class="form-control"
+                               id="EndAt"
+                               name="EndAt"
+                               step="1"
+                               value="@Model.EndAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss")" />
                     </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Current Status</label>
+                    <input class="form-control" value="@Model.Status" readonly />
+                    <small class="text-muted">Status được tự động tính theo Start At và End At.</small>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 flex-wrap">

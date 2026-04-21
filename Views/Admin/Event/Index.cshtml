@@ -37,7 +37,10 @@
                 <button class="btn btn-success" type="submit">Search</button>
             </form>
 
-            <a href="/admin/event/add" class="btn btn-primary">+ Add Event</a>
+            <a href="/admin/event/add?filterKeyword=@keyword&filterEventType=@eventType&filterStatus=@status&currentPage=@currentPage"
+               class="btn btn-primary">
+                + Add Event
+            </a>
         </div>
 
         @if (TempData["Msg"] != null)
@@ -87,10 +90,13 @@
                                 <td>@item.Status</td>
                                 <td>@item.Price.ToString("N0")</td>
                                 <td>@item.CurrentParticipants / @(item.MaxParticipants?.ToString() ?? "∞")</td>
-                                <td>@item.StartAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@item.StartAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                                 <td>
                                     <div class="d-flex gap-2 flex-wrap">
-                                        <a href="/admin/event/edit/@item.EventId" class="btn btn-sm btn-warning">Edit</a>
+                                        <a href="/admin/event/edit/@item.EventId?filterKeyword=@keyword&filterEventType=@eventType&filterStatus=@status&currentPage=@currentPage"
+                                           class="btn btn-sm btn-warning">
+                                            Edit
+                                        </a>
 
                                         <a href="/admin/event-announcement/index/@item.EventId" class="btn btn-sm btn-info text-white">
                                             Announcements
