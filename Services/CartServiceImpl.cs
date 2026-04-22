@@ -5,7 +5,7 @@ namespace GameStore.Services
 {
     public class CartServiceImpl : CartService
     {
-        private GameStoreContext db;
+        private readonly GameStoreContext db;
 
         public CartServiceImpl(GameStoreContext _db)
         {
@@ -32,12 +32,18 @@ namespace GameStore.Services
 
                 db.GioHangs.Add(cart);
                 db.SaveChanges();
+
+                cart = db.GioHangs
+                    .Include(g => g.ChiTietGioHangs)
+                    .ThenInclude(c => c.Game)
+                    .Where(g => g.MaNguoiDung == userId)
+                    .OrderByDescending(g => g.MaGH)
+                    .FirstOrDefault();
             }
 
-            return cart;
+            return cart!;
         }
 
-        // 🛒 GET CART
         public GioHang GetCart(int userId)
         {
             return GetOrCreateCart(userId);
@@ -46,32 +52,47 @@ namespace GameStore.Services
         // ➕ ADD TO CART
         public bool AddToCart(int userId, string gameId)
         {
-            var cart = GetOrCreateCart(userId);
-
-            // ❌ đã mua rồi thì không cho add
-            bool bought = db.ChiTietGiaoDiches
-                .Include(x => x.GiaoDich)
-                .Any(x => x.GiaoDich.MaNguoiDung == userId && x.MaGame == gameId);
-
-            if (bought) return false;
-
-            // ❌ đã có trong cart
-            bool exists = cart.ChiTietGioHangs
-                .Any(x => x.MaGame == gameId);
-
-            if (exists) return false;
-
-            var game = db.Games.Find(gameId);
-            if (game == null) return false;
-
-            db.ChiTietGioHangs.Add(new ChiTietGioHang
+            try
             {
-                MaGH = cart.MaGH,
-                MaGame = gameId,
-                DonGiaHienTai = game.Gia
-            });
+                if (string.IsNullOrWhiteSpace(gameId))
+                    return false;
 
-            return db.SaveChanges() > 0;
+                gameId = gameId.Trim();
+
+                var cart = GetOrCreateCart(userId);
+
+                var game = db.Games.Find(gameId);
+                if (game == null)
+                    return false;
+
+                // ❌ đã sở hữu trong thư viện thì không cho add
+                bool ownedInLibrary = db.ThuVienGames
+                    .Any(x => x.MaNguoiDung == userId && x.MaGame == gameId);
+
+                if (ownedInLibrary)
+                    return false;
+
+                // ❌ đã có trong cart
+                bool exists = cart.ChiTietGioHangs
+                    .Any(x => x.MaGame == gameId);
+
+                if (exists)
+                    return false;
+
+                db.ChiTietGioHangs.Add(new ChiTietGioHang
+                {
+                    MaGH = cart.MaGH,
+                    MaGame = gameId,
+                    DonGiaHienTai = game.Gia
+                });
+
+                return db.SaveChanges() > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ADD TO CART ERROR: " + ex.Message);
+                return false;
+            }
         }
 
         // ❌ REMOVE

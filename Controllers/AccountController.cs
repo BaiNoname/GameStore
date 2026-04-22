@@ -11,35 +11,37 @@ namespace GameStore.Controllers
     {
         private readonly AuthService authService;
         private readonly GameStoreContext db;
+        private readonly UserIconEffectService userIconEffectService;
 
-        public AccountController(AuthService _authService, GameStoreContext _db)
+        public AccountController(AuthService _authService, GameStoreContext _db, UserIconEffectService _userIconEffectService)
         {
             authService = _authService;
             db = _db;
+            userIconEffectService = _userIconEffectService;
         }
 
-        // ================= PROFILE =================
         public IActionResult Profile()
         {
             ViewBag.HideSubBar = true;
-            if (!User.Identity.IsAuthenticated)
+
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
                 return Redirect("/auth/login");
 
-            int userId = int.Parse(User.FindFirst("UserId").Value);
+            int userId = int.Parse(User.FindFirst("UserId")!.Value);
 
-            var user = db.NguoiDungs.Find(userId); // 🔥 lấy user
-
+            var user = db.NguoiDungs.Find(userId);
             if (user == null)
                 return Redirect("/auth/login");
 
-            return View(user); // 🔥 TRUYỀN MODEL
+            ViewBag.EquippedEffectCssClass = userIconEffectService.GetEquippedCssClass(userId);
+
+            return View(user);
         }
 
-        // ================= UPDATE NAME =================
         [HttpPost]
         public IActionResult UpdateName(string tenNguoiDung)
         {
-            int userId = int.Parse(User.FindFirst("UserId").Value);
+            int userId = int.Parse(User.FindFirst("UserId")!.Value);
 
             bool result = authService.UpdateName(userId, tenNguoiDung, out string msg);
 
@@ -51,11 +53,10 @@ namespace GameStore.Controllers
             return RedirectToAction("Profile");
         }
 
-        // ================= CHANGE PASSWORD =================
         [HttpPost]
         public async Task<IActionResult> ChangePassword(string oldPass, string newPass, string confirmPass)
         {
-            var userId = int.Parse(User.FindFirst("UserId").Value);
+            var userId = int.Parse(User.FindFirst("UserId")!.Value);
 
             bool success = authService.ChangePassword(userId, oldPass, newPass, confirmPass, out string message);
 

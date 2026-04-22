@@ -9,9 +9,24 @@
     <div class="container py-4 py-lg-5">
         <div class="mx-auto gs-profile-wrap">
 
+            @{
+                string equippedEffectCssClass = ViewBag.EquippedEffectCssClass as string ?? "";
+            }
+
             <div class="mb-4">
                 <div class="gs-kicker">Account Center</div>
-                <h3 class="gs-profile-title mb-0">👤 Account Profile</h3>
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <div class="gs-profile-avatar @equippedEffectCssClass">
+                        <span class="gs-profile-avatar-core">
+                            @((Model.TenNguoiDung ?? Model.Email ?? "U").Substring(0, 1).ToUpper())
+                        </span>
+                    </div>
+
+                    <div>
+                        <h3 class="gs-profile-title mb-1">👤 Account Profile</h3>
+                        <div class="text-secondary">Hiển thị effect đang sử dụng trên tài khoản của bạn.</div>
+                    </div>
+                </div>
             </div>
 
             @if (TempData["Err"] != null)
@@ -287,5 +302,70 @@
             grid-template-columns: 1fr;
             gap: 8px;
         }
+    }
+
+    .gs-profile-avatar {
+        width: 76px;
+        height: 76px;
+        min-width: 76px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        transition: all .25s ease;
+    }
+
+    .gs-profile-avatar-core {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(124, 58, 237, 0.14);
+        color: #fff;
+        font-size: 1.5rem;
+        font-weight: 800;
+    }
+
+    .gs-profile-avatar.effect-neon-purple .preview-avatar {
+        box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.22), 0 0 18px rgba(168, 85, 247, 0.72), 0 0 30px rgba(168, 85, 247, 0.42);
+    }
+
+    .gs-profile-avatar.effect-champion-gold .preview-avatar {
+        box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.22), 0 0 18px rgba(234, 179, 8, 0.72), 0 0 30px rgba(234, 179, 8, 0.42);
+    }
+
+    .gs-profile-avatar.effect-community-blue .preview-avatar {
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22), 0 0 18px rgba(59, 130, 246, 0.72), 0 0 30px rgba(59, 130, 246, 0.42);
+    }
+
+    .gs-profile-avatar.effect-crimson-blaze .preview-avatar {
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.24), 0 0 16px rgba(239, 68, 68, 0.78), 0 0 28px rgba(185, 28, 28, 0.42);
+    }
+
+    .gs-profile-avatar.effect-emerald-pulse .preview-avatar {
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22), 0 0 16px rgba(16, 185, 129, 0.76), 0 0 28px rgba(5, 150, 105, 0.35);
+    }
+
+    .gs-profile-avatar.effect-frost-crown .preview-avatar {
+        box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.24), 0 0 16px rgba(125, 211, 252, 0.78), 0 0 28px rgba(186, 230, 253, 0.45);
+    }
+
+    .gs-profile-avatar.effect-shadow-rift .preview-avatar {
+        box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.24), 0 0 18px rgba(17, 24, 39, 0.82), 0 0 32px rgba(88, 28, 135, 0.38);
+    }
+
+    .gs-profile-avatar.effect-sunset-nova .preview-avatar {
+        box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.25), 0 0 16px rgba(249, 115, 22, 0.76), 0 0 28px rgba(244, 114, 182, 0.34);
+    }
+
+    .gs-profile-avatar.effect-cyber-lime .preview-avatar {
+        box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.26), 0 0 16px rgba(132, 204, 22, 0.78), 0 0 28px rgba(190, 242, 100, 0.36);
+    }
+
+    .gs-profile-avatar.effect-rose-halo .preview-avatar {
+        box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.24), 0 0 16px rgba(236, 72, 153, 0.72), 0 0 28px rgba(192, 132, 252, 0.32);
     }
 </style>

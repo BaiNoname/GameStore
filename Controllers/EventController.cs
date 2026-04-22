@@ -16,6 +16,8 @@ namespace GameStore.Controllers
         private readonly EventMessageService messageService;
         private readonly PaymentService paymentService;
         private readonly IHubContext<EventChatHub> eventChatHub;
+        private readonly EventRewardService eventRewardService;
+        private readonly UserIconEffectService userIconEffectService;
 
         public EventController(
             EventService _eventService,
@@ -23,7 +25,9 @@ namespace GameStore.Controllers
             EventAnnouncementService _announcementService,
             EventMessageService _messageService,
             PaymentService _paymentService,
-            IHubContext<EventChatHub> _eventChatHub)
+            IHubContext<EventChatHub> _eventChatHub,
+            EventRewardService _eventRewardService,
+            UserIconEffectService _userIconEffectService)
         {
             eventService = _eventService;
             participantService = _participantService;
@@ -31,6 +35,8 @@ namespace GameStore.Controllers
             messageService = _messageService;
             paymentService = _paymentService;
             eventChatHub = _eventChatHub;
+            eventRewardService = _eventRewardService;
+            userIconEffectService = _userIconEffectService;
         }
 
         private IActionResult RedirectToLoginWithReturnUrl(string returnUrl)
@@ -188,11 +194,24 @@ namespace GameStore.Controllers
                 return RedirectToAction("Detail", new { slug = ev.Slug });
             }
 
-            ViewBag.Participants = participantService.GetParticipantsByEvent(id);
-            ViewBag.Announcements = announcementService.GetByEvent(id);
-            ViewBag.Messages = messageService.GetByEvent(id, 100);
-            ViewBag.MyParticipant = participantService.FindParticipant(id, userId);
+            var participants = participantService.GetParticipantsByEvent(id);
+            var announcements = announcementService.GetByEvent(id);
+            var messages = messageService.GetByEvent(id, 100);
+            var myParticipant = participantService.FindParticipant(id, userId);
+
+            var effectUserIds = messages
+                .Where(x => x.UserId > 0)
+                .Select(x => x.UserId)
+                .Distinct()
+                .ToList();
+
+            ViewBag.Participants = participants;
+            ViewBag.Announcements = announcements;
+            ViewBag.Messages = messages;
+            ViewBag.MyParticipant = myParticipant;
             ViewBag.IsArchivedRoom = (ev.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase);
+            ViewBag.CanClaimReward = eventRewardService.CanClaimReward(id, userId);
+            ViewBag.UserEffectMap = userIconEffectService.GetEquippedCssClassMap(effectUserIds);
 
             return View("~/Views/Event/Room.cshtml", ev);
         }
@@ -234,6 +253,7 @@ namespace GameStore.Controllers
             if (messageService.Send(id, userId, content))
             {
                 var latest = messageService.GetLatestMessage(id, userId, content);
+                var effectCssClass = userIconEffectService.GetEquippedCssClass(userId);
 
                 if (latest != null)
                 {
@@ -241,7 +261,8 @@ namespace GameStore.Controllers
                     {
                         userName = latest.NguoiDung?.TenNguoiDung ?? latest.NguoiDung?.Email ?? "User",
                         content = latest.Content,
-                        createdAt = latest.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        createdAt = latest.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
+                        effectCssClass = effectCssClass ?? ""
                     });
                 }
             }
@@ -319,6 +340,54 @@ namespace GameStore.Controllers
             }).ToList();
 
             return View("~/Views/Event/MyEvents.cshtml", model);
+        }
+
+        [HttpPost]
+        [Route("room/{id}/claim-reward")]
+        public async Task<IActionResult> ClaimReward(int id)
+        {
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                var returnUrl = Url.Action("Room", "Event", new { id }) ?? "/event";
+                return RedirectToLoginWithReturnUrl(returnUrl);
+            }
+
+            int userId = int.Parse(User.FindFirst("UserId")!.Value);
+
+            var result = eventRewardService.ClaimReward(id, userId);
+
+            if (result.Success)
+            {
+                TempData["ToastMessage"] = result.Message;
+                TempData["ToastType"] = "success";
+
+                if (!string.IsNullOrWhiteSpace(result.RoomNotice))
+                {
+                    // Lưu notice như 1 message hệ thống vào DB
+                    messageService.Send(id, userId, result.RoomNotice);
+
+                    var latest = messageService.GetLatestMessage(id, userId, result.RoomNotice);
+                    var effectCssClass = userIconEffectService.GetEquippedCssClass(userId);
+
+                    if (latest != null)
+                    {
+                        await eventChatHub.Clients.Group($"event-room-{id}").SendAsync("ReceiveEventMessage", new
+                        {
+                            userName = latest.NguoiDung?.TenNguoiDung ?? latest.NguoiDung?.Email ?? "User",
+                            content = latest.Content,
+                            createdAt = latest.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
+                            effectCssClass = effectCssClass ?? ""
+                        });
+                    }
+                }
+            }
+            else
+            {
+                TempData["ToastMessage"] = result.Message;
+                TempData["ToastType"] = "error";
+            }
+
+            return RedirectToAction("Room", new { id });
         }
     }
 }

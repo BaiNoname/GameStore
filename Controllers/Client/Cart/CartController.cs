@@ -106,10 +106,31 @@ namespace GameStore.Controllers.Client.Cart
         {
             returnUrl = GetSafeReturnUrl(returnUrl);
 
-            var result = cartService.AddToCart(GetUserId(), gameId);
+            var userId = GetUserId();
+            var cart = cartService.GetCart(userId);
 
-            TempData["ToastMessage"] = result ? "Đã thêm vào giỏ hàng 🛒" : "Game đã có trong giỏ hàng!";
-            TempData["ToastType"] = result ? "success" : "error";
+            bool alreadyInCart = cart.ChiTietGioHangs.Any(x => x.MaGame == gameId);
+
+            // BUY NOW: nếu đã có trong cart thì vào thẳng giỏ hàng, không báo lỗi
+            if (mode == "buy" && alreadyInCart)
+            {
+                TempData["ReturnUrl"] = returnUrl;
+                return RedirectToAction("Index", new { returnUrl });
+            }
+
+            var result = cartService.AddToCart(userId, gameId);
+
+            if (result)
+            {
+                TempData["ToastMessage"] = "Đã thêm vào giỏ hàng 🛒";
+                TempData["ToastType"] = "success";
+            }
+            else
+            {
+                TempData["ToastMessage"] = "Không thể thêm game vào giỏ hàng. Có thể game đã có trong giỏ hoặc bạn đã sở hữu game này.";
+                TempData["ToastType"] = "error";
+            }
+
             TempData["ReturnUrl"] = returnUrl;
 
             if (mode == "buy")

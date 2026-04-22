@@ -88,9 +88,81 @@
 
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Prize Info</label>
-                        <input class="form-control" asp-for="PrizeInfo" />
+                        <input class="form-control" asp-for="PrizeInfo" placeholder="Ví dụ: Check-in để nhận thưởng" />
                     </div>
                 </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Prize Type</label>
+                        <select class="form-select" id="PrizeType" name="PrizeType">
+                            @if (string.IsNullOrWhiteSpace(Model.PrizeType))
+                            {
+                                <option value="" selected>-- No Reward --</option>
+                            }
+                            else
+                            {
+                                <option value="">-- No Reward --</option>
+                            }
+
+                            @if (Model.PrizeType == "Balance")
+                            {
+                                <option value="Balance" selected>Balance</option>
+                            }
+                            else
+                            {
+                                <option value="Balance">Balance</option>
+                            }
+
+                            @if (Model.PrizeType == "Effect")
+                            {
+                                <option value="Effect" selected>Effect</option>
+                            }
+                            else
+                            {
+                                <option value="Effect">Effect</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3" id="prizeBalanceWrap">
+                        <label class="form-label">Prize Value (Balance)</label>
+                        <input class="form-control"
+                               id="PrizeValueBalance"
+                               type="number"
+                               step="0.01"
+                               min="0"
+                               value="@(Model.PrizeType == "Balance" ? Model.PrizeValue : "")"
+                               placeholder="Ví dụ: 50000" />
+                    </div>
+
+                    <div class="col-md-4 mb-3" id="prizeEffectWrap">
+                        <label class="form-label">Prize Value (Effect)</label>
+                        <select class="form-select" id="PrizeValueEffect">
+                            <option value="">-- Select Effect --</option>
+                            @foreach (var item in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Effects)
+                            {
+                                if (item.Selected)
+                                {
+                                    <option value="@item.Value" selected>@item.Text</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Prize Condition</label>
+                        <input class="form-control" name="PrizeCondition" value="CheckIn" readonly />
+                    </div>
+                </div>
+
+                <input type="hidden" id="PrizeValue" name="PrizeValue" value="@Model.PrizeValue" />
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -124,3 +196,40 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const prizeType = document.getElementById("PrizeType");
+        const prizeBalanceWrap = document.getElementById("prizeBalanceWrap");
+        const prizeEffectWrap = document.getElementById("prizeEffectWrap");
+        const prizeValueHidden = document.getElementById("PrizeValue");
+        const prizeValueBalance = document.getElementById("PrizeValueBalance");
+        const prizeValueEffect = document.getElementById("PrizeValueEffect");
+
+        function syncPrizeUi() {
+            const type = prizeType.value;
+
+            if (type === "Balance") {
+                prizeBalanceWrap.style.display = "block";
+                prizeEffectWrap.style.display = "none";
+                prizeValueHidden.value = prizeValueBalance.value || "";
+            }
+            else if (type === "Effect") {
+                prizeBalanceWrap.style.display = "none";
+                prizeEffectWrap.style.display = "block";
+                prizeValueHidden.value = prizeValueEffect.value || "";
+            }
+            else {
+                prizeBalanceWrap.style.display = "none";
+                prizeEffectWrap.style.display = "none";
+                prizeValueHidden.value = "";
+            }
+        }
+
+        prizeType.addEventListener("change", syncPrizeUi);
+        prizeValueBalance.addEventListener("input", syncPrizeUi);
+        prizeValueEffect.addEventListener("change", syncPrizeUi);
+
+        syncPrizeUi();
+    });
+</script>

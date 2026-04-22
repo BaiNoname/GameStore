@@ -22,6 +22,8 @@ namespace GameStore.Models
         public DbSet<EventParticipant> EventParticipants => Set<EventParticipant>();
         public DbSet<EventMessage> EventMessages => Set<EventMessage>();
         public DbSet<EventAnnouncement> EventAnnouncements => Set<EventAnnouncement>();
+        public DbSet<IconEffect> IconEffects => Set<IconEffect>();
+        public DbSet<UserIconEffect> UserIconEffects => Set<UserIconEffect>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -324,6 +326,9 @@ namespace GameStore.Models
                 entity.Property(e => e.CreatedBy).HasColumnName("createdby");
                 entity.Property(e => e.CreatedAt).HasColumnName("createdat").HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(e => e.UpdatedAt).HasColumnName("updatedat");
+                entity.Property(e => e.PrizeType).HasColumnName("prizetype");
+                entity.Property(e => e.PrizeValue).HasColumnName("prizevalue");
+                entity.Property(e => e.PrizeCondition).HasColumnName("prizecondition");
 
                 entity.HasIndex(e => e.Slug).IsUnique();
 
@@ -354,6 +359,8 @@ namespace GameStore.Models
                 entity.Property(e => e.JoinedAt).HasColumnName("joinedat").HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(e => e.IsCheckedIn).HasColumnName("ischeckedin").HasDefaultValue(false);
                 entity.Property(e => e.CheckedInAt).HasColumnName("checkedinat");
+                entity.Property(e => e.RewardGranted).HasColumnName("rewardgranted").HasDefaultValue(false);
+                entity.Property(e => e.RewardGrantedAt).HasColumnName("rewardgrantedat");
 
                 entity.HasIndex(e => new { e.EventId, e.UserId }).IsUnique();
 
@@ -418,6 +425,54 @@ namespace GameStore.Models
                       .WithMany()
                       .HasForeignKey(e => e.CreatedBy)
                       .HasConstraintName("fk_eventannouncement_nguoidung");
+            });
+
+            modelBuilder.Entity<IconEffect>(entity =>
+            {
+                entity.ToTable("iconeffect");
+
+                entity.HasKey(e => e.EffectId);
+
+                entity.Property(e => e.EffectId).HasColumnName("effectid");
+                entity.Property(e => e.EffectName).HasColumnName("effectname");
+                entity.Property(e => e.EffectCode).HasColumnName("effectcode");
+                entity.Property(e => e.EffectType).HasColumnName("effecttype");
+                entity.Property(e => e.CssClass).HasColumnName("cssclass");
+                entity.Property(e => e.Rarity).HasColumnName("rarity");
+                entity.Property(e => e.IsActive).HasColumnName("isactive");
+                entity.Property(e => e.CreatedAt).HasColumnName("createdat");
+
+                entity.HasIndex(e => e.EffectCode).IsUnique();
+            });
+
+            modelBuilder.Entity<UserIconEffect>(entity =>
+            {
+                entity.ToTable("usericoneffect");
+
+                entity.HasKey(e => e.UserIconEffectId);
+
+                entity.Property(e => e.UserIconEffectId).HasColumnName("usericoneffectid");
+                entity.Property(e => e.MaNguoiDung).HasColumnName("manguoidung");
+                entity.Property(e => e.EffectId).HasColumnName("effectid");
+                entity.Property(e => e.EventId).HasColumnName("eventid");
+                entity.Property(e => e.IsEquipped).HasColumnName("isequipped");
+                entity.Property(e => e.GrantedAt).HasColumnName("grantedat");
+                entity.Property(e => e.ExpiredAt).HasColumnName("expiredat");
+
+                entity.HasOne(e => e.NguoiDung)
+                      .WithMany(u => u.UserIconEffects)
+                      .HasForeignKey(e => e.MaNguoiDung)
+                      .HasConstraintName("fk_usericoneffect_user");
+
+                entity.HasOne(e => e.IconEffect)
+                      .WithMany(i => i.UserIconEffects)
+                      .HasForeignKey(e => e.EffectId)
+                      .HasConstraintName("fk_usericoneffect_effect");
+
+                entity.HasOne(e => e.Event)
+                      .WithMany(ev => ev.UserIconEffects)
+                      .HasForeignKey(e => e.EventId)
+                      .HasConstraintName("fk_usericoneffect_event");
             });
         }
     }

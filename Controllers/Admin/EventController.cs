@@ -14,13 +14,19 @@ namespace GameStore.Controllers.Admin
         private readonly EventService eventService;
         private readonly GameService gameService;
         private readonly IWebHostEnvironment env;
+        private readonly GameStoreContext db;
         private const int pageSize = 10;
 
-        public EventController(EventService _eventService, GameService _gameService, IWebHostEnvironment _env)
+        public EventController(
+            EventService _eventService,
+            GameService _gameService,
+            IWebHostEnvironment _env,
+            GameStoreContext _db)
         {
             eventService = _eventService;
             gameService = _gameService;
             env = _env;
+            db = _db;
         }
 
         private void LoadGameSelectList(string? selectedGameId = null)
@@ -31,6 +37,26 @@ namespace GameStore.Controllers.Admin
                 "TenGame",
                 selectedGameId
             );
+        }
+
+        private void LoadEffectSelectList(string? selectedEffectCode = null)
+        {
+            ViewBag.Effects = db.IconEffects
+                .Where(x => x.IsActive)
+                .OrderBy(x => x.EffectName)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.EffectCode,
+                    Text = x.EffectName + " (" + x.Rarity + ")",
+                    Selected = x.EffectCode == selectedEffectCode
+                })
+                .ToList();
+        }
+
+        private void LoadFormData(string? selectedGameId = null, string? selectedEffectCode = null)
+        {
+            LoadGameSelectList(selectedGameId);
+            LoadEffectSelectList(selectedEffectCode);
         }
 
         private string? SaveEventImage(IFormFile? photo)
@@ -66,6 +92,57 @@ namespace GameStore.Controllers.Admin
                 System.IO.File.Delete(path);
         }
 
+        private bool ValidatePrize(Event ev, out string errorMessage)
+        {
+            errorMessage = "";
+
+            ev.PrizeType = string.IsNullOrWhiteSpace(ev.PrizeType) ? null : ev.PrizeType.Trim();
+            ev.PrizeValue = string.IsNullOrWhiteSpace(ev.PrizeValue) ? null : ev.PrizeValue.Trim();
+            ev.PrizeCondition = string.IsNullOrWhiteSpace(ev.PrizeCondition) ? null : ev.PrizeCondition.Trim();
+
+            if (string.IsNullOrWhiteSpace(ev.PrizeType))
+            {
+                ev.PrizeType = null;
+                ev.PrizeValue = null;
+                ev.PrizeCondition = null;
+                return true;
+            }
+
+            if (ev.PrizeType != "Balance" && ev.PrizeType != "Effect")
+            {
+                errorMessage = "❌ Prize Type không hợp lệ!";
+                return false;
+            }
+
+            ev.PrizeCondition = "CheckIn";
+
+            if (ev.PrizeType == "Balance")
+            {
+                if (!decimal.TryParse(ev.PrizeValue, out decimal amount) || amount <= 0)
+                {
+                    errorMessage = "❌ Prize Value của Balance phải là số lớn hơn 0!";
+                    return false;
+                }
+            }
+            else if (ev.PrizeType == "Effect")
+            {
+                if (string.IsNullOrWhiteSpace(ev.PrizeValue))
+                {
+                    errorMessage = "❌ Vui lòng chọn effect!";
+                    return false;
+                }
+
+                var effectExists = db.IconEffects.Any(x => x.EffectCode == ev.PrizeValue && x.IsActive);
+                if (!effectExists)
+                {
+                    errorMessage = "❌ Effect không tồn tại hoặc đã bị vô hiệu hóa!";
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         [Route("event/index")]
         public IActionResult Index(string keyword = "", string eventType = "", string status = "", int page = 1)
         {
@@ -84,7 +161,7 @@ namespace GameStore.Controllers.Admin
         [Route("event/add")]
         public IActionResult Add(string filterKeyword = "", string filterEventType = "", string filterStatus = "", int currentPage = 1)
         {
-            LoadGameSelectList();
+            LoadFormData();
 
             ViewBag.Keyword = filterKeyword;
             ViewBag.EventType = filterEventType;
@@ -95,6 +172,7 @@ namespace GameStore.Controllers.Admin
             {
                 EventType = "Tournament",
                 AccessType = "Paid",
+                PrizeCondition = "CheckIn",
                 StartAt = DateTime.Now.AddDays(1),
                 EndAt = DateTime.Now.AddDays(1).AddHours(2)
             });
@@ -102,22 +180,31 @@ namespace GameStore.Controllers.Admin
 
         [HttpPost]
         [Route("event/add")]
-        public IActionResult Add(Event ev, IFormFile? photo, string filterKeyword = "", string filterEventType = "", string filterStatus = "", int currentPage = 1)
+        public IActionResult Add(
+            Event ev,
+            IFormFile? photo,
+            string filterKeyword = "",
+            string filterEventType = "",
+            string filterStatus = "",
+            int currentPage = 1)
         {
-            LoadGameSelectList(ev.RelatedGameId);
+            ev.Title = ev.Title?.Trim() ?? "";
+            ev.Slug = ev.Slug?.Trim().ToLower() ?? "";
+            ev.Summary = ev.Summary?.Trim();
+            ev.Content = ev.Content?.Trim() ?? "";
+            ev.EventType = Request.Form["EventType"].ToString().Trim();
+            ev.AccessType = Request.Form["AccessType"].ToString().Trim();
+            ev.PrizeInfo = ev.PrizeInfo?.Trim();
+            ev.PrizeType = Request.Form["PrizeType"].ToString().Trim();
+            ev.PrizeValue = Request.Form["PrizeValue"].ToString().Trim();
+            ev.PrizeCondition = "CheckIn";
+
+            LoadFormData(ev.RelatedGameId, ev.PrizeType == "Effect" ? ev.PrizeValue : null);
 
             ViewBag.Keyword = filterKeyword;
             ViewBag.EventType = filterEventType;
             ViewBag.Status = filterStatus;
             ViewBag.CurrentPage = currentPage;
-
-            ev.Title = ev.Title?.Trim() ?? "";
-            ev.Slug = ev.Slug?.Trim().ToLower() ?? "";
-            ev.Summary = ev.Summary?.Trim();
-            ev.Content = ev.Content?.Trim() ?? "";
-            ev.EventType = Request.Form["EventType"].ToString();
-            ev.AccessType = Request.Form["AccessType"].ToString();
-            ev.PrizeInfo = ev.PrizeInfo?.Trim();
 
             if (string.IsNullOrWhiteSpace(ev.Title))
             {
@@ -137,6 +224,14 @@ namespace GameStore.Controllers.Admin
             {
                 TempData["Msg"] = "❌ Content không được để trống!";
                 TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/Event/Add.cshtml", ev);
+            }
+
+            if (!ValidatePrize(ev, out string prizeError))
+            {
+                TempData["Msg"] = prizeError;
+                TempData["MsgType"] = "danger";
+                LoadFormData(ev.RelatedGameId, ev.PrizeType == "Effect" ? ev.PrizeValue : null);
                 return View("~/Views/Admin/Event/Add.cshtml", ev);
             }
 
@@ -224,7 +319,7 @@ namespace GameStore.Controllers.Admin
                 });
             }
 
-            LoadGameSelectList(ev.RelatedGameId);
+            LoadFormData(ev.RelatedGameId, ev.PrizeType == "Effect" ? ev.PrizeValue : null);
 
             ViewBag.Keyword = filterKeyword;
             ViewBag.EventType = filterEventType;
@@ -236,7 +331,14 @@ namespace GameStore.Controllers.Admin
 
         [HttpPost]
         [Route("event/edit/{id}")]
-        public IActionResult Edit(int id, Event ev, IFormFile? photo, string filterKeyword = "", string filterEventType = "", string filterStatus = "", int currentPage = 1)
+        public IActionResult Edit(
+            int id,
+            Event ev,
+            IFormFile? photo,
+            string filterKeyword = "",
+            string filterEventType = "",
+            string filterStatus = "",
+            int currentPage = 1)
         {
             var current = eventService.FindById(id);
             if (current == null)
@@ -252,13 +354,6 @@ namespace GameStore.Controllers.Admin
                 });
             }
 
-            LoadGameSelectList(ev.RelatedGameId ?? current.RelatedGameId);
-
-            ViewBag.Keyword = filterKeyword;
-            ViewBag.EventType = filterEventType;
-            ViewBag.Status = filterStatus;
-            ViewBag.CurrentPage = currentPage;
-
             ev.EventId = id;
             ev.Title = string.IsNullOrWhiteSpace(ev.Title) ? current.Title : ev.Title.Trim();
             ev.Slug = string.IsNullOrWhiteSpace(ev.Slug) ? current.Slug : ev.Slug.Trim().ToLower();
@@ -267,6 +362,16 @@ namespace GameStore.Controllers.Admin
             ev.EventType = string.IsNullOrWhiteSpace(Request.Form["EventType"]) ? current.EventType : Request.Form["EventType"].ToString().Trim();
             ev.AccessType = string.IsNullOrWhiteSpace(Request.Form["AccessType"]) ? current.AccessType : Request.Form["AccessType"].ToString().Trim();
             ev.PrizeInfo = ev.PrizeInfo?.Trim();
+            ev.PrizeType = Request.Form["PrizeType"].ToString().Trim();
+            ev.PrizeValue = Request.Form["PrizeValue"].ToString().Trim();
+            ev.PrizeCondition = "CheckIn";
+
+            LoadFormData(ev.RelatedGameId ?? current.RelatedGameId, ev.PrizeType == "Effect" ? ev.PrizeValue : null);
+
+            ViewBag.Keyword = filterKeyword;
+            ViewBag.EventType = filterEventType;
+            ViewBag.Status = filterStatus;
+            ViewBag.CurrentPage = currentPage;
 
             if (string.IsNullOrWhiteSpace(ev.Title))
             {
@@ -286,6 +391,14 @@ namespace GameStore.Controllers.Admin
             {
                 TempData["Msg"] = "❌ Content không được để trống!";
                 TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/Event/Edit.cshtml", current);
+            }
+
+            if (!ValidatePrize(ev, out string prizeError))
+            {
+                TempData["Msg"] = prizeError;
+                TempData["MsgType"] = "danger";
+                LoadFormData(ev.RelatedGameId ?? current.RelatedGameId, ev.PrizeType == "Effect" ? ev.PrizeValue : null);
                 return View("~/Views/Admin/Event/Edit.cshtml", current);
             }
 
@@ -369,7 +482,7 @@ namespace GameStore.Controllers.Admin
             }
             else
             {
-                TempData["Msg"] = "❌ Xóa event thất bại!";
+                TempData["Msg"] = "❌ Không thể xóa event vì event đã có giao dịch hoặc dữ liệu liên quan.";
                 TempData["MsgType"] = "danger";
             }
 

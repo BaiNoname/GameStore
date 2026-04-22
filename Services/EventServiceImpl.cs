@@ -231,6 +231,9 @@ namespace GameStore.Services
                 ev.EventType = string.IsNullOrWhiteSpace(ev.EventType) ? "Tournament" : ev.EventType.Trim();
                 ev.AccessType = string.IsNullOrWhiteSpace(ev.AccessType) ? "Paid" : ev.AccessType.Trim();
                 ev.PrizeInfo = ev.PrizeInfo?.Trim();
+                ev.PrizeType = string.IsNullOrWhiteSpace(ev.PrizeType) ? null : ev.PrizeType.Trim();
+                ev.PrizeValue = string.IsNullOrWhiteSpace(ev.PrizeValue) ? null : ev.PrizeValue.Trim();
+                ev.PrizeCondition = string.IsNullOrWhiteSpace(ev.PrizeCondition) ? null : ev.PrizeCondition.Trim();
 
                 var startUtc = EnsureUtc(ev.StartAt);
                 var endUtc = EnsureUtc(ev.EndAt);
@@ -289,6 +292,9 @@ namespace GameStore.Services
                 current.Price = ev.Price;
                 current.MaxParticipants = ev.MaxParticipants;
                 current.PrizeInfo = ev.PrizeInfo?.Trim();
+                current.PrizeType = string.IsNullOrWhiteSpace(ev.PrizeType) ? null : ev.PrizeType.Trim();
+                current.PrizeValue = string.IsNullOrWhiteSpace(ev.PrizeValue) ? null : ev.PrizeValue.Trim();
+                current.PrizeCondition = string.IsNullOrWhiteSpace(ev.PrizeCondition) ? null : ev.PrizeCondition.Trim();
 
                 current.EndAt = endUtc;
                 current.Status = CalculateStatus(current.StartAt, current.EndAt);
@@ -309,6 +315,13 @@ namespace GameStore.Services
             {
                 var ev = db.Events.FirstOrDefault(x => x.EventId == id);
                 if (ev == null) return false;
+
+                bool hasTransactions = db.GiaoDiches.Any(x => x.EventId == id);
+                if (hasTransactions)
+                {
+                    Console.WriteLine("EVENT DELETE ERROR: Event has related transactions.");
+                    return false;
+                }
 
                 db.Events.Remove(ev);
                 return db.SaveChanges() > 0;
