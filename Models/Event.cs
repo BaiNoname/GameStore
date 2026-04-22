@@ -78,6 +78,18 @@ namespace GameStore.Models
         [Column("updatedat")]
         public DateTime? UpdatedAt { get; set; }
 
+        [Column("prizetype")]
+        [StringLength(20)]
+        public string? PrizeType { get; set; }
+
+        [Column("prizevalue")]
+        [StringLength(255)]
+        public string? PrizeValue { get; set; }
+
+        [Column("prizecondition")]
+        [StringLength(20)]
+        public string? PrizeCondition { get; set; }
+
         [ForeignKey(nameof(RelatedGameId))]
         public virtual Game? Game { get; set; }
 
@@ -87,5 +99,6 @@ namespace GameStore.Models
         public virtual ICollection<EventParticipant> EventParticipants { get; set; } = new List<EventParticipant>();
         public virtual ICollection<EventMessage> EventMessages { get; set; } = new List<EventMessage>();
         public virtual ICollection<EventAnnouncement> EventAnnouncements { get; set; } = new List<EventAnnouncement>();
+        public virtual ICollection<UserIconEffect> UserIconEffects { get; set; } = new List<UserIconEffect>();
     }
 }

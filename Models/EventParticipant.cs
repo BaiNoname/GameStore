@@ -35,6 +35,12 @@ namespace GameStore.Models
         [Column("checkedinat")]
         public DateTime? CheckedInAt { get; set; }
 
+        [Column("rewardgranted")]
+        public bool RewardGranted { get; set; } = false;
+
+        [Column("rewardgrantedat")]
+        public DateTime? RewardGrantedAt { get; set; }
+
         [ForeignKey(nameof(EventId))]
         public virtual Event? Event { get; set; }
 

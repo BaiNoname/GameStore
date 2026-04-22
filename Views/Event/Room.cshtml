@@ -8,6 +8,7 @@
     var messages = ViewBag.Messages as List<GameStore.Models.EventMessage> ?? new List<GameStore.Models.EventMessage>();
     var myParticipant = ViewBag.MyParticipant as GameStore.Models.EventParticipant;
     bool isArchivedRoom = ViewBag.IsArchivedRoom != null && (bool)ViewBag.IsArchivedRoom;
+    bool canClaimReward = ViewBag.CanClaimReward != null && (bool)ViewBag.CanClaimReward;
 
     string GetImage(string? image)
     {
@@ -18,6 +19,16 @@
             return image;
 
         return Url.Content("~/images/events/" + image);
+    }
+
+    var userEffectMap = ViewBag.UserEffectMap as Dictionary<int, string> ?? new Dictionary<int, string>();
+
+    string GetEffectCssClass(int? userId)
+    {
+        if (userId.HasValue && userEffectMap.ContainsKey(userId.Value))
+            return userEffectMap[userId.Value];
+
+        return "";
     }
 }
 
@@ -81,6 +92,15 @@
                                 Event List
                             </a>
                         </div>
+
+                        @if (canClaimReward)
+                        {
+                            <form method="post" action="/event/room/@Model.EventId/claim-reward">
+                                <button type="submit" class="gs-action-btn primary">
+                                    🎁 Nhận phần thưởng
+                                </button>
+                            </form>
+                        }
                     </div>
                 </div>
 
@@ -101,7 +121,7 @@
                             @foreach (var msg in messages)
                             {
                                 <div class="gs-chat-message">
-                                    <div class="gs-chat-avatar">
+                                    <div class="gs-chat-avatar @(GetEffectCssClass(msg.UserId))">
                                         @((msg.NguoiDung?.TenNguoiDung ?? msg.NguoiDung?.Email ?? "U").Substring(0, 1).ToUpper())
                                     </div>
 
@@ -246,18 +266,19 @@
                     }
                 }
 
-                function appendMessage(userName, content, createdAt) {
+                function appendMessage(userName, content, createdAt, effectCssClass) {
                     const empty = document.getElementById("emptyChat");
                     if (empty) {
                         empty.remove();
                     }
 
                     const firstLetter = (userName || "U").trim().charAt(0).toUpperCase();
+                    const avatarClass = effectCssClass ? `gs-chat-avatar ${effectCssClass}` : "gs-chat-avatar";
 
                     const wrapper = document.createElement("div");
                     wrapper.className = "gs-chat-message";
                     wrapper.innerHTML = `
-                        <div class="gs-chat-avatar">${firstLetter}</div>
+                        <div class="${avatarClass}">${firstLetter}</div>
                         <div class="gs-chat-bubble-wrap">
                             <div class="gs-chat-meta">
                                 <span class="gs-chat-user">${userName}</span>
@@ -281,8 +302,9 @@
                     .withUrl("/eventChatHub")
                     .build();
 
+
                 connection.on("ReceiveEventMessage", function (message) {
-                    appendMessage(message.userName, message.content, message.createdAt);
+                appendMessage(message.userName, message.content, message.createdAt, message.effectCssClass);
                 });
 
                 try {
@@ -706,6 +728,48 @@
     }
 
     }
+
+    .gs-chat-avatar.effect-neon-purple {
+        box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.22), 0 0 18px rgba(168, 85, 247, 0.72), 0 0 30px rgba(168, 85, 247, 0.42);
+    }
+
+    .gs-chat-avatar.effect-champion-gold {
+        box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.22), 0 0 18px rgba(234, 179, 8, 0.72), 0 0 30px rgba(234, 179, 8, 0.42);
+    }
+
+    .gs-chat-avatar.effect-community-blue {
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22), 0 0 18px rgba(59, 130, 246, 0.72), 0 0 30px rgba(59, 130, 246, 0.42);
+    }
+
+    .gs-chat-avatar.effect-crimson-blaze {
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.24), 0 0 16px rgba(239, 68, 68, 0.78), 0 0 28px rgba(185, 28, 28, 0.42);
+    }
+
+    .gs-chat-avatar.effect-emerald-pulse {
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22), 0 0 16px rgba(16, 185, 129, 0.76), 0 0 28px rgba(5, 150, 105, 0.35);
+    }
+
+    .gs-chat-avatar.effect-frost-crown {
+        box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.24), 0 0 16px rgba(125, 211, 252, 0.78), 0 0 28px rgba(186, 230, 253, 0.45);
+    }
+
+    .gs-chat-avatar.effect-shadow-rift {
+        box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.24), 0 0 18px rgba(17, 24, 39, 0.82), 0 0 32px rgba(88, 28, 135, 0.38);
+    }
+
+    .gs-chat-avatar.effect-sunset-nova {
+        box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.25), 0 0 16px rgba(249, 115, 22, 0.76), 0 0 28px rgba(244, 114, 182, 0.34);
+    }
+
+    .gs-chat-avatar.effect-cyber-lime {
+        box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.26), 0 0 16px rgba(132, 204, 22, 0.78), 0 0 28px rgba(190, 242, 100, 0.36);
+    }
+
+    .gs-chat-avatar.effect-rose-halo {
+        box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.24), 0 0 16px rgba(236, 72, 153, 0.72), 0 0 28px rgba(192, 132, 252, 0.32);
+    }
+
+
 </style>
 
 <script>

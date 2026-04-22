@@ -19,5 +19,7 @@
         public List<GiaoDich> GiaoDiches { get; set; } = new();
         public List<DanhGia> DanhGias { get; set; } = new();
         public GioHang? GioHang { get; set; }
+
+        public virtual ICollection<UserIconEffect> UserIconEffects { get; set; } = new List<UserIconEffect>();
     }
 }

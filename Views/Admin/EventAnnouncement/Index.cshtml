@@ -29,7 +29,6 @@
     }
 
     <div class="row g-4">
-        <!-- LEFT: ADD FORM -->
         <div class="col-lg-5">
             <div class="card shadow-lg border-0">
                 <div class="card-header bg-light">
@@ -58,7 +57,6 @@
             </div>
         </div>
 
-        <!-- RIGHT: LIST -->
         <div class="col-lg-7">
             <div class="card shadow-lg border-0">
                 <div class="card-header bg-light">
@@ -80,11 +78,14 @@
                                         </div>
                                     </div>
 
-                                    <a href="/admin/event-announcement/delete/@item.AnnouncementId"
-                                       class="btn btn-sm btn-danger"
-                                       onclick="return confirm('Bạn có chắc muốn xóa announcement này?');">
+                                    <button type="button"
+                                            class="btn btn-sm btn-danger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteAnnouncementModal"
+                                            data-announcement-id="@item.AnnouncementId"
+                                            data-announcement-title="@item.Title">
                                         Delete
-                                    </a>
+                                    </button>
                                 </div>
 
                                 <div class="mt-2 text-dark" style="white-space: pre-line;">
@@ -102,3 +103,55 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="deleteAnnouncementModal" tabindex="-1" aria-labelledby="deleteAnnouncementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-secondary rounded-4">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="deleteAnnouncementModalLabel">Xác nhận xóa announcement</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                Bạn có chắc muốn xóa announcement <strong id="deleteAnnouncementTitle"></strong> không? 🛑
+            </div>
+
+            <div class="modal-footer border-secondary flex-wrap">
+                <form method="get" id="deleteAnnouncementForm">
+                    <button type="submit" class="btn btn-danger">
+                        Đồng ý xóa
+                    </button>
+                </form>
+
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Hủy
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media (max-width: 575.98px) {
+        .modal-footer form,
+        .modal-footer .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const deleteModal = document.getElementById("deleteAnnouncementModal");
+        if (!deleteModal) return;
+
+        deleteModal.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget;
+            const announcementId = button.getAttribute("data-announcement-id");
+            const announcementTitle = button.getAttribute("data-announcement-title");
+
+            document.getElementById("deleteAnnouncementTitle").textContent = announcementTitle;
+            document.getElementById("deleteAnnouncementForm").action = "/admin/event-announcement/delete/" + announcementId;
+        });
+    });
+</script>
