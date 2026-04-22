@@ -90,3 +90,18 @@ thông tin thẻ test momo:
 Game down zip test demo:
 https://drive.google.com/file/d/1OJDAHh7zbwJKS6K5YIzuYRBjVyUHzU8e/view?usp=sharing
 
+
+sql insert effect:
+INSERT INTO iconeffect (effectname, effectcode, effecttype, cssclass, rarity)
+VALUES
+('Neon Purple', 'neon-purple', 'Frame', 'effect-neon-purple', 'Rare'),
+('Champion Gold', 'champion-gold', 'Frame', 'effect-champion-gold', 'Epic'),
+('Community Blue', 'community-blue', 'Glow', 'effect-community-blue', 'Common');
+('Crimson Blaze', 'crimson-blaze', 'Glow', 'effect-crimson-blaze', 'Epic'),
+('Emerald Pulse', 'emerald-pulse', 'Glow', 'effect-emerald-pulse', 'Rare'),
+('Frost Crown', 'frost-crown', 'Frame', 'effect-frost-crown', 'Epic'),
+('Shadow Rift', 'shadow-rift', 'Aura', 'effect-shadow-rift', 'Legendary'),
+('Sunset Nova', 'sunset-nova', 'Glow', 'effect-sunset-nova', 'Rare'),
+('Cyber Lime', 'cyber-lime', 'Aura', 'effect-cyber-lime', 'Epic'),
+('Rose Halo', 'rose-halo', 'Halo', 'effect-rose-halo', 'Rare');
+
