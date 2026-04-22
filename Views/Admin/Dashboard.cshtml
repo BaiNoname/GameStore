@@ -1,103 +1,565 @@
 ﻿@model GameStore.Pagination.Admin.DashboardVM
+@using System.Text.Json
+
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Quản lý Dashboard";
+    ViewData["Title"] = "Admin Dashboard";
 }
 
-<div class="row">
+<div class="dashboard-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="dashboard-title mb-1">Dashboard Overview</h2>
+            <p class="dashboard-subtitle mb-0">Theo dõi doanh thu, đơn hàng, game và sự kiện trong hệ thống.</p>
+        </div>
 
-    <!-- CARD -->
-    <div class="col-md-3">
-        <div class="card bg-primary text-white p-3">
-            <h5>Total Revenue</h5>
-            <h3>@Model.TotalRevenue.ToString("N0") VND</h3>
+        <div class="dashboard-chip">
+            Last updated: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card bg-success text-white p-3">
-            <h5>Orders</h5>
-            <h3>@Model.TotalOrders</h3>
+    <!-- Main stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card stat-primary">
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-value">@Model.TotalRevenue.ToString("N0") VND</div>
+                <div class="stat-meta">This month: @Model.RevenueThisMonth.ToString("N0") VND</div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card stat-success">
+                <div class="stat-label">Orders</div>
+                <div class="stat-value">@Model.TotalOrders</div>
+                <div class="stat-meta">Success: @Model.SuccessOrders · Pending: @Model.PendingOrders</div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card stat-warning">
+                <div class="stat-label">Users</div>
+                <div class="stat-value">@Model.TotalUsers</div>
+                <div class="stat-meta">Tổng tài khoản trong hệ thống</div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card stat-danger">
+                <div class="stat-label">Games</div>
+                <div class="stat-value">@Model.TotalGames</div>
+                <div class="stat-meta">Sản phẩm hiện đang quản lý</div>
+            </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card bg-warning text-dark p-3">
-            <h5>Users</h5>
-            <h3>@Model.TotalUsers</h3>
+    <!-- Event stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card" style="color:#7c3aed;">
+                <div class="stat-label">Total Events</div>
+                <div class="stat-value">@Model.TotalEvents</div>
+                <div class="stat-meta">Tổng số sự kiện trong hệ thống</div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card" style="color:#2563eb;">
+                <div class="stat-label">Upcoming Events</div>
+                <div class="stat-value">@Model.UpcomingEvents</div>
+                <div class="stat-meta">Sự kiện sắp diễn ra</div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card" style="color:#16a34a;">
+                <div class="stat-label">Live Events</div>
+                <div class="stat-value">@Model.LiveEvents</div>
+                <div class="stat-meta">Sự kiện đang diễn ra</div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card" style="color:#dc2626;">
+                <div class="stat-label">Ended Events</div>
+                <div class="stat-value">@Model.EndedEvents</div>
+                <div class="stat-meta">Sự kiện đã kết thúc</div>
+            </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card bg-danger text-white p-3">
-            <h5>Games</h5>
-            <h3>@Model.TotalGames</h3>
+    <!-- Revenue chart + quick insights -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-lg-8">
+            <div class="dashboard-card chart-card h-100">
+                <div class="card-head mb-3">
+                    <div>
+                        <h5 class="mb-1">Revenue - Last 7 Days</h5>
+                        <p class="mb-0 text-muted-custom">Chart luôn lấy đúng 7 ngày gần nhất, kể cả ngày không có doanh thu.</p>
+                    </div>
+                </div>
+
+                <div class="chart-wrap">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="dashboard-card insight-card h-100">
+                <h5 class="mb-3">Quick Insights</h5>
+
+                <div class="insight-item">
+                    <span>Revenue Today</span>
+                    <strong>@Model.RevenueToday.ToString("N0") VND</strong>
+                </div>
+
+                <div class="insight-item">
+                    <span>Revenue This Month</span>
+                    <strong>@Model.RevenueThisMonth.ToString("N0") VND</strong>
+                </div>
+
+                <div class="insight-item">
+                    <span>Average Order Value</span>
+                    <strong>@Model.AvgOrderValue.ToString("N0") VND</strong>
+                </div>
+
+                <div class="insight-item border-0 pb-0">
+                    <span>Successful Orders</span>
+                    <strong>@Model.SuccessOrders</strong>
+                </div>
+            </div>
         </div>
     </div>
 
-</div>
+    <!-- Top game + recent orders -->
+    <div class="row g-4">
+        <div class="col-12 col-xl-5">
+            <div class="dashboard-card h-100">
+                <div class="card-head mb-3">
+                    <h5 class="mb-0">🔥 Top Games</h5>
+                </div>
 
-<hr />
-
-<!-- CHART -->
-<div class="card p-3">
-    <h5>Revenue (7 days)</h5>
-    <canvas id="revenueChart"></canvas>
-</div>
-
-<hr />
-
-<div class="row">
-
-    <!-- TOP GAME -->
-    <div class="col-md-6">
-        <div class="card p-3">
-            <h5>🔥 Top Games</h5>
-            <ul>
-                @foreach (var g in Model.TopGames)
+                @if (Model.TopGames.Any())
                 {
-                    <li>@g.TenGame - @g.SoLuotTai lượt tải</li>
+                    <div class="top-game-list">
+                        @for (int i = 0; i < Model.TopGames.Count; i++)
+                        {
+                            var g = Model.TopGames[i];
+                            <div class="top-game-item">
+                                <div class="top-game-rank">#@(i + 1)</div>
+                                <div class="top-game-content">
+                                    <div class="top-game-name">@g.TenGame</div>
+                                    <div class="top-game-download">@g.SoLuotTai.ToString("N0") lượt tải</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 }
-            </ul>
+                else
+                {
+                    <div class="empty-box">Chưa có dữ liệu top game.</div>
+                }
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-7">
+            <div class="dashboard-card h-100">
+                <div class="card-head mb-3">
+                    <h5 class="mb-0">🧾 Recent Orders</h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table dashboard-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>MaGD</th>
+                                <th>Email</th>
+                                <th>Money</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentOrders.Any())
+                            {
+                                @foreach (var o in Model.RecentOrders)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@o.MaGD</td>
+                                        <td>@o.Email</td>
+                                        <td>@o.ThanhTien.ToString("N0") VND</td>
+                                        <td>
+                                            @{
+                                                var badgeClass = o.TrangThai == "Success"
+                                                ? "status-success"
+                                                : o.TrangThai == "Pending"
+                                                ? "status-pending"
+                                                : "status-failed";
+                                            }
+                                            <span class="status-badge @badgeClass">@o.TrangThai</span>
+                                        </td>
+                                        <td>@o.NgayMua.ToString("dd/MM/yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Chưa có giao dịch nào.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- RECENT ORDERS -->
-    <div class="col-md-6">
-        <div class="card p-3">
-            <h5>🧾 Recent Orders</h5>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>MaGD</th>
-                        <th>Email</th>
-                        <th>Money</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var o in Model.RecentOrders)
-                    {
-                        <tr>
-                            <td>@o.MaGD</td>
-                            <td>@o.Email</td>
-                            <td>@o.ThanhTien.ToString("N0")</td>
-                            <td>@o.TrangThai</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+    <!-- Event lists -->
+    <div class="row g-4 mt-1">
+        <div class="col-12 col-xl-6">
+            <div class="dashboard-card h-100">
+                <div class="card-head mb-3">
+                    <h5 class="mb-0">🎯 Recent Events</h5>
+                </div>
+
+                @if (Model.RecentEvents.Any())
+                {
+                    <div class="event-list">
+                        @foreach (var e in Model.RecentEvents)
+                        {
+                            <div class="event-item">
+                                <div class="event-item-title">@e.Title</div>
+                                <div class="event-item-meta">
+                                    <span class="status-badge @(e.Status == "Live" ? "status-success" : e.Status == "Upcoming" ? "status-pending" : "status-failed")">
+                                        @e.Status
+                                    </span>
+                                    <span>@e.EventType</span>
+                                    <span>@e.CurrentParticipants / @(e.MaxParticipants?.ToString() ?? "∞") participants</span>
+                                </div>
+                                <div class="event-item-time">
+                                    @e.StartAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    -
+                                    @e.EndAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-box">Chưa có sự kiện nào.</div>
+                }
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="dashboard-card h-100">
+                <div class="card-head mb-3">
+                    <h5 class="mb-0">👥 Top Joined Events</h5>
+                </div>
+
+                @if (Model.TopJoinedEvents.Any())
+                {
+                    <div class="event-list">
+                        @foreach (var e in Model.TopJoinedEvents)
+                        {
+                            <div class="event-item">
+                                <div class="event-item-title">@e.Title</div>
+                                <div class="event-item-meta">
+                                    <span class="status-badge @(e.Status == "Live" ? "status-success" : e.Status == "Upcoming" ? "status-pending" : "status-failed")">
+                                        @e.Status
+                                    </span>
+                                    <span>@e.EventType</span>
+                                    <span class="fw-semibold">@e.CurrentParticipants / @(e.MaxParticipants?.ToString() ?? "∞") participants</span>
+                                </div>
+                                <div class="event-item-time">
+                                    Starts: @e.StartAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-box">Chưa có dữ liệu tham gia event.</div>
+                }
+            </div>
         </div>
     </div>
-
 </div>
+
+<style>
+    .dashboard-page {
+        padding: 6px 2px 10px;
+    }
+
+    .dashboard-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .dashboard-subtitle {
+        color: #6b7280;
+    }
+
+    .dashboard-chip {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: #f3f4f6;
+        color: #374151;
+        font-weight: 600;
+        font-size: .9rem;
+    }
+
+    .dashboard-card {
+        background: #fff;
+        border: 1px solid #eef1f5;
+        border-radius: 22px;
+        box-shadow: 0 12px 30px rgba(17, 24, 39, 0.06);
+        padding: 22px;
+    }
+
+    .stat-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+        .stat-card::after {
+            content: "";
+            position: absolute;
+            right: -18px;
+            top: -18px;
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            opacity: .12;
+            background: currentColor;
+        }
+
+    .stat-primary {
+        color: #2563eb;
+    }
+
+    .stat-success {
+        color: #16a34a;
+    }
+
+    .stat-warning {
+        color: #d97706;
+    }
+
+    .stat-danger {
+        color: #dc2626;
+    }
+
+    .stat-label {
+        font-size: .92rem;
+        font-weight: 700;
+        color: #6b7280;
+        margin-bottom: 10px;
+    }
+
+    .stat-value {
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.2;
+        margin-bottom: 8px;
+    }
+
+    .stat-meta {
+        color: #6b7280;
+        font-size: .9rem;
+    }
+
+    .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .text-muted-custom {
+        color: #6b7280;
+        font-size: .94rem;
+    }
+
+    .chart-wrap {
+        position: relative;
+        min-height: 320px;
+    }
+
+    .insight-card h5 {
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .insight-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid #eef1f5;
+    }
+
+        .insight-item span {
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .insight-item strong {
+            color: #111827;
+            font-size: 1rem;
+        }
+
+    .top-game-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .top-game-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px;
+        border-radius: 16px;
+        background: #f8fafc;
+    }
+
+    .top-game-rank {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #111827;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+    }
+
+    .top-game-name {
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .top-game-download {
+        color: #6b7280;
+        font-size: .92rem;
+        margin-top: 2px;
+    }
+
+    .dashboard-table thead th {
+        border-bottom: 1px solid #e5e7eb;
+        color: #6b7280;
+        font-size: .9rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .dashboard-table tbody td {
+        border-bottom: 1px solid #f3f4f6;
+        color: #111827;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 82px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: .82rem;
+        font-weight: 700;
+    }
+
+    .status-success {
+        background: rgba(34, 197, 94, 0.12);
+        color: #15803d;
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.14);
+        color: #b45309;
+    }
+
+    .status-failed {
+        background: rgba(239, 68, 68, 0.12);
+        color: #b91c1c;
+    }
+
+    .empty-box {
+        padding: 18px;
+        border-radius: 16px;
+        background: #f8fafc;
+        color: #6b7280;
+    }
+
+    .event-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .event-item {
+        padding: 16px;
+        border-radius: 16px;
+        background: #f8fafc;
+        border: 1px solid #eef1f5;
+    }
+
+    .event-item-title {
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .event-item-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        color: #6b7280;
+        font-size: .92rem;
+        margin-bottom: 6px;
+    }
+
+    .event-item-time {
+        color: #4b5563;
+        font-size: .9rem;
+    }
+
+    @@media (max-width: 767.98px) {
+        .dashboard-card {
+            padding: 18px;
+            border-radius: 18px;
+        }
+
+        .dashboard-title {
+            font-size: 1.6rem;
+        }
+
+        .stat-value {
+            font-size: 1.35rem;
+        }
+
+        .chart-wrap {
+            min-height: 260px;
+        }
+    }
+</style>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        const labels = @Html.Raw(Json.Serialize(Model.RevenueChart.Select(x => x.Date)));
-        const data = @Html.Raw(Json.Serialize(Model.RevenueChart.Select(x => x.Revenue)));
+        const labels = @Html.Raw(JsonSerializer.Serialize(Model.RevenueChart.Select(x => x.Date)));
+        const data = @Html.Raw(JsonSerializer.Serialize(Model.RevenueChart.Select(x => x.Revenue)));
 
         new Chart(document.getElementById("revenueChart"), {
             type: 'line',
@@ -106,8 +568,24 @@
                 datasets: [{
                     label: 'Revenue',
                     data: data,
-                    borderWidth: 2
+                    borderWidth: 3,
+                    tension: 0.35,
+                    fill: true
                 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
             }
         });
     </script>
