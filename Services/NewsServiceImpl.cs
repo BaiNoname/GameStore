@@ -283,10 +283,32 @@ namespace GameStore.Services
 
                 existing.IsFeatured = news.IsFeatured;
 
+                // PublishedAt: chỉ update nếu khác giá trị cũ
                 if (news.PublishedAt != default)
-                    existing.PublishedAt = EnsureUtc(news.PublishedAt);
+                {
+                    var currentPublishedUtc = EnsureUtc(existing.PublishedAt);
+                    var postedPublishedUtc = EnsureUtc(news.PublishedAt);
 
-                existing.ExpiredAt = EnsureUtc(news.ExpiredAt);
+                    if (currentPublishedUtc != postedPublishedUtc)
+                    {
+                        existing.PublishedAt = postedPublishedUtc;
+                    }
+                }
+
+                // ExpiredAt: chỉ update nếu khác giá trị cũ
+                var currentExpiredUtc = EnsureUtc(existing.ExpiredAt);
+                var postedExpiredUtc = EnsureUtc(news.ExpiredAt);
+
+                bool expiredChanged =
+                    (currentExpiredUtc == null && postedExpiredUtc != null) ||
+                    (currentExpiredUtc != null && postedExpiredUtc == null) ||
+                    (currentExpiredUtc != null && postedExpiredUtc != null && currentExpiredUtc.Value != postedExpiredUtc.Value);
+
+                if (expiredChanged)
+                {
+                    existing.ExpiredAt = postedExpiredUtc;
+                }
+
                 existing.UpdatedAt = now;
 
                 return db.SaveChanges() > 0;

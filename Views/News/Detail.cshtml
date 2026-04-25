@@ -5,6 +5,9 @@
 
     var trendingNews = ViewBag.TrendingNews as List<GameStore.Models.News> ?? new List<GameStore.Models.News>();
     var latestNews = ViewBag.LatestNews as List<GameStore.Models.News> ?? new List<GameStore.Models.News>();
+    string newsType = ViewBag.NewsType as string ?? "All";
+    int currentPage = ViewBag.Page != null ? (int)ViewBag.Page : 1;
+    string backUrl = $"/news?newsType={Uri.EscapeDataString(newsType)}&page={currentPage}";
 
     string GetImage(string? image)
     {
@@ -68,7 +71,7 @@
                     <div class="gs-breadcrumb mb-3">
                         <a href="/">Home</a>
                         <span>/</span>
-                        <a href="/news">News</a>
+                        <a href="@backUrl">News</a>
                         <span>/</span>
                         <span class="active">@Model.Title</span>
                     </div>
@@ -103,7 +106,7 @@
                     </div>
 
                     <div class="gs-article-footer mt-4">
-                        <a href="/news" class="gs-btn-primary">← Back to News</a>
+                        <a href="@backUrl" class="gs-btn-primary">← Back to News</a>
                     </div>
                 </article>
             </div>
@@ -117,7 +120,7 @@
                     {
                         @foreach (var item in trendingNews.Where(x => x.NewsId != Model.NewsId).Take(4))
                         {
-                            <a href="/news/detail/@item.Slug">
+                            <a href="/news/detail/@item.Slug?newsType=@Uri.EscapeDataString(newsType)&page=@currentPage">
                                 <article class="gs-side-card">
                                     <img src="@GetImage(item.Thumbnail)" alt="@item.Title" />
                                     <div>
@@ -143,7 +146,7 @@
                     {
                         @foreach (var item in latestNews.Where(x => x.NewsId != Model.NewsId).Take(4))
                         {
-                            <a href="/news/detail/@item.Slug">
+                            <a href="/news/detail/@item.Slug?newsType=@Uri.EscapeDataString(newsType)&page=@currentPage">
                                 <article class="gs-side-card">
                                     <img src="@GetImage(item.Thumbnail)" alt="@item.Title" />
                                     <div>

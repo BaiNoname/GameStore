@@ -1,7 +1,7 @@
-﻿using GameStore.Pagination.User;
+﻿using GameStore.Hubs;
+using GameStore.Pagination.User;
 using GameStore.Services;
 using Microsoft.AspNetCore.Mvc;
-using GameStore.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
 namespace GameStore.Controllers
@@ -39,6 +39,34 @@ namespace GameStore.Controllers
             userIconEffectService = _userIconEffectService;
         }
 
+        private string BuildEventListUrl(string eventType = "All", string status = "All", int page = 1)
+        {
+            return Url.Action("Index", "Event", new { eventType, status, page }) ?? "/event?eventType=All&status=All&page=1";
+        }
+
+        private string BuildEventDetailUrl(string slug, string? returnUrl = null)
+        {
+            var url = Url.Action("Detail", "Event", new { slug, returnUrl });
+            return string.IsNullOrWhiteSpace(url) ? $"/event/detail/{slug}" : url;
+        }
+
+        private string BuildEventRoomUrl(int id, string? returnUrl = null)
+        {
+            var url = Url.Action("Room", "Event", new { id, returnUrl });
+            return string.IsNullOrWhiteSpace(url) ? $"/event/room/{id}" : url;
+        }
+
+        private string NormalizeReturnUrl(string? returnUrl, string? fallback = null)
+        {
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return returnUrl;
+
+            if (!string.IsNullOrWhiteSpace(fallback) && Url.IsLocalUrl(fallback))
+                return fallback;
+
+            return BuildEventListUrl();
+        }
+
         private IActionResult RedirectToLoginWithReturnUrl(string returnUrl)
         {
             return Redirect($"/auth/login?returnUrl={Uri.EscapeDataString(returnUrl)}");
@@ -49,6 +77,7 @@ namespace GameStore.Controllers
         public IActionResult Index(string eventType = "All", string status = "All", int page = 1)
         {
             ViewBag.HideSubBar = true;
+
             int pageSize = 6;
             int totalPages;
 
@@ -73,18 +102,22 @@ namespace GameStore.Controllers
         }
 
         [Route("detail/{slug}")]
-        public IActionResult Detail(string slug)
+        public IActionResult Detail(string slug, string? returnUrl = null)
         {
             ViewBag.HideSubBar = true;
+
+            var fallbackListUrl = BuildEventListUrl();
+            returnUrl = NormalizeReturnUrl(returnUrl, fallbackListUrl);
+
             if (string.IsNullOrWhiteSpace(slug))
-                return RedirectToAction("Index");
+                return Redirect(returnUrl);
 
             var ev = eventService.FindBySlug(slug);
             if (ev == null)
             {
                 TempData["ToastMessage"] = "Sự kiện không tồn tại";
                 TempData["ToastType"] = "error";
-                return RedirectToAction("Index");
+                return Redirect(returnUrl);
             }
 
             bool joined = false;
@@ -97,64 +130,67 @@ namespace GameStore.Controllers
 
             ViewBag.IsJoined = joined;
             ViewBag.Announcements = announcementService.GetByEvent(ev.EventId);
+            ViewBag.ReturnUrl = returnUrl;
 
             return View("~/Views/Event/Detail.cshtml", ev);
         }
 
         [HttpPost]
         [Route("join/{id}")]
-        public async Task<IActionResult> Join(int id, string method = "balance")
+        public async Task<IActionResult> Join(int id, string method = "balance", string? returnUrl = null)
         {
+            var fallbackListUrl = BuildEventListUrl();
+            returnUrl = NormalizeReturnUrl(returnUrl, fallbackListUrl);
+
             var ev = eventService.FindById(id);
             if (ev == null)
             {
                 TempData["ToastMessage"] = "Sự kiện không tồn tại";
                 TempData["ToastType"] = "error";
-                return RedirectToAction("Index");
+                return Redirect(returnUrl);
             }
 
             if ((ev.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase))
             {
                 TempData["ToastMessage"] = "Sự kiện đã kết thúc, không thể tham gia mới.";
                 TempData["ToastType"] = "error";
-                return RedirectToAction("Detail", new { slug = ev.Slug });
+                return Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
             }
 
             if (ev.MaxParticipants.HasValue && ev.CurrentParticipants >= ev.MaxParticipants.Value)
             {
                 TempData["ToastMessage"] = "Sự kiện đã đủ số lượng người tham gia";
                 TempData["ToastType"] = "error";
-                return RedirectToAction("Detail", new { slug = ev.Slug });
+                return Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
             }
 
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
-                var returnUrl = Url.Action("Detail", "Event", new { slug = ev.Slug }) ?? "/event";
-                return RedirectToLoginWithReturnUrl(returnUrl);
+                var loginReturnUrl = BuildEventDetailUrl(ev.Slug, returnUrl);
+                return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
             int userId = int.Parse(User.FindFirst("UserId")!.Value);
-
 
             if (participantService.IsJoined(id, userId))
             {
                 TempData["ToastMessage"] = "Bạn đã tham gia sự kiện này rồi";
                 TempData["ToastType"] = "success";
-                return RedirectToAction("Room", new { id });
+                return Redirect(BuildEventRoomUrl(id, returnUrl));
             }
 
-            if ((ev.AccessType ?? "").Trim().ToLower() == "free")
+            if ((ev.AccessType ?? "").Trim().Equals("free", StringComparison.OrdinalIgnoreCase))
             {
                 if (participantService.JoinFree(id, userId))
                 {
                     TempData["ToastMessage"] = "Tham gia sự kiện thành công";
                     TempData["ToastType"] = "success";
-                    return RedirectToAction("Room", new { id });
+                    return Redirect(BuildEventRoomUrl(id, returnUrl));
                 }
 
                 TempData["ToastMessage"] = "Không thể tham gia sự kiện";
                 TempData["ToastType"] = "error";
-                return RedirectToAction("Detail", new { slug = ev.Slug });
+                return Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
             }
 
             var maGD = paymentService.CreatePendingEventBalance(userId, id);
@@ -166,32 +202,39 @@ namespace GameStore.Controllers
             TempData["ToastType"] = result ? "success" : "error";
 
             return result
-                ? RedirectToAction("Room", new { id })
-                : RedirectToAction("Detail", new { slug = ev.Slug });
+                ? Redirect(BuildEventRoomUrl(id, returnUrl))
+                : Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
         }
 
         [Route("room/{id}")]
-        public IActionResult Room(int id)
+        public IActionResult Room(int id, string? returnUrl = null)
         {
             ViewBag.HideSubBar = true;
 
+            var fallbackListUrl = BuildEventListUrl();
+            returnUrl = NormalizeReturnUrl(returnUrl, fallbackListUrl);
+
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
-                var returnUrl = Url.Action("Room", "Event", new { id }) ?? "/event";
-                return RedirectToLoginWithReturnUrl(returnUrl);
+                var loginReturnUrl = BuildEventRoomUrl(id, returnUrl);
+                return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
             int userId = int.Parse(User.FindFirst("UserId")!.Value);
 
             var ev = eventService.FindById(id);
             if (ev == null)
-                return RedirectToAction("Index");
+            {
+                TempData["ToastMessage"] = "Sự kiện không tồn tại";
+                TempData["ToastType"] = "error";
+                return Redirect(returnUrl);
+            }
 
             if (!participantService.IsJoined(id, userId))
             {
                 TempData["ToastMessage"] = "Bạn cần tham gia sự kiện trước";
                 TempData["ToastType"] = "error";
-                return RedirectToAction("Detail", new { slug = ev.Slug });
+                return Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
             }
 
             var participants = participantService.GetParticipantsByEvent(id);
@@ -212,43 +255,66 @@ namespace GameStore.Controllers
             ViewBag.IsArchivedRoom = (ev.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase);
             ViewBag.CanClaimReward = eventRewardService.CanClaimReward(id, userId);
             ViewBag.UserEffectMap = userIconEffectService.GetEquippedCssClassMap(effectUserIds);
+            ViewBag.ReturnUrl = returnUrl;
 
             return View("~/Views/Event/Room.cshtml", ev);
         }
 
         [HttpPost]
         [Route("room/{id}/send-message")]
-        public async Task<IActionResult> SendMessage(int id, string content)
+        public async Task<IActionResult> SendMessage(int id, string content, string? returnUrl = null)
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
-                var returnUrl = Url.Action("Room", "Event", new { id }) ?? "/event";
-                return RedirectToLoginWithReturnUrl(returnUrl);
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Unauthorized();
+
+                var loginReturnUrl = BuildEventRoomUrl(id, returnUrl);
+                return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
             int userId = int.Parse(User.FindFirst("UserId")!.Value);
 
             var ev = eventService.FindById(id);
             if (ev == null)
-                return RedirectToAction("Index");
+            {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return NotFound();
+
+                TempData["ToastMessage"] = "Sự kiện không tồn tại";
+                TempData["ToastType"] = "error";
+                return Redirect(NormalizeReturnUrl(returnUrl, BuildEventListUrl()));
+            }
 
             if ((ev.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase))
             {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return BadRequest();
+
                 TempData["ToastMessage"] = "Sự kiện đã kết thúc, chat đã bị khóa.";
                 TempData["ToastType"] = "error";
-                return BadRequest();
+                return Redirect(BuildEventRoomUrl(id, returnUrl));
             }
 
             if (!participantService.IsJoined(id, userId))
             {
-                TempData["ToastMessage"] = "Bạn không có quyền gửi tin nhắn trong sự kiện này";
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Forbid();
+
+                TempData["ToastMessage"] = "Bạn chưa tham gia sự kiện này";
                 TempData["ToastType"] = "error";
-                return RedirectToAction("Detail", new { slug = ev.Slug });
+                return Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
             }
 
-            content = content?.Trim() ?? "";
             if (string.IsNullOrWhiteSpace(content))
-                return RedirectToAction("Room", new { id });
+            {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return BadRequest();
+
+                TempData["ToastMessage"] = "Nội dung tin nhắn không hợp lệ";
+                TempData["ToastType"] = "error";
+                return Redirect(BuildEventRoomUrl(id, returnUrl));
+            }
 
             if (messageService.Send(id, userId, content))
             {
@@ -265,41 +331,51 @@ namespace GameStore.Controllers
                         effectCssClass = effectCssClass ?? ""
                     });
                 }
+
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Ok();
+            }
+            else
+            {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return BadRequest();
             }
 
-            return Ok();
+            return Redirect(BuildEventRoomUrl(id, returnUrl));
         }
 
         [HttpPost]
         [Route("room/{id}/checkin")]
-        public IActionResult CheckIn(int id)
+        public IActionResult CheckIn(int id, string? returnUrl = null)
         {
-            ViewBag.HideSubBar = true;
-
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
-                var returnUrl = Url.Action("Room", "Event", new { id }) ?? "/event";
-                return RedirectToLoginWithReturnUrl(returnUrl);
+                var loginReturnUrl = BuildEventRoomUrl(id, returnUrl);
+                return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
             int userId = int.Parse(User.FindFirst("UserId")!.Value);
 
             var ev = eventService.FindById(id);
             if (ev == null)
-                return RedirectToAction("Index");
+            {
+                TempData["ToastMessage"] = "Sự kiện không tồn tại";
+                TempData["ToastType"] = "error";
+                return Redirect(NormalizeReturnUrl(returnUrl, BuildEventListUrl()));
+            }
 
             if ((ev.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase))
             {
                 TempData["ToastMessage"] = "Sự kiện đã kết thúc, check-in đã đóng.";
                 TempData["ToastType"] = "error";
-                return RedirectToAction("Room", new { id });
+                return Redirect(BuildEventRoomUrl(id, returnUrl));
             }
 
             if (!participantService.IsJoined(id, userId))
             {
                 TempData["ToastMessage"] = "Bạn chưa tham gia sự kiện này";
                 TempData["ToastType"] = "error";
-                return RedirectToAction("Detail", new { slug = ev.Slug });
+                return Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
             }
 
             if (participantService.CheckIn(id, userId))
@@ -313,7 +389,7 @@ namespace GameStore.Controllers
                 TempData["ToastType"] = "error";
             }
 
-            return RedirectToAction("Room", new { id });
+            return Redirect(BuildEventRoomUrl(id, returnUrl));
         }
 
         [Route("my-events")]
@@ -323,7 +399,7 @@ namespace GameStore.Controllers
 
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
-                var returnUrl = Url.Action("MyEvents", "Event") ?? "/event";
+                var returnUrl = Url.Action("MyEvents", "Event") ?? "/event/my-events";
                 return RedirectToLoginWithReturnUrl(returnUrl);
             }
 
@@ -344,12 +420,12 @@ namespace GameStore.Controllers
 
         [HttpPost]
         [Route("room/{id}/claim-reward")]
-        public async Task<IActionResult> ClaimReward(int id)
+        public async Task<IActionResult> ClaimReward(int id, string? returnUrl = null)
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
-                var returnUrl = Url.Action("Room", "Event", new { id }) ?? "/event";
-                return RedirectToLoginWithReturnUrl(returnUrl);
+                var loginReturnUrl = BuildEventRoomUrl(id, returnUrl);
+                return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
             int userId = int.Parse(User.FindFirst("UserId")!.Value);
@@ -363,7 +439,6 @@ namespace GameStore.Controllers
 
                 if (!string.IsNullOrWhiteSpace(result.RoomNotice))
                 {
-                    // Lưu notice như 1 message hệ thống vào DB
                     messageService.Send(id, userId, result.RoomNotice);
 
                     var latest = messageService.GetLatestMessage(id, userId, result.RoomNotice);
@@ -383,11 +458,13 @@ namespace GameStore.Controllers
             }
             else
             {
-                TempData["ToastMessage"] = result.Message;
+                TempData["ToastMessage"] = string.IsNullOrWhiteSpace(result.Message)
+                    ? "Không thể nhận phần thưởng."
+                    : result.Message;
                 TempData["ToastType"] = "error";
             }
 
-            return RedirectToAction("Room", new { id });
+            return Redirect(BuildEventRoomUrl(id, returnUrl));
         }
     }
 }
