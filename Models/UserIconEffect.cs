@@ -25,7 +25,7 @@ namespace GameStore.Models
         public bool IsEquipped { get; set; } = false;
 
         [Column("grantedat")]
-        public DateTime GrantedAt { get; set; } = DateTime.Now;
+        public DateTime GrantedAt { get; set; } = DateTime.UtcNow;
 
         [Column("expiredat")]
         public DateTime? ExpiredAt { get; set; }

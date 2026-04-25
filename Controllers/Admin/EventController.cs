@@ -168,13 +168,15 @@ namespace GameStore.Controllers.Admin
             ViewBag.Status = filterStatus;
             ViewBag.CurrentPage = currentPage;
 
+            var nowUtc = DateTime.UtcNow;
+
             return View("~/Views/Admin/Event/Add.cshtml", new Event
             {
                 EventType = "Tournament",
                 AccessType = "Paid",
                 PrizeCondition = "CheckIn",
-                StartAt = DateTime.Now.AddDays(1),
-                EndAt = DateTime.Now.AddDays(1).AddHours(2)
+                StartAt = nowUtc.AddDays(1),
+                EndAt = nowUtc.AddDays(1).AddHours(2)
             });
         }
 

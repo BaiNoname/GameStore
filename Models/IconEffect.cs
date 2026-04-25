@@ -39,7 +39,7 @@ namespace GameStore.Models
         public bool IsActive { get; set; } = true;
 
         [Column("createdat")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public virtual ICollection<UserIconEffect> UserIconEffects { get; set; } = new List<UserIconEffect>();
     }

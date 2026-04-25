@@ -3,6 +3,10 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Add Event";
+
+    var minLocal = DateTime.UtcNow.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss");
+    var startLocal = Model.StartAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss");
+    var endLocal = Model.EndAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss");
 }
 
 <div class="container mt-5">
@@ -172,8 +176,8 @@
                                id="StartAt"
                                name="StartAt"
                                step="1"
-                               value="@Model.StartAt.ToString("yyyy-MM-ddTHH:mm:ss")"
-                               min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" />
+                               value="@startLocal"
+                               min="@minLocal" />
                     </div>
 
                     <div class="col-md-6 mb-3">
@@ -183,8 +187,8 @@
                                id="EndAt"
                                name="EndAt"
                                step="1"
-                               value="@Model.EndAt.ToString("yyyy-MM-ddTHH:mm:ss")"
-                               min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" />
+                               value="@endLocal"
+                               min="@minLocal" />
                     </div>
                 </div>
 
