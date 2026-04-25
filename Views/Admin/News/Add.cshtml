@@ -3,6 +3,11 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Add News";
+
+    var publishedLocal = Model.PublishedAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm");
+    var expiredLocal = Model.ExpiredAt.HasValue
+        ? Model.ExpiredAt.Value.ToLocalTime().ToString("yyyy-MM-ddTHH:mm")
+        : "";
 }
 
 <div class="container mt-5">
@@ -91,12 +96,24 @@
                     </div>
                 </div>
 
-                <div class="alert alert-info">
-                    <strong>Auto time:</strong> When you create the article, the system will automatically set:
-                    <br />
-                    - Published At = current time
-                    <br />
-                    - Expired At = 1 month after Published At
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Published At</label>
+                        <input type="datetime-local"
+                               class="form-control"
+                               value="@publishedLocal"
+                               readonly />
+                        <input type="hidden" name="PublishedAt" value="@publishedLocal" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Expired At</label>
+                        <input type="datetime-local"
+                               class="form-control"
+                               value="@expiredLocal"
+                               readonly />
+                        <input type="hidden" name="ExpiredAt" value="@expiredLocal" />
+                    </div>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2">
