@@ -25,7 +25,7 @@ namespace GameStore.Services
             if (value.Kind == DateTimeKind.Local)
                 return value.ToUniversalTime();
 
-            return DateTime.SpecifyKind(value, DateTimeKind.Utc);
+            return DateTime.SpecifyKind(value, DateTimeKind.Local).ToUniversalTime();
         }
 
         private DateTime? EnsureUtc(DateTime? value)

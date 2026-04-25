@@ -55,13 +55,13 @@ namespace GameStore.Models
         public int ViewCount { get; set; } = 0;
 
         [Column("publishedat")]
-        public DateTime PublishedAt { get; set; } = DateTime.Now;
+        public DateTime PublishedAt { get; set; } = DateTime.UtcNow;
 
         [Column("expiredat")]
         public DateTime? ExpiredAt { get; set; }
 
         [Column("createdat")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Column("updatedat")]
         public DateTime? UpdatedAt { get; set; }

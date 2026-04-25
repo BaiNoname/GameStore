@@ -96,10 +96,12 @@ namespace GameStore.Controllers.Admin
             ViewBag.Status = status;
             ViewBag.CurrentPage = page;
 
+            var nowUtc = DateTime.UtcNow;
+
             return View("~/Views/Admin/News/Add.cshtml", new Models.News
             {
-                PublishedAt = DateTime.Now,
-                ExpiredAt = DateTime.Now.AddMonths(1),
+                PublishedAt = nowUtc,
+                ExpiredAt = nowUtc.AddMonths(1),
                 NewsType = "General",
                 Status = "Published"
             });
@@ -162,8 +164,9 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/News/Add.cshtml", news);
             }
 
-            news.PublishedAt = DateTime.Now;
-            news.ExpiredAt = news.PublishedAt.AddMonths(1);
+            var nowUtc = DateTime.UtcNow;
+            news.PublishedAt = nowUtc;
+            news.ExpiredAt = nowUtc.AddMonths(1);
 
             if (photo != null)
             {

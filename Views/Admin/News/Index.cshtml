@@ -109,7 +109,7 @@
                                 <td>@(item.IsFeatured ? "Yes" : "No")</td>
                                 <td>@(item.Game?.TenGame ?? "-")</td>
                                 <td>@item.ViewCount</td>
-                                <td>@item.PublishedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@item.PublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                                 <td>
                                     <div class="d-flex gap-2 flex-wrap admin-action-group">
                                         <a class="btn btn-sm btn-warning"

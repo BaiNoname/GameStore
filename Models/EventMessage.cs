@@ -24,7 +24,7 @@ namespace GameStore.Models
         public string Content { get; set; } = null!;
 
         [Column("createdat")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Column("isdeleted")]
         public bool IsDeleted { get; set; } = false;

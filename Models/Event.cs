@@ -73,7 +73,7 @@ namespace GameStore.Models
         public int CreatedBy { get; set; }
 
         [Column("createdat")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Column("updatedat")]
         public DateTime? UpdatedAt { get; set; }
