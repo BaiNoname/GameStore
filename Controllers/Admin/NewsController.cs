@@ -164,9 +164,32 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/News/Add.cshtml", news);
             }
 
-            var nowUtc = DateTime.UtcNow;
-            news.PublishedAt = nowUtc;
-            news.ExpiredAt = nowUtc.AddMonths(1);
+            var publishedAtRaw = Request.Form["PublishedAt"].ToString();
+            var expiredAtRaw = Request.Form["ExpiredAt"].ToString();
+
+            if (!DateTime.TryParse(publishedAtRaw, out DateTime publishedAtLocal))
+            {
+                TempData["Msg"] = "❌ Published At không hợp lệ!";
+                TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/News/Add.cshtml", news);
+            }
+
+            if (!DateTime.TryParse(expiredAtRaw, out DateTime expiredAtLocal))
+            {
+                TempData["Msg"] = "❌ Expired At không hợp lệ!";
+                TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/News/Add.cshtml", news);
+            }
+
+            if (expiredAtLocal <= publishedAtLocal)
+            {
+                TempData["Msg"] = "❌ Expired At phải lớn hơn Published At!";
+                TempData["MsgType"] = "danger";
+                return View("~/Views/Admin/News/Add.cshtml", news);
+            }
+
+            news.PublishedAt = publishedAtLocal;
+            news.ExpiredAt = expiredAtLocal;
 
             if (photo != null)
             {
