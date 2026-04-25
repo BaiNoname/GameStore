@@ -105,3 +105,7 @@ VALUES
 ('Cyber Lime', 'cyber-lime', 'Aura', 'effect-cyber-lime', 'Epic'),
 ('Rose Halo', 'rose-halo', 'Halo', 'effect-rose-halo', 'Rare');
 
+
+
+Time Local: > ~7h
+Time Host: < ~7h
