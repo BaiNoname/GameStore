@@ -57,8 +57,8 @@
                             @(string.IsNullOrWhiteSpace(featured.Summary) ? "Sự kiện nổi bật đang được cộng đồng quan tâm." : featured.Summary)
                         </p>
                         <div class="gs-meta">
-                            <span>📅 @featured.StartAt.ToString("dd MMM yyyy")</span>
-                            <span>⏰ @featured.StartAt.ToString("HH:mm")</span>
+                            <span>📅 @featured.StartAt.ToLocalTime().ToString("dd MMM yyyy")</span>
+                            <span>⏰ @featured.StartAt.ToLocalTime().ToString("HH:mm")</span>
                             <span>👥 @featured.CurrentParticipants participants</span>
                             <span>🏆 @(string.IsNullOrWhiteSpace(featured.PrizeInfo) ? "Updating prize info" : featured.PrizeInfo)</span>
                         </div>
@@ -102,7 +102,7 @@
                                     @(string.IsNullOrWhiteSpace(item.Summary) ? "Thông tin sự kiện đang được cập nhật." : item.Summary)
                                 </div>
                                 <div class="gs-mini-stat">
-                                    <span>📅 @item.StartAt.ToString("dd MMM")</span>
+                                    <span>📅 @item.StartAt.ToLocalTime().ToString("dd MMM")</span>
                                     <span>👥 @item.CurrentParticipants joined</span>
                                 </div>
                                 <a href="/event/detail/@item.Slug?returnUrl=@Uri.EscapeDataString($"/event?eventType={Uri.EscapeDataString(Model.EventType)}&status={Uri.EscapeDataString(Model.Status)}&page={Model.CurrentPage}")" class="gs-btn-primary w-100">View Event</a>
@@ -152,7 +152,7 @@
                 @foreach (var item in Model.UpcomingEvents.Take(4))
                 {
                     <div class="gs-schedule-item">
-                        <div class="gs-schedule-time">@item.StartAt.ToString("dd MMM · HH:mm")</div>
+                        <div class="gs-schedule-time">@item.StartAt.ToLocalTime().ToString("dd MMM · HH:mm")</div>
                         <div>
                             <div class="gs-schedule-name">@item.Title</div>
                             <div class="gs-schedule-meta">@item.EventType · @(item.Game?.TenGame ?? "GameStore Event")</div>
