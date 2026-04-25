@@ -106,6 +106,5 @@ VALUES
 ('Rose Halo', 'rose-halo', 'Halo', 'effect-rose-halo', 'Rare');
 
 
+Quy uoc Time UTC
 
-Time Local: > ~7h
-Time Host: < ~7h
