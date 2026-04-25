@@ -27,6 +27,7 @@
     var upcoming = Model.Where(x => x.Event != null && (x.Event.Status ?? "").Trim().Equals("Upcoming", StringComparison.OrdinalIgnoreCase)).ToList();
     var live = Model.Where(x => x.Event != null && (x.Event.Status ?? "").Trim().Equals("Live", StringComparison.OrdinalIgnoreCase)).ToList();
     var ended = Model.Where(x => x.Event != null && (x.Event.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase)).ToList();
+    var myEventsReturnUrl = "/event/my-events";
 }
 
 <main class="gs-page">
@@ -38,6 +39,9 @@
                 Theo dõi các event bạn đã join, trạng thái check-in, announcement mới nhất và chat mới nhất từ room sự kiện.
             </p>
         </div>
+
+
+        <a href="/event?eventType=All&status=All&page=1" class="gs-btn-chip">All Events</a>
 
         @if (Model.Any())
         {
@@ -116,8 +120,8 @@
                                     </div>
 
                                     <div class="gs-action-row">
-                                        <a href="/event/detail/@ev.Slug" class="gs-btn-ghost">Detail</a>
-                                        <a href="/event/room/@ev.EventId" class="gs-btn-primary">Open Room</a>
+                                        <a href="/event/detail/@ev.Slug?returnUrl=@Uri.EscapeDataString(myEventsReturnUrl)" class="gs-btn-ghost">Detail</a>
+                                        <a href="/event/room/@ev.EventId?returnUrl=@Uri.EscapeDataString(myEventsReturnUrl)" class="gs-btn-primary">Open Room</a>
                                     </div>
                                 </div>
                             </div>
@@ -201,7 +205,8 @@
                                     </div>
 
                                     <div class="gs-action-row">
-                                        <a href="/event/detail/@ev.Slug" class="gs-btn-ghost w-100">View Detail</a>
+                                        <a href="/event/detail/@ev.Slug?returnUrl=@Uri.EscapeDataString(myEventsReturnUrl)" class="gs-btn-ghost">View Detail</a>
+                                        <a href="/event/room/@ev.EventId?returnUrl=@Uri.EscapeDataString(myEventsReturnUrl)" class="gs-btn-primary">Open Archived Room</a>
                                     </div>
                                 </div>
                             </div>
@@ -503,4 +508,35 @@
             width: 100%;
         }
     }
+
+    .gs-btn-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        font-size: .88rem;
+        font-weight: 700;
+        text-decoration: none;
+        color: #dbeafe;
+        background: rgba(125, 211, 252, 0.08);
+        border: 1px solid rgba(125, 211, 252, 0.20);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        transition: all .2s ease;
+        flex: 0 0 auto;
+        white-space: nowrap;
+        margin-bottom: 24px;
+    }
+
+        .gs-btn-chip:hover {
+            color: #ffffff;
+            background: rgba(125, 211, 252, 0.16);
+            border-color: rgba(125, 211, 252, 0.32);
+            transform: translateY(-1px);
+        }
+
+        .gs-btn-chip:active {
+            transform: translateY(0);
+        }
 </style>

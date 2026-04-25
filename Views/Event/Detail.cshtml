@@ -5,6 +5,9 @@
     bool isJoined = ViewBag.IsJoined != null && (bool)ViewBag.IsJoined;
     bool isFull = Model.MaxParticipants.HasValue && Model.CurrentParticipants >= Model.MaxParticipants.Value;
     bool isEnded = (Model.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase);
+    string returnUrl = ViewBag.ReturnUrl as string ?? "/event?eventType=All&status=All&page=1";
+    bool fromMyEvents = string.Equals(returnUrl, "/event/my-events", StringComparison.OrdinalIgnoreCase);
+    string backText = fromMyEvents ? "Back to My Events" : "Back to Events";
 
     string GetImage(string? image)
     {
@@ -26,7 +29,7 @@
                     <div class="gs-breadcrumb mb-3">
                         <a href="/">Home</a>
                         <span>/</span>
-                        <a href="/event">Event</a>
+                        <a href="@returnUrl">Event</a>
                         <span>/</span>
                         <span class="active">@Model.Title</span>
                     </div>
@@ -58,11 +61,11 @@
                         {
                             if (isEnded)
                             {
-                                <a href="/event/room/@Model.EventId" class="gs-btn-outline">View Archived Room</a>
+                                <a href="/event/room/@Model.EventId?returnUrl=@Uri.EscapeDataString(returnUrl)" class="gs-btn-outline">View Archived Room</a>
                             }
                             else
                             {
-                                <a href="/event/room/@Model.EventId" class="gs-btn-primary">Open Member Area</a>
+                                <a href="/event/room/@Model.EventId?returnUrl=@Uri.EscapeDataString(returnUrl)" class="gs-btn-primary">Open Member Area</a>
                             }
                         }
                         else if (isEnded)
@@ -104,7 +107,7 @@
                             }
                         }
 
-                        <a href="/event" class="gs-btn-outline">Back to Events</a>
+                        <a href="@returnUrl" class="gs-btn-outline">@backText</a>
                     </div>
 
                     <div id="eventFullToast" class="gs-inline-toast">
@@ -144,6 +147,7 @@
                                         </button>
 
                                         <form method="post" action="/event/join/@Model.EventId">
+                                            <input type="hidden" name="returnUrl" value="@returnUrl" />
                                             <input type="hidden" name="method" value="balance" />
                                             <button type="submit" class="gs-btn-free">
                                                 <span class="gs-btn-free-icon">⚡</span>
@@ -191,6 +195,7 @@
 
                                         <form method="post" action="/event/join/@Model.EventId">
                                             <input type="hidden" name="method" value="balance" />
+                                            <input type="hidden" name="returnUrl" value="@returnUrl" />
                                             <button type="submit" class="gs-btn-primary">
                                                 Xác nhận mua
                                             </button>

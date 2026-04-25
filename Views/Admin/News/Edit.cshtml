@@ -115,10 +115,8 @@
                         <label class="form-label">Published At</label>
                         <input type="datetime-local"
                                class="form-control"
-                               name="PublishedAt"
-                               min="@minDateTime"
-                               value="@Model.PublishedAt.ToString("yyyy-MM-ddTHH:mm")" />
-                        <small class="text-muted">Cannot choose a past time.</small>
+                               value="@Model.PublishedAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm")"
+                               readonly />
                     </div>
 
                     <div class="col-md-6 mb-3">
@@ -126,9 +124,7 @@
                         <input type="datetime-local"
                                class="form-control"
                                name="ExpiredAt"
-                               min="@minDateTime"
-                               value="@(Model.ExpiredAt.HasValue? Model.ExpiredAt.Value.ToString("yyyy-MM-ddTHH:mm") : "")" />
-                        <small class="text-muted">Cannot choose a past time.</small>
+                               value="@(Model.ExpiredAt.HasValue? Model.ExpiredAt.Value.ToLocalTime().ToString("yyyy-MM-ddTHH:mm") : "")" />
                     </div>
                 </div>
 

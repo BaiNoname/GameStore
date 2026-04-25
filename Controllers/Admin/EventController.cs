@@ -332,13 +332,13 @@ namespace GameStore.Controllers.Admin
         [HttpPost]
         [Route("event/edit/{id}")]
         public IActionResult Edit(
-            int id,
-            Event ev,
-            IFormFile? photo,
-            string filterKeyword = "",
-            string filterEventType = "",
-            string filterStatus = "",
-            int currentPage = 1)
+    int id,
+    Event ev,
+    IFormFile? photo,
+    string filterKeyword = "",
+    string filterEventType = "",
+    string filterStatus = "",
+    int currentPage = 1)
         {
             var current = eventService.FindById(id);
             if (current == null)
@@ -402,20 +402,41 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/Event/Edit.cshtml", current);
             }
 
+            // giữ StartAt cũ
             ev.StartAt = current.StartAt;
 
-            if (ev.EndAt.ToUniversalTime() < DateTime.UtcNow)
-            {
-                TempData["Msg"] = "❌ Không được sửa End At về quá khứ!";
-                TempData["MsgType"] = "danger";
-                return View("~/Views/Admin/Event/Edit.cshtml", current);
-            }
+            // nếu EndAt không đổi thì giữ nguyên, không validate lại
+            var postedEndRaw = Request.Form["EndAt"].ToString();
+            var currentEndRaw = current.EndAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss");
 
-            if (ev.EndAt <= ev.StartAt)
+            if (string.IsNullOrWhiteSpace(postedEndRaw) || postedEndRaw == currentEndRaw)
             {
-                TempData["Msg"] = "❌ End At phải lớn hơn Start At!";
-                TempData["MsgType"] = "danger";
-                return View("~/Views/Admin/Event/Edit.cshtml", current);
+                ev.EndAt = current.EndAt;
+            }
+            else
+            {
+                if (!DateTime.TryParse(postedEndRaw, out DateTime parsedEndAt))
+                {
+                    TempData["Msg"] = "❌ Không được sửa End At về quá khứ!";
+                    TempData["MsgType"] = "danger";
+                    return View("~/Views/Admin/Event/Edit.cshtml", current);
+                }
+
+                ev.EndAt = parsedEndAt;
+
+                if (ev.EndAt.ToUniversalTime() < DateTime.UtcNow)
+                {
+                    TempData["Msg"] = "❌ Không được sửa End At về quá khứ!";
+                    TempData["MsgType"] = "danger";
+                    return View("~/Views/Admin/Event/Edit.cshtml", current);
+                }
+
+                if (ev.EndAt <= ev.StartAt)
+                {
+                    TempData["Msg"] = "❌ End At phải lớn hơn Start At!";
+                    TempData["MsgType"] = "danger";
+                    return View("~/Views/Admin/Event/Edit.cshtml", current);
+                }
             }
 
             var duplicateSlug = eventService.FindAll("", "", "", 1, int.MaxValue, out int _)
@@ -463,7 +484,7 @@ namespace GameStore.Controllers.Admin
                 });
             }
 
-            TempData["Msg"] = "❌ Cập nhật event thất bại! Không được sửa thời gian về quá khứ.";
+            TempData["Msg"] = "❌ Cập nhật event thất bại!";
             TempData["MsgType"] = "danger";
             return View("~/Views/Admin/Event/Edit.cshtml", current);
         }

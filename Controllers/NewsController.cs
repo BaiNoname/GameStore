@@ -6,7 +6,6 @@ namespace GameStore.Controllers
 {
     [Route("news")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-
     public class NewsController : Controller
     {
         private readonly NewsService newsService;
@@ -21,6 +20,7 @@ namespace GameStore.Controllers
         public IActionResult Index(string newsType = "All", int page = 1)
         {
             ViewBag.HideSubBar = true;
+
             int pageSize = 6;
             int totalPages;
 
@@ -42,11 +42,12 @@ namespace GameStore.Controllers
         }
 
         [Route("detail/{slug}")]
-        public IActionResult Detail(string slug)
+        public IActionResult Detail(string slug, string newsType = "All", int page = 1)
         {
             ViewBag.HideSubBar = true;
+
             if (string.IsNullOrWhiteSpace(slug))
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", new { newsType, page });
 
             var news = newsService.FindBySlug(slug);
 
@@ -54,13 +55,15 @@ namespace GameStore.Controllers
             {
                 TempData["ToastMessage"] = "Bài viết không tồn tại hoặc đã hết hạn";
                 TempData["ToastType"] = "error";
-                return RedirectToAction("Index");
+                return RedirectToAction("Index", new { newsType, page });
             }
 
             newsService.IncreaseView(news.NewsId);
 
             ViewBag.TrendingNews = newsService.GetTrending(4);
             ViewBag.LatestNews = newsService.GetLatest(4);
+            ViewBag.NewsType = string.IsNullOrWhiteSpace(newsType) ? "All" : newsType;
+            ViewBag.Page = page;
 
             return View("~/Views/News/Detail.cshtml", news);
         }

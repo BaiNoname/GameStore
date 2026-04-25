@@ -9,6 +9,9 @@
     var myParticipant = ViewBag.MyParticipant as GameStore.Models.EventParticipant;
     bool isArchivedRoom = ViewBag.IsArchivedRoom != null && (bool)ViewBag.IsArchivedRoom;
     bool canClaimReward = ViewBag.CanClaimReward != null && (bool)ViewBag.CanClaimReward;
+    string returnUrl = ViewBag.ReturnUrl as string ?? "/event?eventType=All&status=All&page=1";
+    bool fromMyEvents = string.Equals(returnUrl, "/event/my-events", StringComparison.OrdinalIgnoreCase);
+    string listButtonText = fromMyEvents ? "Back to My Events" : "Event List";
 
     string GetImage(string? image)
     {
@@ -77,6 +80,7 @@
                                 else
                                 {
                                     <form method="post" action="/event/room/@Model.EventId/checkin">
+                                        <input type="hidden" name="returnUrl" value="@returnUrl" />
                                         <button type="submit" class="gs-action-btn primary">
                                             ✅ Check-in Event
                                         </button>
@@ -84,18 +88,20 @@
                                 }
                             }
 
-                            <a href="/event/detail/@Model.Slug" class="gs-action-btn ghost">
+                            <a href="/event/detail/@Model.Slug?returnUrl=@Uri.EscapeDataString(returnUrl)" class="gs-action-btn ghost">
                                 ← Event Detail
                             </a>
 
-                            <a href="/event" class="gs-action-btn ghost">
-                                Event List
+                            <a href="@returnUrl" class="gs-action-btn ghost">
+                                @listButtonText
                             </a>
+
                         </div>
 
                         @if (canClaimReward)
                         {
                             <form method="post" action="/event/room/@Model.EventId/claim-reward">
+                                <input type="hidden" name="returnUrl" value="@returnUrl" />
                                 <button type="submit" class="gs-action-btn primary">
                                     🎁 Nhận phần thưởng
                                 </button>
@@ -259,6 +265,7 @@
                 const chatInput = document.getElementById("chatInput");
                 const emptyChat = document.getElementById("emptyChat");
                 const chatCount = document.getElementById("chatCount");
+                const returnUrl = "@returnUrl";
 
                 function scrollToBottom() {
                     if (chatBox) {
@@ -331,7 +338,7 @@
                                     "Content-Type": "application/x-www-form-urlencoded",
                                     "X-Requested-With": "XMLHttpRequest"
                                 },
-                                body: new URLSearchParams({ content })
+                                body: new URLSearchParams({ content, returnUrl })
                             });
 
                             if (response.ok) {

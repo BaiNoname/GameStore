@@ -194,7 +194,6 @@
                         <input type="hidden"
                                name="StartAt"
                                value="@Model.StartAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss")" />
-                        <small class="text-muted">Start At không được phép chỉnh sửa sau khi event đã tạo.</small>
                     </div>
 
                     <div class="col-md-6 mb-3">
@@ -204,9 +203,7 @@
                                id="EndAt"
                                name="EndAt"
                                step="1"
-                               value="@Model.EndAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss")"
-                               min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" />
-                        <small class="text-muted">Chỉ được phép dời thời gian kết thúc và không được chọn quá khứ.</small>
+                               value="@Model.EndAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss")" />
                     </div>
                 </div>
 

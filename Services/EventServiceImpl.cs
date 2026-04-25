@@ -272,15 +272,6 @@ namespace GameStore.Services
                 var current = db.Events.FirstOrDefault(x => x.EventId == ev.EventId);
                 if (current == null) return false;
 
-                var startUtc = current.StartAt;
-                var endUtc = EnsureUtc(ev.EndAt);
-
-                if (endUtc < nowUtc)
-                    return false;
-
-                if (endUtc <= startUtc)
-                    return false;
-
                 current.Title = string.IsNullOrWhiteSpace(ev.Title) ? current.Title : ev.Title.Trim();
                 current.Slug = string.IsNullOrWhiteSpace(ev.Slug) ? current.Slug : ev.Slug.Trim().ToLower();
                 current.Summary = ev.Summary?.Trim();
@@ -296,7 +287,25 @@ namespace GameStore.Services
                 current.PrizeValue = string.IsNullOrWhiteSpace(ev.PrizeValue) ? null : ev.PrizeValue.Trim();
                 current.PrizeCondition = string.IsNullOrWhiteSpace(ev.PrizeCondition) ? null : ev.PrizeCondition.Trim();
 
-                current.EndAt = endUtc;
+                var currentEndUtc = EnsureUtc(current.EndAt);
+                var postedEndUtc = EnsureUtc(ev.EndAt);
+
+                bool endChanged = currentEndUtc != postedEndUtc;
+
+                // chỉ validate và update EndAt khi admin thực sự sửa
+                if (endChanged)
+                {
+                    var startUtc = EnsureUtc(current.StartAt);
+
+                    if (postedEndUtc < nowUtc)
+                        return false;
+
+                    if (postedEndUtc <= startUtc)
+                        return false;
+
+                    current.EndAt = postedEndUtc;
+                }
+
                 current.Status = CalculateStatus(current.StartAt, current.EndAt);
                 current.UpdatedAt = nowUtc;
 
