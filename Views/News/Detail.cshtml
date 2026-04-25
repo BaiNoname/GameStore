@@ -83,7 +83,7 @@
                     <h1 class="gs-article-title">@Model.Title</h1>
 
                     <div class="gs-meta mb-4">
-                        <span>📅 @Model.PublishedAt.ToString("dd MMM yyyy")</span>
+                        <span>📅 @Model.PublishedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
                         <span>📰 @GetAuthor()</span>
                         <span>🎮 @GetGameName(Model)</span>
                         <span>👁 @Model.ViewCount lượt xem</span>
@@ -126,7 +126,7 @@
                                     <div>
                                         <span class="gs-badge">TRENDING</span>
                                         <div class="gs-side-card-title">@item.Title</div>
-                                        <div class="gs-side-meta">@item.PublishedAt.ToString("dd MMM yyyy")</div>
+                                        <div class="gs-side-meta">@item.PublishedAt.ToLocalTime().ToString("dd MMM yyyy")</div>
                                     </div>
                                 </article>
                             </a>
@@ -152,7 +152,7 @@
                                     <div>
                                         <span class="@GetBadgeClass(item.NewsType)">@GetDisplayType(item.NewsType)</span>
                                         <div class="gs-side-card-title">@item.Title</div>
-                                        <div class="gs-side-meta">@item.PublishedAt.ToString("dd MMM yyyy")</div>
+                                        <div class="gs-side-meta">@item.PublishedAt.ToLocalTime().ToString("dd MMM yyyy")</div>
                                     </div>
                                 </article>
                             </a>

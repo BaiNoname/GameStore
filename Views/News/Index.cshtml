@@ -98,7 +98,7 @@
                                             @GetSummary(featured)
                                         </p>
                                         <div class="gs-meta">
-                                            <span>📅 @featured.PublishedAt.ToString("dd MMM yyyy")</span>
+                                            <span>📅 @featured.PublishedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
                                             <span>📰 @GetAuthor(featured)</span>
                                             <span>⏱ @GetReadTime(featured)</span>
                                         </div>
@@ -121,7 +121,7 @@
                                                 <span class="@GetBadgeClass(item.NewsType)">@GetDisplayType(item.NewsType)</span>
                                                 <div class="gs-feature-side-title">@item.Title</div>
                                                 <div class="gs-meta mb-0">
-                                                    <span>@item.PublishedAt.ToString("dd MMM yyyy")</span>
+                                                    <span>@item.PublishedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
                                                 </div>
                                             </div>
                                         </article>
@@ -155,7 +155,7 @@
                                     <div class="gs-news-title">@item.Title</div>
                                     <div class="gs-news-desc">@GetSummary(item)</div>
                                     <div class="gs-meta">
-                                        <span>@item.PublishedAt.ToString("dd MMM yyyy")</span>
+                                        <span>@item.PublishedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
                                         <span>@GetReadTime(item)</span>
                                     </div>
                                     <a href="/news/detail/@item.Slug?newsType=@Uri.EscapeDataString(Model.NewsType)&page=@Model.CurrentPage" class="gs-readmore">Read Article →</a>
@@ -231,7 +231,7 @@
                                     <span class="gs-badge">TRENDING</span>
                                     <div class="gs-trending-title">@item.Title</div>
                                     <div class="gs-meta mb-0">
-                                        <span>@item.PublishedAt.ToString("dd MMM yyyy")</span>
+                                        <span>@item.PublishedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
                                     </div>
                                 </div>
                             </article>
@@ -249,7 +249,7 @@
                                     <span class="gs-badge">@GetDisplayType(item.NewsType)</span>
                                     <div class="gs-trending-title">@item.Title</div>
                                     <div class="gs-meta mb-0">
-                                        <span>@item.PublishedAt.ToString("dd MMM yyyy")</span>
+                                        <span>@item.PublishedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
                                     </div>
                                 </div>
                             </article>
