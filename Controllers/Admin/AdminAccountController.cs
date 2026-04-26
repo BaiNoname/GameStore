@@ -19,25 +19,44 @@ namespace GameStore.Controllers.Admin
             db = _db;
         }
 
-        [HttpGet("profile")]
-        public IActionResult Profile()
+        private async Task<NguoiDung?> GetCurrentActiveAdminAsync()
         {
-            if (!User.Identity.IsAuthenticated)
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+                return null;
+
+            var claim = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrWhiteSpace(claim) || !int.TryParse(claim, out int userId))
+                return null;
+
+            var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
+            if (user == null)
+            {
+                HttpContext.Session.Clear();
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return null;
+            }
+
+            return user;
+        }
+
+        [HttpGet("profile")]
+        public async Task<IActionResult> Profile()
+        {
+            var user = await GetCurrentActiveAdminAsync();
+            if (user == null)
                 return Redirect("/auth/login");
-
-            int userId = int.Parse(User.FindFirst("UserId").Value);
-
-            var user = db.NguoiDungs.Find(userId);
 
             return View(user);
         }
 
         [HttpPost("update-name")]
-        public IActionResult UpdateName(string tenNguoiDung)
+        public async Task<IActionResult> UpdateName(string tenNguoiDung)
         {
-            int userId = int.Parse(User.FindFirst("UserId").Value);
+            var user = await GetCurrentActiveAdminAsync();
+            if (user == null)
+                return Redirect("/auth/login");
 
-            authService.UpdateName(userId, tenNguoiDung, out string msg);
+            bool success = authService.UpdateName(user.MaNguoiDung, tenNguoiDung, out string msg);
 
             TempData["Msg"] = msg;
 
@@ -47,9 +66,11 @@ namespace GameStore.Controllers.Admin
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword(string oldPass, string newPass, string confirmPass)
         {
-            int userId = int.Parse(User.FindFirst("UserId").Value);
+            var user = await GetCurrentActiveAdminAsync();
+            if (user == null)
+                return Redirect("/auth/login");
 
-            bool success = authService.ChangePassword(userId, oldPass, newPass, confirmPass, out string msg);
+            bool success = authService.ChangePassword(user.MaNguoiDung, oldPass, newPass, confirmPass, out string msg);
 
             if (!success)
             {

@@ -100,7 +100,7 @@ namespace GameStore.Services
         // Game mới trong 1 tháng
         public List<Game> GetNewGames(int count = 10)
         {
-            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+            var oneMonthAgo = DateTime.UtcNow.AddMonths(-1);
 
             return db.Games
                 .Where(g => g.NgayRaMat >= DateOnly.FromDateTime(oneMonthAgo))

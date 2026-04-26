@@ -12,6 +12,11 @@ namespace GameStore.Services
             db = _db;
         }
 
+        private bool IsUserActive(int userId)
+        {
+            return db.NguoiDungs.Any(x => x.MaNguoiDung == userId && x.IsActive);
+        }
+
         private DateTime UtcNow()
         {
             return DateTime.UtcNow;
@@ -52,6 +57,9 @@ namespace GameStore.Services
 
         public bool JoinFree(int eventId, int userId)
         {
+            if (!IsUserActive(userId))
+                return false;
+
             try
             {
                 if (IsJoined(eventId, userId))
@@ -88,6 +96,9 @@ namespace GameStore.Services
 
         public bool JoinPaid(int eventId, int userId, decimal paidAmount)
         {
+            if (!IsUserActive(userId))
+                return false;
+
             try
             {
                 if (IsJoined(eventId, userId))
@@ -124,6 +135,9 @@ namespace GameStore.Services
 
         public bool CheckIn(int eventId, int userId)
         {
+            if (!IsUserActive(userId))
+                return false;
+
             try
             {
                 var participant = db.EventParticipants
@@ -185,6 +199,9 @@ namespace GameStore.Services
 
         public List<EventParticipant> GetMyEvents(int userId)
         {
+            if (!IsUserActive(userId))
+                return new List<EventParticipant>();
+
             return db.EventParticipants
                 .Include(x => x.Event)
                     .ThenInclude(e => e.Game)

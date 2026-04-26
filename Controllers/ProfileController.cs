@@ -1,4 +1,7 @@
-﻿using GameStore.Services;
+﻿using GameStore.Models;
+using GameStore.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,30 +13,57 @@ namespace GameStore.Controllers
     public class ProfileController : Controller
     {
         private readonly UserIconEffectService userIconEffectService;
+        private readonly GameStoreContext db;
 
-        public ProfileController(UserIconEffectService _userIconEffectService)
+        public ProfileController(UserIconEffectService _userIconEffectService, GameStoreContext _db)
         {
             userIconEffectService = _userIconEffectService;
+            db = _db;
+        }
+
+        private async Task<NguoiDung?> GetCurrentActiveUserAsync()
+        {
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+                return null;
+
+            var claim = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrWhiteSpace(claim) || !int.TryParse(claim, out int userId))
+                return null;
+
+            var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
+            if (user == null)
+            {
+                HttpContext.Session.Clear();
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return null;
+            }
+
+            return user;
         }
 
         [Route("my-effects")]
-        public IActionResult MyEffects()
+        public async Task<IActionResult> MyEffects()
         {
             ViewBag.HideSubBar = true;
 
-            int userId = int.Parse(User.FindFirst("UserId")!.Value);
-            var effects = userIconEffectService.GetByUser(userId);
+            var user = await GetCurrentActiveUserAsync();
+            if (user == null)
+                return Redirect("/auth/login");
+
+            var effects = userIconEffectService.GetByUser(user.MaNguoiDung);
 
             return View("~/Views/Profile/MyEffects.cshtml", effects);
         }
 
         [HttpPost]
         [Route("equip-effect/{id}")]
-        public IActionResult EquipEffect(int id)
+        public async Task<IActionResult> EquipEffect(int id)
         {
-            int userId = int.Parse(User.FindFirst("UserId")!.Value);
+            var user = await GetCurrentActiveUserAsync();
+            if (user == null)
+                return Redirect("/auth/login");
 
-            if (userIconEffectService.Equip(userId, id))
+            if (userIconEffectService.Equip(user.MaNguoiDung, id))
             {
                 TempData["ToastMessage"] = "Trang bị effect thành công!";
                 TempData["ToastType"] = "success";
@@ -49,11 +79,13 @@ namespace GameStore.Controllers
 
         [HttpPost]
         [Route("unequip-effect")]
-        public IActionResult UnequipEffect()
+        public async Task<IActionResult> UnequipEffect()
         {
-            int userId = int.Parse(User.FindFirst("UserId")!.Value);
+            var user = await GetCurrentActiveUserAsync();
+            if (user == null)
+                return Redirect("/auth/login");
 
-            if (userIconEffectService.Unequip(userId))
+            if (userIconEffectService.Unequip(user.MaNguoiDung))
             {
                 TempData["ToastMessage"] = "Đã gỡ effect hiện tại!";
                 TempData["ToastType"] = "success";

@@ -23,6 +23,28 @@ namespace GameStore.Controllers.Admin
             env = _env;
         }
 
+        private DateTime EnsureUtc(DateTime value)
+        {
+            if (value.Kind == DateTimeKind.Utc)
+                return value;
+
+            if (value.Kind == DateTimeKind.Local)
+                return value.ToUniversalTime();
+
+            return DateTime.SpecifyKind(value, DateTimeKind.Local).ToUniversalTime();
+        }
+
+        private DateTime ToLocalDisplay(DateTime value)
+        {
+            if (value.Kind == DateTimeKind.Utc)
+                return value.ToLocalTime();
+
+            if (value.Kind == DateTimeKind.Unspecified)
+                return DateTime.SpecifyKind(value, DateTimeKind.Utc).ToLocalTime();
+
+            return value.ToLocalTime();
+        }
+
         private void LoadGameSelectList(string? selectedGameId = null)
         {
             ViewBag.Games = new SelectList(
@@ -188,8 +210,8 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/News/Add.cshtml", news);
             }
 
-            news.PublishedAt = publishedAtLocal;
-            news.ExpiredAt = expiredAtLocal;
+            news.PublishedAt = EnsureUtc(publishedAtLocal);
+            news.ExpiredAt = EnsureUtc(expiredAtLocal);
 
             if (photo != null)
             {
@@ -233,6 +255,10 @@ namespace GameStore.Controllers.Admin
             ViewBag.NewsType = newsType;
             ViewBag.Status = status;
             ViewBag.CurrentPage = page;
+
+            news.PublishedAt = ToLocalDisplay(news.PublishedAt);
+            if (news.ExpiredAt.HasValue)
+                news.ExpiredAt = ToLocalDisplay(news.ExpiredAt.Value);
 
             return View("~/Views/Admin/News/Edit.cshtml", news);
         }
@@ -296,13 +322,11 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/News/Edit.cshtml", current);
             }
 
-            // Giữ PublishedAt cũ, không cho edit lại
             news.PublishedAt = current.PublishedAt;
 
-            // ExpiredAt: nếu giữ nguyên giá trị cũ thì không coi là đang sửa
             var expiredAtRaw = Request.Form["ExpiredAt"].ToString();
             var currentExpiredRaw = current.ExpiredAt.HasValue
-                ? current.ExpiredAt.Value.ToLocalTime().ToString("yyyy-MM-ddTHH:mm")
+                ? ToLocalDisplay(current.ExpiredAt.Value).ToString("yyyy-MM-ddTHH:mm")
                 : "";
 
             if (string.IsNullOrWhiteSpace(expiredAtRaw) || expiredAtRaw == currentExpiredRaw)
@@ -311,21 +335,21 @@ namespace GameStore.Controllers.Admin
             }
             else
             {
-                if (!DateTime.TryParse(expiredAtRaw, out DateTime parsedExpiredAt))
+                if (!DateTime.TryParse(expiredAtRaw, out DateTime parsedExpiredAtLocal))
                 {
                     TempData["Msg"] = "❌ Expired At không hợp lệ!";
                     TempData["MsgType"] = "danger";
                     return View("~/Views/Admin/News/Edit.cshtml", current);
                 }
 
-                if (parsedExpiredAt <= current.PublishedAt.ToLocalTime())
+                if (parsedExpiredAtLocal <= ToLocalDisplay(current.PublishedAt))
                 {
                     TempData["Msg"] = "❌ Expired At phải lớn hơn Published At!";
                     TempData["MsgType"] = "danger";
                     return View("~/Views/Admin/News/Edit.cshtml", current);
                 }
 
-                news.ExpiredAt = parsedExpiredAt;
+                news.ExpiredAt = EnsureUtc(parsedExpiredAtLocal);
             }
 
             if (photo != null && photo.Length > 0)

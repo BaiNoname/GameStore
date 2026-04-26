@@ -23,6 +23,11 @@ namespace GameStore.Services
             eventParticipantService = _eventParticipantService;
         }
 
+        private NguoiDung? GetActiveUser(int userId)
+        {
+            return db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
+        }
+
         public List<GiaoDich> findAll()
         {
             return db.GiaoDiches
@@ -107,9 +112,7 @@ namespace GameStore.Services
                     return false;
                 }
 
-                var user = db.NguoiDungs
-                    .Where(u => u.MaNguoiDung == userId)
-                    .FirstOrDefault();
+                var user = GetActiveUser(userId);
 
                 if (user == null)
                 {
@@ -225,6 +228,10 @@ namespace GameStore.Services
 
         public void CreatePendingMomo(int userId, string maGD, decimal amount)
         {
+            var user = GetActiveUser(userId);
+            if (user == null)
+                throw new Exception("User inactive or not found");
+
             var cart = db.GioHangs
                 .Include(x => x.ChiTietGioHangs)
                 .FirstOrDefault(x => x.MaNguoiDung == userId);
@@ -271,6 +278,10 @@ namespace GameStore.Services
                     throw new Exception("Transaction not found: " + maGD);
 
                 var userId = gd.MaNguoiDung;
+
+                var user = GetActiveUser(userId);
+                if (user == null)
+                    throw new Exception("User inactive or not found");
 
                 foreach (var item in gd.ChiTietGiaoDiches)
                 {
@@ -332,8 +343,8 @@ namespace GameStore.Services
 
         public async Task CompleteTopup(int userId, decimal amount)
         {
-            var user = db.NguoiDungs.Find(userId);
-            if (user == null) throw new Exception("User not found");
+            var user = GetActiveUser(userId);
+            if (user == null) throw new Exception("User inactive or not found");
 
             user.SoDu += amount;
             await db.SaveChangesAsync();
@@ -347,6 +358,9 @@ namespace GameStore.Services
         // =========================
         public string CreatePendingEventBalance(int userId, int eventId)
         {
+            var user = GetActiveUser(userId);
+            if (user == null) throw new Exception("User inactive or not found");
+
             var ev = db.Events.FirstOrDefault(x => x.EventId == eventId);
             if (ev == null) throw new Exception("Event not found");
 
@@ -386,7 +400,7 @@ namespace GameStore.Services
                 if (gd.TrangThai == "Success") return true;
                 if (!gd.EventId.HasValue) return false;
 
-                var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == gd.MaNguoiDung);
+                var user = GetActiveUser(gd.MaNguoiDung);
                 if (user == null) return false;
 
                 db.Entry(user).Reload();

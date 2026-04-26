@@ -1,6 +1,9 @@
 ﻿using GameStore.Hubs;
+using GameStore.Models;
 using GameStore.Pagination.User;
 using GameStore.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
@@ -18,6 +21,7 @@ namespace GameStore.Controllers
         private readonly IHubContext<EventChatHub> eventChatHub;
         private readonly EventRewardService eventRewardService;
         private readonly UserIconEffectService userIconEffectService;
+        private readonly GameStoreContext db;
 
         public EventController(
             EventService _eventService,
@@ -27,7 +31,8 @@ namespace GameStore.Controllers
             PaymentService _paymentService,
             IHubContext<EventChatHub> _eventChatHub,
             EventRewardService _eventRewardService,
-            UserIconEffectService _userIconEffectService)
+            UserIconEffectService _userIconEffectService,
+            GameStoreContext _db)
         {
             eventService = _eventService;
             participantService = _participantService;
@@ -37,6 +42,27 @@ namespace GameStore.Controllers
             eventChatHub = _eventChatHub;
             eventRewardService = _eventRewardService;
             userIconEffectService = _userIconEffectService;
+            db = _db;
+        }
+
+        private async Task<NguoiDung?> GetCurrentActiveUserAsync()
+        {
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+                return null;
+
+            var claim = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrWhiteSpace(claim) || !int.TryParse(claim, out int userId))
+                return null;
+
+            var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
+            if (user == null)
+            {
+                HttpContext.Session.Clear();
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return null;
+            }
+
+            return user;
         }
 
         private string BuildEventListUrl(string eventType = "All", string status = "All", int page = 1)
@@ -102,7 +128,7 @@ namespace GameStore.Controllers
         }
 
         [Route("detail/{slug}")]
-        public IActionResult Detail(string slug, string? returnUrl = null)
+        public async Task<IActionResult> Detail(string slug, string? returnUrl = null)
         {
             ViewBag.HideSubBar = true;
 
@@ -122,10 +148,10 @@ namespace GameStore.Controllers
 
             bool joined = false;
 
-            if (User.Identity != null && User.Identity.IsAuthenticated)
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser != null)
             {
-                int userId = int.Parse(User.FindFirst("UserId")!.Value);
-                joined = participantService.IsJoined(ev.EventId, userId);
+                joined = participantService.IsJoined(ev.EventId, activeUser.MaNguoiDung);
             }
 
             ViewBag.IsJoined = joined;
@@ -164,13 +190,14 @@ namespace GameStore.Controllers
                 return Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
             }
 
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
             {
                 var loginReturnUrl = BuildEventDetailUrl(ev.Slug, returnUrl);
                 return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
-            int userId = int.Parse(User.FindFirst("UserId")!.Value);
+            int userId = activeUser.MaNguoiDung;
 
             if (participantService.IsJoined(id, userId))
             {
@@ -207,20 +234,21 @@ namespace GameStore.Controllers
         }
 
         [Route("room/{id}")]
-        public IActionResult Room(int id, string? returnUrl = null)
+        public async Task<IActionResult> Room(int id, string? returnUrl = null)
         {
             ViewBag.HideSubBar = true;
 
             var fallbackListUrl = BuildEventListUrl();
             returnUrl = NormalizeReturnUrl(returnUrl, fallbackListUrl);
 
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
             {
                 var loginReturnUrl = BuildEventRoomUrl(id, returnUrl);
                 return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
-            int userId = int.Parse(User.FindFirst("UserId")!.Value);
+            int userId = activeUser.MaNguoiDung;
 
             var ev = eventService.FindById(id);
             if (ev == null)
@@ -264,7 +292,8 @@ namespace GameStore.Controllers
         [Route("room/{id}/send-message")]
         public async Task<IActionResult> SendMessage(int id, string content, string? returnUrl = null)
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
             {
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                     return Unauthorized();
@@ -273,7 +302,7 @@ namespace GameStore.Controllers
                 return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
-            int userId = int.Parse(User.FindFirst("UserId")!.Value);
+            int userId = activeUser.MaNguoiDung;
 
             var ev = eventService.FindById(id);
             if (ev == null)
@@ -346,15 +375,16 @@ namespace GameStore.Controllers
 
         [HttpPost]
         [Route("room/{id}/checkin")]
-        public IActionResult CheckIn(int id, string? returnUrl = null)
+        public async Task<IActionResult> CheckIn(int id, string? returnUrl = null)
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
             {
                 var loginReturnUrl = BuildEventRoomUrl(id, returnUrl);
                 return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
-            int userId = int.Parse(User.FindFirst("UserId")!.Value);
+            int userId = activeUser.MaNguoiDung;
 
             var ev = eventService.FindById(id);
             if (ev == null)
@@ -393,17 +423,18 @@ namespace GameStore.Controllers
         }
 
         [Route("my-events")]
-        public IActionResult MyEvents()
+        public async Task<IActionResult> MyEvents()
         {
             ViewBag.HideSubBar = true;
 
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
             {
                 var returnUrl = Url.Action("MyEvents", "Event") ?? "/event/my-events";
                 return RedirectToLoginWithReturnUrl(returnUrl);
             }
 
-            int userId = int.Parse(User.FindFirst("UserId")!.Value);
+            int userId = activeUser.MaNguoiDung;
 
             var myParticipants = participantService.GetMyEvents(userId);
 
@@ -422,13 +453,14 @@ namespace GameStore.Controllers
         [Route("room/{id}/claim-reward")]
         public async Task<IActionResult> ClaimReward(int id, string? returnUrl = null)
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
             {
                 var loginReturnUrl = BuildEventRoomUrl(id, returnUrl);
                 return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
-            int userId = int.Parse(User.FindFirst("UserId")!.Value);
+            int userId = activeUser.MaNguoiDung;
 
             var result = eventRewardService.ClaimReward(id, userId);
 

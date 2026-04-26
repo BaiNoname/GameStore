@@ -3,6 +3,7 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Quản lý User";
+    string status = ViewBag.Status?.ToString() ?? "all";
 }
 
 <div class="card admin-list-card">
@@ -11,13 +12,18 @@
         <p class="card-subtitle mb-3">Quản lý toàn bộ Users trong hệ thống</p>
 
         <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
-
-            <form method="get" action="/admin/user/index" class="d-flex flex-wrap admin-search-form">
+            <form method="get" action="/admin/user/index" class="d-flex flex-wrap gap-2 admin-search-form">
                 <input type="text"
                        name="keyword"
                        value="@Model.Keyword"
-                       class="form-control me-2"
-                       placeholder="Tìm user theo email..." />
+                       class="form-control"
+                       placeholder="Tìm user theo email hoặc tên..." />
+
+                <select name="status" class="form-control">
+                    <option value="all" selected="@(status == "all")">All</option>
+                    <option value="active" selected="@(status == "active")">Active</option>
+                    <option value="inactive" selected="@(status == "inactive")">Inactive</option>
+                </select>
 
                 <button type="submit" class="btn btn-success">
                     Search
@@ -27,6 +33,7 @@
             <a asp-controller="User"
                asp-action="Add"
                asp-route-keyword="@Model.Keyword"
+               asp-route-status="@status"
                asp-route-page="@Model.CurrentPage"
                class="btn btn-primary">
                 + Add New User
@@ -39,7 +46,6 @@
                     @TempData["Msg"]
                 </div>
             }
-
         </div>
 
         <div class="table-responsive">
@@ -52,71 +58,110 @@
                         <th>Date Register</th>
                         <th>Role</th>
                         <th>Balance</th>
+                        <th>Status</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var user in Model.Users)
+                    @if (Model.Users != null && Model.Users.Any())
+                    {
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr class="@(user.IsActive ? "" : "table-secondary")">
+                                <td>@user.MaNguoiDung</td>
+                                <td>@user.TenNguoiDung</td>
+                                <td class="text-break">@user.Email</td>
+                                <td>@user.NgayDangKy</td>
+                                <td>@user.Quyen</td>
+                                <td>@user.SoDu</td>
+                                <td>
+                                    @if (user.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-dark">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2 flex-wrap admin-action-group">
+                                        <a class="btn btn-sm btn-warning"
+                                           asp-controller="User"
+                                           asp-action="Edit"
+                                           asp-route-id="@user.MaNguoiDung"
+                                           asp-route-page="@Model.CurrentPage"
+                                           asp-route-keyword="@Model.Keyword"
+                                           asp-route-status="@status">
+                                            Edit
+                                        </a>
+
+                                        @if (user.IsActive)
+                                        {
+                                            <button class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal"
+                                                    data-user-id="@user.MaNguoiDung"
+                                                    data-user-name="@user.TenNguoiDung">
+                                                Deactivate
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <a class="btn btn-success btn-sm"
+                                               asp-controller="User"
+                                               asp-action="Activate"
+                                               asp-route-id="@user.MaNguoiDung"
+                                               asp-route-page="@Model.CurrentPage"
+                                               asp-route-keyword="@Model.Keyword"
+                                               asp-route-status="@status">
+                                                Activate
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
                     {
                         <tr>
-                            <td>@user.MaNguoiDung</td>
-                            <td>@user.TenNguoiDung</td>
-                            <td class="text-break">@user.Email</td>
-                            <td>@user.NgayDangKy</td>
-                            <td>@user.Quyen</td>
-                            <td>@user.SoDu</td>
-                            <td>
-                                <div class="d-flex gap-2 flex-wrap admin-action-group">
-                                    <a class="btn btn-sm btn-warning"
-                                       asp-controller="User"
-                                       asp-action="Edit"
-                                       asp-route-id="@user.MaNguoiDung"
-                                       asp-route-page="@Model.CurrentPage"
-                                       asp-route-keyword="@Model.Keyword">
-                                        Edit
-                                    </a>
-
-                                    <button class="btn btn-danger btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#deleteModal"
-                                            data-user-id="@user.MaNguoiDung"
-                                            data-user-name="@user.TenNguoiDung">
-                                        Delete
-                                    </button>
-                                </div>
-                            </td>
+                            <td colspan="8" class="text-center text-muted">Không có user nào</td>
                         </tr>
                     }
                 </tbody>
             </table>
 
-            <nav>
-                <ul class="pagination justify-content-center mt-4 flex-wrap">
-                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
-                        <a class="page-link"
-                           href="?keyword=@Model.Keyword&page=@(Model.CurrentPage - 1)">
-                            Previous
-                        </a>
-                    </li>
-
-                    @for (int i = 1; i <= Model.TotalPages; i++)
-                    {
-                        <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+            @if (Model.TotalPages > 1)
+            {
+                <nav>
+                    <ul class="pagination justify-content-center mt-4 flex-wrap">
+                        <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
                             <a class="page-link"
-                               href="?keyword=@Model.Keyword&page=@i">
-                                @i
+                               href="?keyword=@Model.Keyword&status=@status&page=@(Model.CurrentPage - 1)">
+                                Previous
                             </a>
                         </li>
-                    }
 
-                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link"
-                           href="?keyword=@Model.Keyword&page=@(Model.CurrentPage + 1)">
-                            Next
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   href="?keyword=@Model.Keyword&status=@status&page=@i">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               href="?keyword=@Model.Keyword&status=@status&page=@(Model.CurrentPage + 1)">
+                                Next
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
         </div>
     </div>
 </div>
@@ -124,27 +169,26 @@
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light">
-
             <div class="modal-header border-secondary">
-                <h5 class="modal-title">Xác nhận xóa user</h5>
+                <h5 class="modal-title">Xác nhận vô hiệu hóa user</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
-                Bạn có chắc muốn xóa user <strong id="deleteUserName"></strong> không? 🛑
+                Bạn có chắc muốn chuyển user <strong id="deleteUserName"></strong> sang trạng thái Inactive không? 🛑
             </div>
 
             <div class="modal-footer border-secondary flex-wrap">
                 <form method="get" id="deleteForm">
                     <input type="hidden" name="page" value="@Model.CurrentPage" />
                     <input type="hidden" name="keyword" value="@Model.Keyword" />
+                    <input type="hidden" name="status" value="@status" />
                     <button type="submit" class="btn btn-danger">
-                        Đồng ý xóa
+                        Đồng ý
                     </button>
                 </form>
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
             </div>
-
         </div>
     </div>
 </div>
@@ -156,10 +200,10 @@
 
     .admin-search-form {
         width: 100%;
-        max-width: 350px;
     }
 
-        .admin-search-form .form-control {
+        .admin-search-form .form-control,
+        .admin-search-form select {
             min-width: 0;
             flex: 1 1 220px;
         }
@@ -182,16 +226,12 @@
         }
 
     .admin-action-group {
-        min-width: 120px;
+        min-width: 140px;
     }
 
     @@media (max-width: 991.98px) {
         .admin-list-toolbar {
             align-items: stretch !important;
-        }
-
-        .admin-search-form {
-            max-width: 100%;
         }
     }
 
@@ -202,38 +242,22 @@
 
         .admin-search-form {
             flex-direction: column;
-            gap: 0.5rem;
         }
 
-            .admin-search-form .form-control {
-                margin-right: 0 !important;
+            .admin-search-form .form-control,
+            .admin-search-form select,
+            .admin-search-form .btn,
+            .admin-list-toolbar > .btn {
                 width: 100%;
                 flex: 1 1 auto;
             }
 
-            .admin-search-form .btn,
-            .admin-list-toolbar > .btn {
-                width: 100%;
-            }
-
         .admin-user-table {
-            min-width: 900px;
-        }
-
-        .pagination .page-link {
-            padding: 0.45rem 0.7rem;
+            min-width: 1050px;
         }
     }
 
     @@media (max-width: 575.98px) {
-        .card-title {
-            font-size: 1.1rem;
-        }
-
-        .card-subtitle {
-            font-size: 0.9rem;
-        }
-
         .modal-footer form,
         .modal-footer .btn {
             width: 100%;
@@ -244,6 +268,8 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         var deleteModal = document.getElementById('deleteModal');
+        if (!deleteModal) return;
+
         deleteModal.addEventListener('show.bs.modal', function (event) {
             var button = event.relatedTarget;
             var userId = button.getAttribute('data-user-id');

@@ -4,11 +4,13 @@ namespace GameStore.Services
 {
     public interface UserService
     {
-        public List<NguoiDung> findAll(string keyword, int page, int pageSize, out int totalPages);
-        public NguoiDung findById(int id);
-        public bool Create(NguoiDung user);
-        public bool Update(NguoiDung user);
-        public bool Delete(int id, int currentUserId);
-        public bool IsEmailExists(string email);
+        List<NguoiDung> findAll(string keyword, string status, int page, int pageSize, out int totalPages);
+        NguoiDung findById(int id);
+        bool Create(NguoiDung user);
+        bool Update(NguoiDung user);
+        bool Delete(int id, int currentUserId);
+        bool IsEmailExists(string email);
+        bool IsEmailExistsForOtherUser(string email, int userId);
+        bool Activate(int id);
     }
 }

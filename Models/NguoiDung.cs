@@ -9,6 +9,7 @@
         public DateOnly NgayDangKy { get; set; }
         public string Quyen { get; set; } = null!;
         public decimal SoDu { get; set; }
+        public bool IsActive { get; set; } = true;
 
         // 🔥 reset password
         public string? ResetCode { get; set; }

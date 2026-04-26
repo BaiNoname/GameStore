@@ -87,6 +87,16 @@ namespace GameStore.Controllers.Client.Game
                     TempData["ToastMessage"] = "Bạn phải mua game trước khi đánh giá!";
                     TempData["ToastType"] = "error";
                     break;
+
+                case "inactive_user":
+                    TempData["ToastMessage"] = "Tài khoản của bạn không còn hoạt động.";
+                    TempData["ToastType"] = "error";
+                    break;
+
+                default:
+                    TempData["ToastMessage"] = "Không thể gửi đánh giá.";
+                    TempData["ToastType"] = "error";
+                    break;
             }
 
             return Redirect(Request.Headers["Referer"].ToString());
