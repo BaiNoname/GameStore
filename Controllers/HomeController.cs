@@ -97,19 +97,28 @@ public class HomeController : Controller
         List<string> ownedGameIds = new List<string>();
         List<string> cartGameIds = new List<string>();
 
-        if (User.Identity.IsAuthenticated)
+        if (User.Identity != null && User.Identity.IsAuthenticated)
         {
-            var userId = int.Parse(User.FindFirst("UserId").Value);
+            var claim = User.FindFirst("UserId")?.Value;
 
-            ownedGameIds = gameService.GetDb().ThuVienGames
-                .Where(x => x.MaNguoiDung == userId)
-                .Select(x => x.MaGame)
-                .ToList();
+            if (int.TryParse(claim, out int userId))
+            {
+                var user = gameService.GetDb().NguoiDungs
+                    .FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
 
-            cartGameIds = gameService.GetDb().ChiTietGioHangs
-                .Where(x => x.GioHang.MaNguoiDung == userId)
-                .Select(x => x.MaGame)
-                .ToList();
+                if (user != null)
+                {
+                    ownedGameIds = gameService.GetDb().ThuVienGames
+                        .Where(x => x.MaNguoiDung == userId)
+                        .Select(x => x.MaGame)
+                        .ToList();
+
+                    cartGameIds = gameService.GetDb().ChiTietGioHangs
+                        .Where(x => x.GioHang.MaNguoiDung == userId)
+                        .Select(x => x.MaGame)
+                        .ToList();
+                }
+            }
         }
 
         ViewBag.OwnedGames = ownedGameIds;

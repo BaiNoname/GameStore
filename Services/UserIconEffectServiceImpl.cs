@@ -12,8 +12,16 @@ namespace GameStore.Services
             db = _db;
         }
 
+        private bool IsUserActive(int userId)
+        {
+            return db.NguoiDungs.Any(x => x.MaNguoiDung == userId && x.IsActive);
+        }
+
         public List<UserIconEffect> GetByUser(int userId)
         {
+            if (!IsUserActive(userId))
+                return new List<UserIconEffect>();
+
             return db.UserIconEffects
                 .Include(x => x.IconEffect)
                 .Include(x => x.Event)
@@ -24,6 +32,9 @@ namespace GameStore.Services
 
         public UserIconEffect? GetEquipped(int userId)
         {
+            if (!IsUserActive(userId))
+                return null;
+
             return db.UserIconEffects
                 .Include(x => x.IconEffect)
                 .FirstOrDefault(x => x.MaNguoiDung == userId && x.IsEquipped);
@@ -31,6 +42,9 @@ namespace GameStore.Services
 
         public string? GetEquippedCssClass(int userId)
         {
+            if (!IsUserActive(userId))
+                return null;
+
             return db.UserIconEffects
                 .Include(x => x.IconEffect)
                 .Where(x => x.MaNguoiDung == userId && x.IsEquipped)
@@ -45,7 +59,12 @@ namespace GameStore.Services
 
             return db.UserIconEffects
                 .Include(x => x.IconEffect)
-                .Where(x => userIds.Contains(x.MaNguoiDung) && x.IsEquipped && x.IconEffect != null)
+                .Where(x =>
+                    userIds.Contains(x.MaNguoiDung) &&
+                    x.IsEquipped &&
+                    x.IconEffect != null &&
+                    x.NguoiDung != null &&
+                    x.NguoiDung.IsActive)
                 .ToDictionary(
                     x => x.MaNguoiDung,
                     x => x.IconEffect!.CssClass
@@ -54,6 +73,8 @@ namespace GameStore.Services
 
         public bool Equip(int userId, int userIconEffectId)
         {
+            if (!IsUserActive(userId))
+                return false;
             try
             {
                 var effects = db.UserIconEffects.Where(x => x.MaNguoiDung == userId).ToList();
@@ -77,6 +98,8 @@ namespace GameStore.Services
 
         public bool Unequip(int userId)
         {
+            if (!IsUserActive(userId))
+                return false;
             try
             {
                 var effects = db.UserIconEffects.Where(x => x.MaNguoiDung == userId && x.IsEquipped).ToList();

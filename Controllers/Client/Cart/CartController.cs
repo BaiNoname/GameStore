@@ -1,4 +1,7 @@
-﻿using GameStore.Services;
+﻿using GameStore.Models;
+using GameStore.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,15 +15,41 @@ namespace GameStore.Controllers.Client.Cart
         private readonly CartService cartService;
         private readonly PaymentService paymentService;
         private readonly IMomoService momoService;
+        private readonly GameStoreContext db;
 
-        public CartController(CartService _cartService, PaymentService _paymentService, IMomoService _momoService)
+        public CartController(
+            CartService _cartService,
+            PaymentService _paymentService,
+            IMomoService _momoService,
+            GameStoreContext _db)
         {
             cartService = _cartService;
             paymentService = _paymentService;
             momoService = _momoService;
+            db = _db;
         }
 
-        private int GetUserId() => int.Parse(User.FindFirst("UserId").Value);
+        private int GetUserId() => int.Parse(User.FindFirst("UserId")!.Value);
+
+        private async Task<NguoiDung?> GetCurrentActiveUserAsync()
+        {
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+                return null;
+
+            var claim = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrWhiteSpace(claim) || !int.TryParse(claim, out int userId))
+                return null;
+
+            var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
+            if (user == null)
+            {
+                HttpContext.Session.Clear();
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return null;
+            }
+
+            return user;
+        }
 
         private string GetSafeReturnUrl(string? returnUrl = null)
         {
@@ -36,9 +65,12 @@ namespace GameStore.Controllers.Client.Cart
         [HttpGet("index")]
         public async Task<IActionResult> Index(string returnUrl)
         {
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
+                return Redirect("/auth/login");
+
             returnUrl = GetSafeReturnUrl(returnUrl);
 
-            // MoMo redirect về /cart với params
             if (Request.Query.ContainsKey("resultCode") && Request.Query.ContainsKey("orderId"))
             {
                 var resultCode = Request.Query["resultCode"].ToString();
@@ -93,7 +125,14 @@ namespace GameStore.Controllers.Client.Cart
                 TempData["ToastType"] = "error";
             }
 
-            var cart = cartService.GetCart(GetUserId());
+            var cart = cartService.GetCart(activeUser.MaNguoiDung);
+            if (cart == null)
+            {
+                TempData["ToastMessage"] = "Không thể tải giỏ hàng.";
+                TempData["ToastType"] = "error";
+                return Redirect("/auth/login");
+            }
+
             ViewBag.HideSubBar = true;
             ViewBag.ReturnUrl = returnUrl;
 
@@ -102,23 +141,31 @@ namespace GameStore.Controllers.Client.Cart
         }
 
         [HttpGet("add")]
-        public IActionResult Add(string gameId, string returnUrl, string mode)
+        public async Task<IActionResult> Add(string gameId, string returnUrl, string mode)
         {
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
+                return Redirect("/auth/login");
+
             returnUrl = GetSafeReturnUrl(returnUrl);
 
-            var userId = GetUserId();
-            var cart = cartService.GetCart(userId);
+            var cart = cartService.GetCart(activeUser.MaNguoiDung);
+            if (cart == null)
+            {
+                TempData["ToastMessage"] = "Không thể tải giỏ hàng.";
+                TempData["ToastType"] = "error";
+                return Redirect("/auth/login");
+            }
 
             bool alreadyInCart = cart.ChiTietGioHangs.Any(x => x.MaGame == gameId);
 
-            // BUY NOW: nếu đã có trong cart thì vào thẳng giỏ hàng, không báo lỗi
             if (mode == "buy" && alreadyInCart)
             {
                 TempData["ReturnUrl"] = returnUrl;
                 return RedirectToAction("Index", new { returnUrl });
             }
 
-            var result = cartService.AddToCart(userId, gameId);
+            var result = cartService.AddToCart(activeUser.MaNguoiDung, gameId);
 
             if (result)
             {
@@ -127,7 +174,7 @@ namespace GameStore.Controllers.Client.Cart
             }
             else
             {
-                TempData["ToastMessage"] = "Không thể thêm game vào giỏ hàng. Có thể game đã có trong giỏ hoặc bạn đã sở hữu game này.";
+                TempData["ToastMessage"] = "Không thể thêm game vào giỏ hàng. Có thể game đã có trong giỏ, bạn đã sở hữu game này, hoặc tài khoản không còn hợp lệ.";
                 TempData["ToastType"] = "error";
             }
 
@@ -140,11 +187,15 @@ namespace GameStore.Controllers.Client.Cart
         }
 
         [HttpGet("remove")]
-        public IActionResult Remove(string gameId, string returnUrl)
+        public async Task<IActionResult> Remove(string gameId, string returnUrl)
         {
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
+                return Redirect("/auth/login");
+
             returnUrl = GetSafeReturnUrl(returnUrl);
 
-            cartService.RemoveFromCart(GetUserId(), gameId);
+            cartService.RemoveFromCart(activeUser.MaNguoiDung, gameId);
 
             TempData["ToastMessage"] = "Đã xóa game khỏi giỏ hàng";
             TempData["ToastType"] = "success";
@@ -154,11 +205,15 @@ namespace GameStore.Controllers.Client.Cart
         }
 
         [HttpGet("clear")]
-        public IActionResult Clear(string returnUrl)
+        public async Task<IActionResult> Clear(string returnUrl)
         {
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
+                return Redirect("/auth/login");
+
             returnUrl = GetSafeReturnUrl(returnUrl);
 
-            cartService.ClearCart(GetUserId());
+            cartService.ClearCart(activeUser.MaNguoiDung);
 
             TempData["ToastMessage"] = "Đã xóa toàn bộ giỏ hàng 🧹";
             TempData["ToastType"] = "success";
@@ -170,9 +225,13 @@ namespace GameStore.Controllers.Client.Cart
         [HttpGet("/checkout")]
         public async Task<IActionResult> Checkout(string method = "balance", string returnUrl = null)
         {
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
+                return Redirect("/auth/login");
+
             returnUrl = GetSafeReturnUrl(returnUrl);
 
-            var userId = GetUserId();
+            var userId = activeUser.MaNguoiDung;
 
             if (method.Equals("momo", StringComparison.OrdinalIgnoreCase))
             {

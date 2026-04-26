@@ -208,7 +208,7 @@
                             <div>
                                 <strong class="gs-review-user">@r.NguoiDung.TenNguoiDung</strong>
                                 <p class="gs-review-date mb-0">
-                                    @r.NgayDanhGia.ToString("dd/MM/yyyy HH:mm")
+                                    @r.NgayDanhGia.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                                 </p>
                             </div>
 

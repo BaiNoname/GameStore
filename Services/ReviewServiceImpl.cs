@@ -14,6 +14,9 @@ namespace GameStore.Services
 
         public string AddOrUpdate(int userId, string gameId, int rating, string comment)
         {
+            var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
+            if (user == null) return "inactive_user";
+
             bool bought = db.ChiTietGiaoDiches
                 .Any(x => x.GiaoDich.MaNguoiDung == userId && x.MaGame == gameId);
 
@@ -57,10 +60,10 @@ namespace GameStore.Services
         public List<DanhGia> GetByGame(string gameId)
         {
             return db.DanhGias
-    .Include(x => x.NguoiDung)
-    .Where(x => x.MaGame == gameId)
-    .OrderByDescending(x => x.NgayDanhGia)
-    .ToList();
+                .Include(x => x.NguoiDung)
+                .Where(x => x.MaGame == gameId)
+                .OrderByDescending(x => x.NgayDanhGia)
+                .ToList();
         }
     }
 }

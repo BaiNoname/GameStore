@@ -80,6 +80,7 @@ namespace GameStore.Models
                 entity.Property(e => e.NgayDangKy).HasColumnName("ngaydangky");
                 entity.Property(e => e.Quyen).HasColumnName("quyen");
                 entity.Property(e => e.SoDu).HasColumnName("sodu");
+                entity.Property(e => e.IsActive).HasColumnName("isactive").HasDefaultValue(true);
 
                 // 🔥 reset password
                 entity.Property(e => e.ResetCode).HasColumnName("resetcode");

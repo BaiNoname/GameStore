@@ -7,13 +7,18 @@ namespace GameStore.Services
 {
     public class AuthServiceImpl : AuthService
     {
-        private GameStoreContext db;
-        private MailHelper mailHelper;
+        private readonly GameStoreContext db;
+        private readonly MailHelper mailHelper;
 
         public AuthServiceImpl(GameStoreContext _db, MailHelper _mailHelper)
         {
             db = _db;
             mailHelper = _mailHelper;
+        }
+
+        private DateTime UtcNow()
+        {
+            return DateTime.UtcNow;
         }
 
         public bool Register(NguoiDung user, out string message)
@@ -49,10 +54,11 @@ namespace GameStore.Services
             }
 
             user.MatKhau = BCrypt.Net.BCrypt.HashPassword(user.MatKhau);
-            user.NgayDangKy = DateOnly.FromDateTime(DateTime.Now);
-            user.Quyen = "User";
+            user.NgayDangKy = DateOnly.FromDateTime(UtcNow());
+            user.Quyen = "user";
             user.SoDu = 0;
             user.GioHang = null;
+            user.IsActive = true;
 
             db.NguoiDungs.Add(user);
             db.SaveChanges();
@@ -68,25 +74,30 @@ namespace GameStore.Services
 
             email = email.Trim().ToLower();
 
-            var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email);
+            var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email && x.IsActive);
 
-            if (user == null)
+            if (user == null || string.IsNullOrWhiteSpace(user.MatKhau))
                 return null;
 
-            bool check = BCrypt.Net.BCrypt.Verify(password, user.MatKhau);
-
-            if (!check)
+            try
+            {
+                bool check = BCrypt.Net.BCrypt.Verify(password, user.MatKhau);
+                if (!check)
+                    return null;
+            }
+            catch
+            {
                 return null;
+            }
 
             return user;
         }
 
-        // ================= CHANGE PASSWORD =================
         public bool ChangePassword(int userId, string oldPass, string newPass, string confirmPass, out string message)
         {
             message = "";
 
-            var user = db.NguoiDungs.Find(userId);
+            var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
 
             if (user == null)
             {
@@ -94,7 +105,6 @@ namespace GameStore.Services
                 return false;
             }
 
-            // check mật khẩu cũ
             bool check = BCrypt.Net.BCrypt.Verify(oldPass, user.MatKhau);
 
             if (!check)
@@ -103,14 +113,12 @@ namespace GameStore.Services
                 return false;
             }
 
-            // confirm
             if (newPass != confirmPass)
             {
                 message = "Xác nhận mật khẩu không khớp";
                 return false;
             }
 
-            // validate password
             if (newPass.Length < 5)
             {
                 message = "Mật khẩu phải >= 5 ký tự";
@@ -122,16 +130,14 @@ namespace GameStore.Services
             db.SaveChanges();
 
             message = "Đổi mật khẩu thành công ✅";
-
             return true;
         }
 
-        // ================= UPDATE NAME =================
         public bool UpdateName(int userId, string newName, out string message)
         {
             message = "";
 
-            var user = db.NguoiDungs.Find(userId);
+            var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
 
             if (user == null)
             {
@@ -150,7 +156,6 @@ namespace GameStore.Services
             db.SaveChanges();
 
             message = "Cập nhật tên thành công ✅";
-
             return true;
         }
 
@@ -166,7 +171,7 @@ namespace GameStore.Services
 
             email = email.Trim().ToLower();
 
-            var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email);
+            var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email && x.IsActive);
 
             if (user == null)
             {
@@ -177,13 +182,12 @@ namespace GameStore.Services
             var code = new Random().Next(100000, 999999).ToString();
 
             user.ResetCode = code;
-            user.ResetCodeExpiry = DateTime.UtcNow.AddMinutes(5);
+            user.ResetCodeExpiry = UtcNow().AddMinutes(5);
             user.IsVerified = false;
 
             db.SaveChanges();
 
             var subject = "Reset Password - GameStore";
-
             var body = $"<h3>Mã reset của bạn là: <b>{code}</b></h3><p>Hết hạn sau 5 phút</p>";
 
             bool sent = Task.Run(() => mailHelper.SendEmail(email, subject, body)).Result;
@@ -202,7 +206,7 @@ namespace GameStore.Services
         {
             message = "";
 
-            var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email);
+            var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email && x.IsActive);
 
             if (user == null)
             {
@@ -222,7 +226,7 @@ namespace GameStore.Services
                 return false;
             }
 
-            if (user.ResetCodeExpiry == null || user.ResetCodeExpiry < DateTime.UtcNow)
+            if (user.ResetCodeExpiry == null || user.ResetCodeExpiry < UtcNow())
             {
                 message = "Mã đã hết hạn";
                 return false;
@@ -239,7 +243,7 @@ namespace GameStore.Services
         {
             message = "";
 
-            var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email);
+            var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email && x.IsActive);
 
             if (user == null)
             {
@@ -266,8 +270,6 @@ namespace GameStore.Services
             }
 
             user.MatKhau = BCrypt.Net.BCrypt.HashPassword(newPass);
-
-            // reset lại code
             user.ResetCode = null;
             user.ResetCodeExpiry = null;
             user.IsVerified = false;

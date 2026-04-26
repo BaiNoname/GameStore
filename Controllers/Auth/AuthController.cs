@@ -9,11 +9,9 @@ using System.Security.Claims;
 namespace GameStore.Controllers.Auth
 {
     [Route("auth")]
-
     public class AuthController : Controller
     {
-        private AuthService authService;
-
+        private readonly AuthService authService;
         private readonly MailHelper mailHelper;
 
         public AuthController(AuthService _authService, MailHelper _mailHelper)
@@ -51,12 +49,12 @@ namespace GameStore.Controllers.Auth
             }
 
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.Name, user.TenNguoiDung),
-        new Claim(ClaimTypes.Email, user.Email),
-        new Claim(ClaimTypes.Role, user.Quyen.ToLower()),
-        new Claim("UserId", user.MaNguoiDung.ToString())
-    };
+            {
+                new Claim(ClaimTypes.Name, user.TenNguoiDung),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Quyen.ToLower()),
+                new Claim("UserId", user.MaNguoiDung.ToString())
+            };
 
             var identity = new ClaimsIdentity(
                 claims,
@@ -73,7 +71,6 @@ namespace GameStore.Controllers.Auth
             TempData["ToastMessage"] = "Đăng nhập thành công!";
             TempData["ToastType"] = "success";
 
-            // Ưu tiên quay lại trang trước đó nếu có
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 return Redirect(returnUrl);
@@ -151,7 +148,6 @@ namespace GameStore.Controllers.Auth
             if (authService.SendResetCode(email, out string message))
             {
                 HttpContext.Session.SetString("ResetEmail", email);
-
                 return RedirectToAction("VerifyCode");
             }
 
@@ -176,8 +172,6 @@ namespace GameStore.Controllers.Auth
         {
             ViewBag.HideSubBar = true;
             var email = HttpContext.Session.GetString("ResetEmail");
-
-            Console.WriteLine("EMAIL SESSION: " + email); // debug
 
             if (string.IsNullOrEmpty(email))
             {
@@ -221,8 +215,7 @@ namespace GameStore.Controllers.Auth
 
             if (authService.ResetPassword(email, password, confirmPassword, out string message))
             {
-                HttpContext.Session.Remove("ResetEmail"); // 🔥 xoá sau khi xong
-
+                HttpContext.Session.Remove("ResetEmail");
                 TempData["Reset Success"] = "Đổi mật khẩu thành công!";
                 return RedirectToAction("Login");
             }
@@ -230,6 +223,5 @@ namespace GameStore.Controllers.Auth
             ViewBag.Error = message;
             return View();
         }
-
     }
 }

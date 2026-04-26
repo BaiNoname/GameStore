@@ -6,9 +6,7 @@
 }
 
 <div class="container mt-5">
-
     <div class="card bg-light text-light shadow-lg border-0">
-
         <div class="card-header border-bottom border-secondary">
             <h4 class="mb-0">🎮 Add Users</h4>
         </div>
@@ -22,74 +20,60 @@
         }
 
         <div class="card-body">
-            <form method="post" asp-controller="user" asp-action="add">
+            <form method="post" asp-controller="User" asp-action="Add">
                 <input type="hidden" name="keyword" value="@ViewBag.Keyword" />
+                <input type="hidden" name="status" value="@ViewBag.Status" />
                 <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
 
-                <!-- Category Name -->
                 <div class="mb-3">
                     <label class="form-label">User Name</label>
-
                     <input type="text"
                            class="form-control"
                            asp-for="TenNguoiDung"
                            placeholder="Enter User Name..." />
-
-                    <span asp-validation-for="TenNguoiDung"
-                          class="text-danger"></span>
+                    <span asp-validation-for="TenNguoiDung" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Email</label>
-
                     <input type="email"
                            class="form-control"
                            asp-for="Email"
                            placeholder="Enter Email..." />
-
-                    <span asp-validation-for="Email"
-                          class="text-danger"></span>
+                    <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">PassWord</label>
-
                     <input type="password"
                            class="form-control"
                            asp-for="MatKhau"
                            placeholder="Enter PassWord..." />
-
-                    <span asp-validation-for="MatKhau"
-                          class="text-danger"></span>
+                    <span asp-validation-for="MatKhau" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Confirm Password</label>
-
                     <input type="password"
                            class="form-control"
                            name="confirmPassword"
                            placeholder="Confirm Password..." />
-
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Role</label>
-
                     <select class="form-control" asp-for="Quyen">
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
                     </select>
-
                     <span asp-validation-for="Quyen" class="text-danger"></span>
                 </div>
 
-                <!-- Buttons -->
                 <div class="d-flex justify-content-end gap-2">
-
                     <a asp-controller="User"
                        asp-action="Index"
                        asp-route-keyword="@ViewBag.Keyword"
+                       asp-route-status="@ViewBag.Status"
                        asp-route-page="@ViewBag.CurrentPage"
                        class="btn btn-secondary">
                         Back
@@ -98,18 +82,13 @@
                     <button class="btn btn-success" type="submit">
                         ➕ Add User
                     </button>
-
                 </div>
-
             </form>
-
         </div>
-
     </div>
-
 </div>
+
 <script>
-    // Ẩn thông báo sau 3s
     setTimeout(() => {
         const alert = document.querySelector('.alert');
         if (alert) alert.style.display = 'none';

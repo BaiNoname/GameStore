@@ -36,6 +36,10 @@ namespace GameStore.Services
                 if (string.IsNullOrWhiteSpace(content))
                     return false;
 
+                var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
+                if (user == null)
+                    return false;
+
                 var message = new EventMessage
                 {
                     EventId = eventId,

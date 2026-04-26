@@ -11,8 +11,16 @@ namespace GameStore.Services
             db = _db;
         }
 
+        private NguoiDung? GetActiveUser(int userId)
+        {
+            return db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
+        }
+
         public bool CanClaimReward(int eventId, int userId)
         {
+            var user = GetActiveUser(userId);
+            if (user == null) return false;
+
             var ev = db.Events.FirstOrDefault(x => x.EventId == eventId);
             if (ev == null) return false;
 
@@ -37,6 +45,16 @@ namespace GameStore.Services
 
             try
             {
+                var user = GetActiveUser(userId);
+                if (user == null)
+                {
+                    return new RewardClaimResult
+                    {
+                        Success = false,
+                        Message = "Tài khoản không hợp lệ hoặc đã bị khóa."
+                    };
+                }
+
                 var ev = db.Events.FirstOrDefault(x => x.EventId == eventId);
                 if (ev == null)
                     return new RewardClaimResult { Success = false, Message = "Sự kiện không tồn tại." };
@@ -57,16 +75,12 @@ namespace GameStore.Services
                 var prizeType = (ev.PrizeType ?? "").Trim();
                 var prizeValue = (ev.PrizeValue ?? "").Trim();
 
-                var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId);
-                var displayName = user?.TenNguoiDung ?? user?.Email ?? "Người dùng";
+                var displayName = user.TenNguoiDung ?? user.Email ?? "Người dùng";
 
                 if (string.Equals(prizeType, "Balance", StringComparison.OrdinalIgnoreCase))
                 {
                     if (!decimal.TryParse(prizeValue, out decimal amount) || amount <= 0)
                         return new RewardClaimResult { Success = false, Message = "Giá trị thưởng Balance không hợp lệ." };
-
-                    if (user == null)
-                        return new RewardClaimResult { Success = false, Message = "Người dùng không tồn tại." };
 
                     user.SoDu += amount;
 

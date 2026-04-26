@@ -334,13 +334,13 @@ namespace GameStore.Controllers.Admin
         [HttpPost]
         [Route("event/edit/{id}")]
         public IActionResult Edit(
-    int id,
-    Event ev,
-    IFormFile? photo,
-    string filterKeyword = "",
-    string filterEventType = "",
-    string filterStatus = "",
-    int currentPage = 1)
+            int id,
+            Event ev,
+            IFormFile? photo,
+            string filterKeyword = "",
+            string filterEventType = "",
+            string filterStatus = "",
+            int currentPage = 1)
         {
             var current = eventService.FindById(id);
             if (current == null)

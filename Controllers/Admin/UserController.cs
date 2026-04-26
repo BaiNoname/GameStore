@@ -10,7 +10,7 @@ namespace GameStore.Controllers.Admin
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class UserController : Controller
     {
-        private UserService userService;
+        private readonly UserService userService;
 
         public UserController(UserService _userService)
         {
@@ -19,16 +19,16 @@ namespace GameStore.Controllers.Admin
 
         private int GetCurrentUserId()
         {
-            return int.Parse(User.FindFirst("UserId").Value);
+            return int.Parse(User.FindFirst("UserId")!.Value);
         }
 
         [Route("user/index")]
-        public IActionResult Index(string keyword = "", int page = 1)
+        public IActionResult Index(string keyword = "", string status = "all", int page = 1)
         {
             int pageSize = 10;
             int totalPages;
 
-            var users = userService.findAll(keyword, page, pageSize, out totalPages);
+            var users = userService.findAll(keyword, status, page, pageSize, out totalPages);
 
             var vm = new GameStore.Pagination.Admin.UserListVM
             {
@@ -38,25 +38,30 @@ namespace GameStore.Controllers.Admin
                 Keyword = keyword
             };
 
+            ViewBag.Status = status;
+
             return View("~/Views/Admin/User/Index.cshtml", vm);
         }
 
         [Route("user/add")]
-        public IActionResult Add(string keyword = "", int page = 1)
+        public IActionResult Add(string keyword = "", string status = "all", int page = 1)
         {
             ViewBag.Keyword = keyword;
+            ViewBag.Status = status;
             ViewBag.CurrentPage = page;
-            return View("~/Views/Admin/User/Add.cshtml");
+            return View("~/Views/Admin/User/Add.cshtml", new NguoiDung { Quyen = "user" });
         }
 
         [HttpPost]
         [Route("user/add")]
-        public IActionResult Add(NguoiDung user, string confirmPassword, string keyword = "", int page = 1)
+        public IActionResult Add(NguoiDung user, string confirmPassword, string keyword = "", string status = "all", int page = 1)
         {
             user.Email = user.Email?.Trim().ToLower();
             user.TenNguoiDung = user.TenNguoiDung?.Trim();
+            user.Quyen = (user.Quyen ?? "").Trim().ToLower();
 
             ViewBag.Keyword = keyword;
+            ViewBag.Status = status;
             ViewBag.CurrentPage = page;
 
             if (string.IsNullOrWhiteSpace(user.TenNguoiDung))
@@ -84,7 +89,7 @@ namespace GameStore.Controllers.Admin
                 TempData["Msg"] = "Password không khớp";
                 TempData["MsgType"] = "danger";
             }
-            else if (userService.findAll(user.Email, 1, 1, out int tmp).Any())
+            else if (userService.IsEmailExists(user.Email))
             {
                 TempData["Msg"] = "Email đã tồn tại";
                 TempData["MsgType"] = "danger";
@@ -93,7 +98,7 @@ namespace GameStore.Controllers.Admin
             {
                 TempData["Msg"] = "Add Oke";
                 TempData["MsgType"] = "success";
-                return RedirectToAction("Index", new { keyword, page });
+                return RedirectToAction("Index", new { keyword, status, page });
             }
             else
             {
@@ -105,14 +110,14 @@ namespace GameStore.Controllers.Admin
         }
 
         [Route("user/delete/{id}")]
-        public IActionResult Delete(int id, string keyword = "", int page = 1)
+        public IActionResult Delete(int id, string keyword = "", string status = "all", int page = 1)
         {
             var userToDelete = userService.findById(id);
             if (userToDelete == null)
             {
                 TempData["Msg"] = "❌ User không tồn tại!";
                 TempData["MsgType"] = "danger";
-                return RedirectToAction("Index", new { keyword, page });
+                return RedirectToAction("Index", new { keyword, status, page });
             }
 
             var currentUserId = GetCurrentUserId();
@@ -121,58 +126,59 @@ namespace GameStore.Controllers.Admin
             {
                 TempData["Msg"] = "❌ Bạn không thể xoá chính mình!";
                 TempData["MsgType"] = "warning";
-                return RedirectToAction("Index", new { keyword, page });
+                return RedirectToAction("Index", new { keyword, status, page });
             }
 
-            if (userToDelete.Quyen == "admin")
+            if ((userToDelete.Quyen ?? "").Trim().ToLower() == "admin")
             {
                 TempData["Msg"] = "❌ Không thể xoá admin khác!";
                 TempData["MsgType"] = "warning";
-                return RedirectToAction("Index", new { keyword, page });
+                return RedirectToAction("Index", new { keyword, status, page });
             }
 
             if (userService.Delete(id, currentUserId))
             {
-                TempData["Msg"] = "✅ Delete thành công!";
+                TempData["Msg"] = "✅ Chuyển user sang Inactive thành công!";
                 TempData["MsgType"] = "success";
             }
             else
             {
-                TempData["Msg"] = "❌ Delete thất bại!";
+                TempData["Msg"] = "❌ Thao tác thất bại!";
                 TempData["MsgType"] = "danger";
             }
 
             int pageSize = 10;
             int totalPages;
-            userService.findAll(keyword, 1, pageSize, out totalPages);
+            userService.findAll(keyword, status, 1, pageSize, out totalPages);
 
             if (totalPages <= 0) totalPages = 1;
             if (page > totalPages) page = totalPages;
 
-            return RedirectToAction("Index", new { keyword, page });
+            return RedirectToAction("Index", new { keyword, status, page });
         }
 
         [Route("user/edit/{id}")]
-        public IActionResult Edit(int id, string keyword = "", int page = 1)
+        public IActionResult Edit(int id, string keyword = "", string status = "all", int page = 1)
         {
             var user = userService.findById(id);
             if (user == null)
             {
                 TempData["Msg"] = "❌ User không tồn tại!";
                 TempData["MsgType"] = "danger";
-                return RedirectToAction("Index", new { keyword, page });
+                return RedirectToAction("Index", new { keyword, status, page });
             }
 
             int currentUserId = GetCurrentUserId();
 
-            if (user.Quyen == "admin" && user.MaNguoiDung != currentUserId)
+            if ((user.Quyen ?? "").Trim().ToLower() == "admin" && user.MaNguoiDung != currentUserId)
             {
                 TempData["Msg"] = "⚠️ Bạn không thể chỉnh sửa admin khác!";
                 TempData["MsgType"] = "warning";
-                return RedirectToAction("Index", new { keyword, page });
+                return RedirectToAction("Index", new { keyword, status, page });
             }
 
             ViewBag.Keyword = keyword;
+            ViewBag.Status = status;
             ViewBag.CurrentPage = page;
 
             return View("~/Views/Admin/User/Edit.cshtml", user);
@@ -180,38 +186,51 @@ namespace GameStore.Controllers.Admin
 
         [HttpPost]
         [Route("user/edit/{id}")]
-        public IActionResult Edit(NguoiDung user, string confirmPassword, string keyword = "", int page = 1)
+        public IActionResult Edit(NguoiDung user, string confirmPassword, string keyword = "", string status = "all", int page = 1)
         {
-            var existingUser = userService.findById(user.MaNguoiDung);
-            if (existingUser == null)
+            var dbUser = userService.findById(user.MaNguoiDung);
+            if (dbUser == null)
             {
                 TempData["Msg"] = "User không tồn tại!";
                 TempData["MsgType"] = "danger";
-                return RedirectToAction("Index", new { keyword, page });
+                return RedirectToAction("Index", new { keyword, status, page });
             }
 
             ViewBag.Keyword = keyword;
+            ViewBag.Status = status;
             ViewBag.CurrentPage = page;
 
             bool isChanged = false;
 
-            if (!string.IsNullOrWhiteSpace(user.TenNguoiDung) && user.TenNguoiDung.Trim() != existingUser.TenNguoiDung)
+            var updateUser = new NguoiDung
             {
-                existingUser.TenNguoiDung = user.TenNguoiDung.Trim();
+                MaNguoiDung = dbUser.MaNguoiDung,
+                TenNguoiDung = dbUser.TenNguoiDung,
+                Email = dbUser.Email,
+                Quyen = dbUser.Quyen,
+                SoDu = dbUser.SoDu,
+                IsActive = dbUser.IsActive,
+                MatKhau = null
+            };
+
+            if (!string.IsNullOrWhiteSpace(user.TenNguoiDung) && user.TenNguoiDung.Trim() != dbUser.TenNguoiDung)
+            {
+                updateUser.TenNguoiDung = user.TenNguoiDung.Trim();
                 isChanged = true;
             }
 
-            if (!string.IsNullOrWhiteSpace(user.Email) && user.Email.Trim().ToLower() != existingUser.Email)
+            if (!string.IsNullOrWhiteSpace(user.Email) && user.Email.Trim().ToLower() != dbUser.Email)
             {
                 var newEmail = user.Email.Trim().ToLower();
-                var allUsers = userService.findAll("", 1, int.MaxValue, out int _);
-                if (allUsers.Any(u => u.Email == newEmail && u.MaNguoiDung != existingUser.MaNguoiDung))
+
+                if (userService.IsEmailExistsForOtherUser(newEmail, dbUser.MaNguoiDung))
                 {
                     TempData["Msg"] = "❌ Email đã tồn tại";
                     TempData["MsgType"] = "danger";
                     return View("~/Views/Admin/User/Edit.cshtml", user);
                 }
-                existingUser.Email = newEmail;
+
+                updateUser.Email = newEmail;
                 isChanged = true;
             }
 
@@ -223,6 +242,7 @@ namespace GameStore.Controllers.Admin
                     TempData["MsgType"] = "danger";
                     return View("~/Views/Admin/User/Edit.cshtml", user);
                 }
+
                 if (user.MatKhau != confirmPassword)
                 {
                     TempData["Msg"] = "❌ Password không khớp";
@@ -230,29 +250,36 @@ namespace GameStore.Controllers.Admin
                     return View("~/Views/Admin/User/Edit.cshtml", user);
                 }
 
-                existingUser.MatKhau = user.MatKhau;
+                updateUser.MatKhau = user.MatKhau;
                 isChanged = true;
             }
 
-            bool isEditingSelf = existingUser.MaNguoiDung == GetCurrentUserId();
-            bool isTargetAdmin = existingUser.Quyen == "admin";
+            bool isEditingSelf = dbUser.MaNguoiDung == GetCurrentUserId();
+            bool isTargetAdmin = (dbUser.Quyen ?? "").Trim().ToLower() == "admin";
 
             if (!isEditingSelf && isTargetAdmin)
             {
-                user.Quyen = existingUser.Quyen;
+                updateUser.Quyen = dbUser.Quyen;
             }
-            else if (isEditingSelf || (!isTargetAdmin))
+            else if (isEditingSelf || !isTargetAdmin)
             {
-                if (user.Quyen != existingUser.Quyen && (user.Quyen == "user" || user.Quyen == "admin"))
+                var newRole = (user.Quyen ?? "").Trim().ToLower();
+                if (newRole != dbUser.Quyen && (newRole == "user" || newRole == "admin"))
                 {
-                    existingUser.Quyen = user.Quyen;
+                    updateUser.Quyen = newRole;
                     isChanged = true;
                 }
             }
 
-            if (user.SoDu != existingUser.SoDu)
+            if (user.SoDu != dbUser.SoDu)
             {
-                existingUser.SoDu = user.SoDu;
+                updateUser.SoDu = user.SoDu;
+                isChanged = true;
+            }
+
+            if (user.IsActive != dbUser.IsActive)
+            {
+                updateUser.IsActive = user.IsActive;
                 isChanged = true;
             }
 
@@ -260,21 +287,25 @@ namespace GameStore.Controllers.Admin
             {
                 TempData["Msg"] = "⚠️ Không có gì thay đổi!";
                 TempData["MsgType"] = "info";
-                return RedirectToAction("Index", new { keyword, page });
+                return RedirectToAction("Index", new { keyword, status, page });
             }
 
-            if (userService.Update(existingUser))
+            if (userService.Update(updateUser))
             {
                 TempData["Msg"] = "✅ Chỉnh sửa user thành công!";
                 TempData["MsgType"] = "success";
 
-                var allUsers = userService.findAll(keyword, 1, int.MaxValue, out int _);
-                var sorted = allUsers.OrderByDescending(u => u.NgayDangKy).ToList();
-                int index = sorted.FindIndex(u => u.MaNguoiDung == existingUser.MaNguoiDung);
+                var allUsers = userService.findAll(keyword, status, 1, int.MaxValue, out int _);
+                var sorted = allUsers
+                    .OrderByDescending(u => u.IsActive)
+                    .ThenByDescending(u => u.NgayDangKy)
+                    .ToList();
+
+                int index = sorted.FindIndex(u => u.MaNguoiDung == dbUser.MaNguoiDung);
                 int pageSize = 10;
                 int targetPage = index >= 0 ? (index / pageSize) + 1 : page;
 
-                return RedirectToAction("Index", new { keyword, page = targetPage });
+                return RedirectToAction("Index", new { keyword, status, page = targetPage });
             }
             else
             {
@@ -282,6 +313,31 @@ namespace GameStore.Controllers.Admin
                 TempData["MsgType"] = "danger";
                 return View("~/Views/Admin/User/Edit.cshtml", user);
             }
+        }
+
+        [Route("user/activate/{id}")]
+        public IActionResult Activate(int id, string keyword = "", string status = "all", int page = 1)
+        {
+            var user = userService.findById(id);
+            if (user == null)
+            {
+                TempData["Msg"] = "❌ User không tồn tại!";
+                TempData["MsgType"] = "danger";
+                return RedirectToAction("Index", new { keyword, status, page });
+            }
+
+            if (userService.Activate(id))
+            {
+                TempData["Msg"] = "✅ Kích hoạt lại user thành công!";
+                TempData["MsgType"] = "success";
+            }
+            else
+            {
+                TempData["Msg"] = "❌ Kích hoạt user thất bại!";
+                TempData["MsgType"] = "danger";
+            }
+
+            return RedirectToAction("Index", new { keyword, status, page });
         }
     }
 }
