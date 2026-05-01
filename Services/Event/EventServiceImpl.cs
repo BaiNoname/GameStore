@@ -86,7 +86,7 @@ namespace GameStore.Services
                 keyword = keyword.Trim().ToLower();
                 query = query.Where(x =>
                     x.Title.ToLower().Contains(keyword) ||
-                    (x.Summary != null && x.Summary.ToLower().Contains(keyword)));
+                    x.Summary != null && x.Summary.ToLower().Contains(keyword));
             }
 
             if (!string.IsNullOrWhiteSpace(eventType) && eventType.Trim().ToLower() != "all")

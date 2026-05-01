@@ -2,14 +2,14 @@
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Quản lý User";
+    ViewData["Title"] = "User Management";
     string status = ViewBag.Status?.ToString() ?? "all";
 }
 
 <div class="card admin-list-card">
     <div class="card-body">
-        <h4 class="card-title">Danh sách Users</h4>
-        <p class="card-subtitle mb-3">Quản lý toàn bộ Users trong hệ thống</p>
+        <h4 class="card-title">User List</h4>
+        <p class="card-subtitle mb-3">Manage all users in the system</p>
 
         <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
             <form method="get" action="/admin/user/index" class="d-flex flex-wrap gap-2 admin-search-form">
@@ -17,7 +17,7 @@
                        name="keyword"
                        value="@Model.Keyword"
                        class="form-control"
-                       placeholder="Tìm user theo email hoặc tên..." />
+                       placeholder="Search by email or name..." />
 
                 <select name="status" class="form-control">
                     <option value="all" selected="@(status == "all")">All</option>
@@ -53,13 +53,13 @@
                 <thead>
                     <tr>
                         <th>User ID</th>
-                        <th>UserName</th>
+                        <th>User Name</th>
                         <th>Email</th>
-                        <th>Date Register</th>
+                        <th>Registration Date</th>
                         <th>Role</th>
                         <th>Balance</th>
                         <th>Status</th>
-                        <th>Thao tác</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -100,7 +100,7 @@
                                         {
                                             <button class="btn btn-danger btn-sm"
                                                     data-bs-toggle="modal"
-                                                    data-bs-target="#deleteModal"
+                                                    data-bs-target="#deactivateModal"
                                                     data-user-id="@user.MaNguoiDung"
                                                     data-user-name="@user.TenNguoiDung">
                                                 Deactivate
@@ -108,15 +108,13 @@
                                         }
                                         else
                                         {
-                                            <a class="btn btn-success btn-sm"
-                                               asp-controller="User"
-                                               asp-action="Activate"
-                                               asp-route-id="@user.MaNguoiDung"
-                                               asp-route-page="@Model.CurrentPage"
-                                               asp-route-keyword="@Model.Keyword"
-                                               asp-route-status="@status">
+                                            <button class="btn btn-success btn-sm"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#activateModal"
+                                                    data-user-id="@user.MaNguoiDung"
+                                                    data-user-name="@user.TenNguoiDung">
                                                 Activate
-                                            </a>
+                                            </button>
                                         }
                                     </div>
                                 </td>
@@ -126,7 +124,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="8" class="text-center text-muted">Không có user nào</td>
+                            <td colspan="8" class="text-center text-muted">No users found</td>
                         </tr>
                     }
                 </tbody>
@@ -166,28 +164,57 @@
     </div>
 </div>
 
-<div class="modal fade" id="deleteModal" tabindex="-1">
+<!-- Deactivate Modal -->
+<div class="modal fade" id="deactivateModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light">
             <div class="modal-header border-secondary">
-                <h5 class="modal-title">Xác nhận vô hiệu hóa user</h5>
+                <h5 class="modal-title">Confirm User Deactivation</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
-                Bạn có chắc muốn chuyển user <strong id="deleteUserName"></strong> sang trạng thái Inactive không? 🛑
+                Are you sure you want to change user <strong id="deactivateUserName"></strong> to inactive status? 🛑
             </div>
 
             <div class="modal-footer border-secondary flex-wrap">
-                <form method="get" id="deleteForm">
+                <form method="get" id="deactivateForm">
                     <input type="hidden" name="page" value="@Model.CurrentPage" />
                     <input type="hidden" name="keyword" value="@Model.Keyword" />
                     <input type="hidden" name="status" value="@status" />
                     <button type="submit" class="btn btn-danger">
-                        Đồng ý
+                        Confirm
                     </button>
                 </form>
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activate Modal -->
+<div class="modal fade" id="activateModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Confirm User Activation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Are you sure you want to reactivate user <strong id="activateUserName"></strong>? ✅
+            </div>
+
+            <div class="modal-footer border-secondary flex-wrap">
+                <form method="get" id="activateForm">
+                    <input type="hidden" name="page" value="@Model.CurrentPage" />
+                    <input type="hidden" name="keyword" value="@Model.Keyword" />
+                    <input type="hidden" name="status" value="@status" />
+                    <button type="submit" class="btn btn-success">
+                        Confirm
+                    </button>
+                </form>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>
@@ -267,18 +294,28 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        var deleteModal = document.getElementById('deleteModal');
-        if (!deleteModal) return;
+        var deactivateModal = document.getElementById('deactivateModal');
+        if (deactivateModal) {
+            deactivateModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var userId = button.getAttribute('data-user-id');
+                var userName = button.getAttribute('data-user-name');
 
-        deleteModal.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget;
-            var userId = button.getAttribute('data-user-id');
-            var userName = button.getAttribute('data-user-name');
+                document.getElementById('deactivateUserName').textContent = userName;
+                document.getElementById('deactivateForm').action = '/admin/user/delete/' + userId;
+            });
+        }
 
-            document.getElementById('deleteUserName').textContent = userName;
+        var activateModal = document.getElementById('activateModal');
+        if (activateModal) {
+            activateModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var userId = button.getAttribute('data-user-id');
+                var userName = button.getAttribute('data-user-name');
 
-            var deleteForm = document.getElementById('deleteForm');
-            deleteForm.action = '/admin/user/delete/' + userId;
-        });
+                document.getElementById('activateUserName').textContent = userName;
+                document.getElementById('activateForm').action = '/admin/user/activate/' + userId;
+            });
+        }
     });
 </script>

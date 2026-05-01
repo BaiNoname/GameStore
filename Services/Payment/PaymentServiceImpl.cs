@@ -1,4 +1,5 @@
 ﻿using GameStore.Models;
+using GameStore.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

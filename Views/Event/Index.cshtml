@@ -41,7 +41,7 @@
             <div class="gs-kicker">Community Hub</div>
             <h1 class="gs-title">Event Group</h1>
             <p class="gs-subtitle">
-                Nơi tập trung các sự kiện nổi bật, giải đấu cộng đồng, hoạt động nhóm và lịch trình sắp diễn ra trên GameStore.
+                A hub for featured events, community tournaments, group activities, and upcoming schedules on GameStore.
             </p>
         </div>
 
@@ -54,7 +54,7 @@
                         <span class="@GetBadgeClass(featured.Status)">@GetBadgeText(featured.Status)</span>
                         <h2 class="gs-hero-title">@featured.Title</h2>
                         <p class="gs-hero-desc">
-                            @(string.IsNullOrWhiteSpace(featured.Summary) ? "Sự kiện nổi bật đang được cộng đồng quan tâm." : featured.Summary)
+                            @(string.IsNullOrWhiteSpace(featured.Summary) ? "Featured event is gaining attention from the community." : featured.Summary)
                         </p>
                         <div class="gs-meta">
                             <span>📅 @featured.StartAt.ToLocalTime().ToString("dd MMM yyyy")</span>
@@ -87,7 +87,7 @@
 
         <section class="mb-5">
             <h3 class="gs-section-title">Featured Events</h3>
-            <p class="gs-section-subtitle">Các sự kiện nổi bật được đề xuất cho cộng đồng.</p>
+            <p class="gs-section-subtitle">Featured events recommended for the community.</p>
 
             <div class="row g-4">
                 @foreach (var item in Model.Events)
@@ -99,7 +99,7 @@
                                 <span class="@GetBadgeClass(item.Status)">@GetBadgeText(item.Status)</span>
                                 <div class="gs-event-title">@item.Title</div>
                                 <div class="gs-event-desc">
-                                    @(string.IsNullOrWhiteSpace(item.Summary) ? "Thông tin sự kiện đang được cập nhật." : item.Summary)
+                                    @(string.IsNullOrWhiteSpace(item.Summary) ? "Event information is being updated." : item.Summary)
                                 </div>
                                 <div class="gs-mini-stat">
                                     <span>📅 @item.StartAt.ToLocalTime().ToString("dd MMM")</span>
@@ -146,7 +146,7 @@
 
         <section class="mb-5">
             <h3 class="gs-section-title">Event Schedule</h3>
-            <p class="gs-section-subtitle">Lịch trình hoạt động trong tuần dành cho cộng đồng và giải đấu.</p>
+            <p class="gs-section-subtitle">Weekly schedule of activities for the community and tournaments.</p>
 
             <div class="gs-schedule-card">
                 @foreach (var item in Model.UpcomingEvents.Take(4))

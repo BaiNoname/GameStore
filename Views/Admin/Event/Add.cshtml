@@ -92,7 +92,7 @@
 
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Prize Info</label>
-                        <input class="form-control" asp-for="PrizeInfo" placeholder="Ví dụ: Check-in để nhận thưởng" />
+                        <input class="form-control" asp-for="PrizeInfo" placeholder="Ex: Check in to receive your reward." />
                     </div>
                 </div>
 
@@ -137,7 +137,7 @@
                                step="0.01"
                                min="0"
                                value="@(Model.PrizeType == "Balance" ? Model.PrizeValue : "")"
-                               placeholder="Ví dụ: 50000" />
+                               placeholder="Ex: 50000" />
                     </div>
 
                     <div class="col-md-4 mb-3" id="prizeEffectWrap">

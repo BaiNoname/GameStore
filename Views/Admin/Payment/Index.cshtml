@@ -2,13 +2,13 @@
 @model PaymentListVM
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Quản lý Payment";
+    ViewData["Title"] = "Payment Management";
 }
 
 <div class="card admin-list-card">
     <div class="card-body">
-        <h4 class="card-title">Danh sách Payment</h4>
-        <p class="card-subtitle mb-3">Quản lý toàn bộ Payment trong hệ thống</p>
+        <h4 class="card-title">Payment List</h4>
+        <p class="card-subtitle mb-3">Manage all payments in the system</p>
 
         <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
 
@@ -18,10 +18,9 @@
                        name="keyword"
                        value="@Model.Keyword"
                        class="form-control"
-                       placeholder="Tìm theo email..." />
-
+                       placeholder="Search by email..." />
                 <select name="status" class="form-control">
-                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="">-- All Statuses --</option>
                     <option value="Success" selected="@(Model.Status == "Success")">Success</option>
                     <option value="Failed" selected="@(Model.Status == "Failed")">Failed</option>
                 </select>
@@ -39,11 +38,11 @@
             <table class="table table-striped align-middle admin-payment-table">
                 <thead>
                     <tr>
-                        <th>Mã GD</th>
+                        <th>Transaction ID</th>
                         <th>User</th>
-                        <th>Tiền</th>
-                        <th>Phương thức</th>
-                        <th>Trạng thái</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>

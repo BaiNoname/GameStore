@@ -78,7 +78,7 @@ namespace GameStore.Services
                 keyword = keyword.Trim().ToLower();
                 query = query.Where(x =>
                     x.Title.ToLower().Contains(keyword) ||
-                    (x.Summary != null && x.Summary.ToLower().Contains(keyword)));
+                    x.Summary != null && x.Summary.ToLower().Contains(keyword));
             }
 
             if (!string.IsNullOrWhiteSpace(newsType) && newsType.Trim().ToLower() != "all")
@@ -274,11 +274,11 @@ namespace GameStore.Services
                 existing.RelatedGameId = news.RelatedGameId;
 
                 existing.NewsType = string.IsNullOrWhiteSpace(news.NewsType)
-                    ? (string.IsNullOrWhiteSpace(existing.NewsType) ? "General" : existing.NewsType)
+                    ? string.IsNullOrWhiteSpace(existing.NewsType) ? "General" : existing.NewsType
                     : news.NewsType.Trim();
 
                 existing.Status = string.IsNullOrWhiteSpace(news.Status)
-                    ? (string.IsNullOrWhiteSpace(existing.Status) ? "Published" : existing.Status)
+                    ? string.IsNullOrWhiteSpace(existing.Status) ? "Published" : existing.Status
                     : news.Status.Trim();
 
                 existing.IsFeatured = news.IsFeatured;
@@ -300,9 +300,9 @@ namespace GameStore.Services
                 var postedExpiredUtc = EnsureUtc(news.ExpiredAt);
 
                 bool expiredChanged =
-                    (currentExpiredUtc == null && postedExpiredUtc != null) ||
-                    (currentExpiredUtc != null && postedExpiredUtc == null) ||
-                    (currentExpiredUtc != null && postedExpiredUtc != null && currentExpiredUtc.Value != postedExpiredUtc.Value);
+                    currentExpiredUtc == null && postedExpiredUtc != null ||
+                    currentExpiredUtc != null && postedExpiredUtc == null ||
+                    currentExpiredUtc != null && postedExpiredUtc != null && currentExpiredUtc.Value != postedExpiredUtc.Value;
 
                 if (expiredChanged)
                 {

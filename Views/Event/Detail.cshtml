@@ -49,7 +49,7 @@
                     </div>
 
                     <div class="gs-summary-box mb-4">
-                        @(string.IsNullOrWhiteSpace(Model.Summary) ? "Thông tin sự kiện đang được cập nhật." : Model.Summary)
+                        @(string.IsNullOrWhiteSpace(Model.Summary) ? "Event information is being updated." : Model.Summary)
                     </div>
 
                     <div class="gs-article-content">
@@ -111,7 +111,7 @@
                     </div>
 
                     <div id="eventFullToast" class="gs-inline-toast">
-                        Sự kiện này đã đủ số lượng người tham gia.
+                        This event has reached the maximum number of participants.
                     </div>
 
                     @if (!isJoined && !isFull && !isEnded && (Model.AccessType ?? "").Trim().ToLower() == "free")
@@ -120,30 +120,30 @@
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content gs-confirm-modal">
                                     <div class="modal-header border-0">
-                                        <h5 class="modal-title" id="confirmJoinFreeEventModalLabel">Xác nhận tham gia sự kiện</h5>
+                                        <h5 class="modal-title" id="confirmJoinFreeEventModalLabel">Confirm Join Event</h5>
                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
 
                                     <div class="modal-body">
                                         <p class="mb-2 text-light">
-                                            Bạn sắp tham gia event miễn phí:
+                                            You are about to join a free event:
                                         </p>
 
                                         <div class="gs-confirm-box mb-3 free">
                                             <div class="fw-bold text-light">@Model.Title</div>
                                             <div class="text-info small mt-1">
-                                                Miễn phí tham gia · Truy cập member area sau khi xác nhận
+                                                Free to join · Access member area after confirmation
                                             </div>
                                         </div>
 
                                         <p class="text-secondary mb-0">
-                                            Sau khi tham gia, bạn có thể vào room sự kiện, xem announcement, chat cùng thành viên và check-in.
+                                            After joining, you can enter the event room, view announcements, chat with members, and check-in.
                                         </p>
                                     </div>
 
                                     <div class="modal-footer border-0">
                                         <button type="button" class="gs-btn-outline" data-bs-dismiss="modal">
-                                            Hủy
+                                            Cancel
                                         </button>
 
                                         <form method="post" action="/event/join/@Model.EventId">
@@ -151,7 +151,7 @@
                                             <input type="hidden" name="method" value="balance" />
                                             <button type="submit" class="gs-btn-free">
                                                 <span class="gs-btn-free-icon">⚡</span>
-                                                <span>Xác nhận tham gia</span>
+                                                <span>Confirm Join</span>
                                             </button>
                                         </form>
                                     </div>
@@ -166,38 +166,38 @@
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content gs-confirm-modal">
                                     <div class="modal-header border-0">
-                                        <h5 class="modal-title" id="confirmBuyEventModalLabel">Xác nhận mua quyền tham gia</h5>
+                                        <h5 class="modal-title" id="confirmBuyEventModalLabel">Confirm Purchase of Event Access</h5>
                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
 
                                     <div class="modal-body">
                                         <p class="mb-2 text-light">
-                                            Bạn sắp mua quyền tham gia event:
+                                            You are about to purchase access to the event:
                                         </p>
 
                                         <div class="gs-confirm-box mb-3">
                                             <div class="fw-bold text-light">@Model.Title</div>
                                             <div class="text-secondary small mt-1">
-                                                Giá tham gia:
+                                                Participation Fee:
                                                 <span class="text-warning fw-semibold">@Model.Price.ToString("N0") VND</span>
                                             </div>
                                         </div>
 
                                         <p class="text-secondary mb-0">
-                                            Số dư tài khoản của bạn sẽ bị trừ ngay sau khi xác nhận. Bạn có chắc muốn tiếp tục không?
+                                            Your account balance will be deducted immediately after confirmation. Are you sure you want to continue?
                                         </p>
                                     </div>
 
                                     <div class="modal-footer border-0">
                                         <button type="button" class="gs-btn-outline" data-bs-dismiss="modal">
-                                            Hủy
+                                            Cancel
                                         </button>
 
                                         <form method="post" action="/event/join/@Model.EventId">
                                             <input type="hidden" name="method" value="balance" />
                                             <input type="hidden" name="returnUrl" value="@returnUrl" />
                                             <button type="submit" class="gs-btn-primary">
-                                                Xác nhận mua
+                                                Confirm Purchase
                                             </button>
                                         </form>
                                     </div>
@@ -238,7 +238,7 @@
                     }
                     else
                     {
-                        <p class="text-secondary">Chưa có thông báo nào.</p>
+                        <p class="text-secondary">No announcements available.</p>
                     }
                 </div>
             </div>
@@ -524,9 +524,9 @@
 
     function showEndedToast() {
         if (typeof showToast === "function") {
-            showToast("Sự kiện đã kết thúc, không thể tham gia mới.", "error");
+            showToast("The event has ended, you cannot join new.", "error");
         } else {
-            alert("Sự kiện đã kết thúc, không thể tham gia mới.");
+            alert("The event has ended, you cannot join new.");
         }
     }
 </script>

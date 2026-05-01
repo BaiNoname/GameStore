@@ -2,7 +2,7 @@
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Quản lý News";
+    ViewData["Title"] = "News Management";
 
     string keyword = ViewBag.Keyword?.ToString() ?? "";
     string newsType = ViewBag.NewsType?.ToString() ?? "";
@@ -13,8 +13,8 @@
 
 <div class="card admin-list-card">
     <div class="card-body">
-        <h4 class="card-title">Danh sách News</h4>
-        <p class="card-subtitle mb-3">Quản lý toàn bộ bài viết tin tức trong hệ thống</p>
+        <h4 class="card-title">News List</h4>
+        <p class="card-subtitle mb-3">Manage all news articles in the system</p>
 
         <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
             <form method="get" action="/admin/news/index" class="d-flex gap-2 flex-wrap admin-search-form admin-news-search-form">
@@ -22,10 +22,10 @@
                        name="keyword"
                        value="@keyword"
                        class="form-control"
-                       placeholder="Tìm theo tiêu đề..." />
+                       placeholder="Search by title..." />
 
                 <select name="newsType" class="form-control">
-                    <option value="">-- Tất cả loại tin --</option>
+                    <option value="">-- All News Types --</option>
                     <option value="Updates" selected="@(newsType == "Updates")">Updates</option>
                     <option value="Events" selected="@(newsType == "Events")">Events</option>
                     <option value="Releases" selected="@(newsType == "Releases")">Releases</option>
@@ -36,7 +36,7 @@
                 </select>
 
                 <select name="status" class="form-control">
-                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="">-- All Statuses --</option>
                     <option value="Published" selected="@(status == "Published")">Published</option>
                     <option value="Draft" selected="@(status == "Draft")">Draft</option>
                     <option value="Hidden" selected="@(status == "Hidden")">Hidden</option>
@@ -138,7 +138,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="10" class="text-center text-muted">Chưa có bài viết nào</td>
+                            <td colspan="10" class="text-center text-muted">No news articles available</td>
                         </tr>
                     }
                 </tbody>
@@ -182,12 +182,12 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light">
             <div class="modal-header border-secondary">
-                <h5 class="modal-title">Xác nhận xóa bài viết</h5>
+                <h5 class="modal-title">Confirm Delete News</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
-                Bạn có chắc muốn xóa bài viết <strong id="deleteNewsTitle"></strong> không?
+                Are you sure you want to delete the news article <strong id="deleteNewsTitle"></strong>?
             </div>
 
             <div class="modal-footer border-secondary flex-wrap">
@@ -196,9 +196,9 @@
                     <input type="hidden" name="newsType" value="@newsType" />
                     <input type="hidden" name="status" value="@status" />
                     <input type="hidden" name="page" value="@currentPage" />
-                    <button type="submit" class="btn btn-danger">Đồng ý xóa</button>
+                    <button type="submit" class="btn btn-danger">Confirm Delete</button>
                 </form>
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>

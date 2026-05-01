@@ -33,17 +33,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\Ai\" />
     <Folder Include="Services\Auth\" />
     <Folder Include="Services\Cart\" />
     <Folder Include="Services\Category\" />
-    <Folder Include="Services\Game\" />
-    <Folder Include="Services\MoMo\" />
-    <Folder Include="Services\News\" />
-    <Folder Include="Services\Payment\" />
-    <Folder Include="Services\Review\" />
-    <Folder Include="Services\User\" />
-    <Folder Include="Services\VnPay\" />
     <Folder Include="wwwroot\images\events\" />
   </ItemGroup>
 
