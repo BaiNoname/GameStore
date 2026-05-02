@@ -14,7 +14,7 @@
 <div class="card admin-list-card">
     <div class="card-body">
         <h4 class="card-title">Danh sách Event</h4>
-        <p class="card-subtitle mb-3">Quản lý toàn bộ sự kiện cộng đồng trong hệ thống</p>
+        <p class="card-subtitle mb-3">Manage all community events within the system</p>
 
         <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
             <form method="get" action="/admin/event/index" class="d-flex gap-2 flex-wrap">
@@ -122,7 +122,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="9" class="text-center text-muted">Chưa có event nào</td>
+                            <td colspan="9" class="text-center text-muted">No events available</td>
                         </tr>
                     }
                 </tbody>
@@ -155,12 +155,12 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-light border-secondary rounded-4">
                 <div class="modal-header border-secondary">
-                    <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa event</h5>
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete Event</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body">
-                    Bạn có chắc muốn xóa event <strong id="deleteEventTitle"></strong> không? 🛑
+                    Are you sure you want to delete the event <strong id="deleteEventTitle"></strong>? 🛑
                 </div>
 
                 <div class="modal-footer border-secondary flex-wrap">
@@ -170,12 +170,12 @@
                         <input type="hidden" name="status" value="@ViewBag.Status" />
                         <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
                         <button type="submit" class="btn btn-danger">
-                            Đồng ý xóa
+                            Confirm Delete
                         </button>
                     </form>
 
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        Hủy
+                        Cancel
                     </button>
                 </div>
             </div>

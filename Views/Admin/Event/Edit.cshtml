@@ -109,7 +109,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">Prize Info</label>
-                    <input class="form-control" asp-for="PrizeInfo" placeholder="Ví dụ: Check-in để nhận thưởng" />
+                    <input class="form-control" asp-for="PrizeInfo" placeholder="Ex: Check in to receive a reward" />
                 </div>
 
                 <div class="row">
@@ -153,7 +153,7 @@
                                step="0.01"
                                min="0"
                                value="@(Model.PrizeType == "Balance" ? Model.PrizeValue : "")"
-                               placeholder="Ví dụ: 50000" />
+                               placeholder="Ex: 50000" />
                     </div>
 
                     <div class="col-md-4 mb-3" id="prizeEffectWrap">
@@ -210,7 +210,7 @@
                 <div class="mb-3">
                     <label class="form-label">Current Status</label>
                     <input class="form-control" value="@Model.Status" readonly />
-                    <small class="text-muted">Status được tự động tính theo Start At và End At.</small>
+                    <small class="text-muted">Status is automatically calculated based on Start At and End At.</small>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 flex-wrap">

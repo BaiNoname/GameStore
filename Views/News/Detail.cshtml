@@ -55,7 +55,7 @@
     string FormatContent(string? content)
     {
         if (string.IsNullOrWhiteSpace(content))
-            return "<p>Nội dung đang được cập nhật.</p>";
+            return "<p>Content is being updated.</p>";
 
         var encoded = System.Net.WebUtility.HtmlEncode(content);
         encoded = encoded.Replace("\r\n", "\n").Replace("\n\n", "</p><p>").Replace("\n", "<br />");
@@ -134,7 +134,7 @@
                     }
                     else
                     {
-                        <p class="gs-empty-text">Chưa có bài viết nổi bật.</p>
+                        <p class="gs-empty-text">No trending articles available.</p>
                     }
                 </div>
 
@@ -160,7 +160,7 @@
                     }
                     else
                     {
-                        <p class="gs-empty-text">Chưa có bài viết mới.</p>
+                        <p class="gs-empty-text">No new posts yet.</p>
                     }
                 </div>
             </div>

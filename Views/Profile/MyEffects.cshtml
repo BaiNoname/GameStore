@@ -11,7 +11,7 @@
             <div class="gs-kicker">Customization</div>
             <h2 class="gs-page-title mb-2">My Effects</h2>
             <p class="gs-page-subtitle mb-0">
-                Quản lý các effect bạn đã nhận được từ event và chọn effect đang sử dụng.
+                Manage the effects you've received from the event and select the effect you're currently using.
             </p>
         </div>
 
@@ -70,7 +70,7 @@
 
                                 <form method="post" action="/profile/equip-effect/@item.UserIconEffectId">
                                     <button type="submit" class="gs-btn-primary w-100 rounded-pill">
-                                        @(item.IsEquipped ? "Đang sử dụng" : "Use This Effect")
+                                        @(item.IsEquipped ? "Currently Using" : "Use This Effect")
                                     </button>
                                 </form>
                             </div>
@@ -82,7 +82,7 @@
             {
                 <div class="col-12">
                     <div class="gs-empty-box">
-                        Bạn chưa có effect nào.
+                        You don't have any effects yet.
                     </div>
                 </div>
             }

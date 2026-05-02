@@ -1,7 +1,8 @@
-﻿@using Microsoft.AspNetCore.Http
+﻿@using GameStore.Services
+@using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor HttpContextAccessor
 @inject GameStore.Models.GameStoreContext _db
-@inject GameStore.Services.UserIconEffectService UserIconEffectService
+@inject UserIconEffectService UserIconEffectService
 
 @{
     var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");

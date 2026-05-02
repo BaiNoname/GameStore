@@ -93,7 +93,7 @@
             }
             else
             {
-                <div class="text-muted">Chưa có participant nào cho event này.</div>
+                <div class="text-muted">No participants have been registered for this event yet.</div>
             }
         </div>
     </div>
@@ -103,23 +103,23 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light border-secondary rounded-4">
             <div class="modal-header border-secondary">
-                <h5 class="modal-title" id="deleteParticipantModalLabel">Xác nhận xóa participant</h5>
+                <h5 class="modal-title" id="deleteParticipantModalLabel">Confirm Delete Participant</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
-                Bạn có chắc muốn xóa participant <strong id="deleteParticipantName"></strong> khỏi event này không? 🛑
+                Are you sure you want to delete the participant <strong id="deleteParticipantName"></strong> from this event? 🛑
             </div>
 
             <div class="modal-footer border-secondary flex-wrap">
                 <form method="get" id="deleteParticipantForm">
                     <button type="submit" class="btn btn-danger">
-                        Đồng ý xóa
+                        Confirm Delete
                     </button>
                 </form>
 
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Hủy
+                    Cancel
                 </button>
             </div>
         </div>

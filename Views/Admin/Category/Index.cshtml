@@ -1,13 +1,13 @@
 ﻿@model GameStore.Pagination.Admin.CategoryListVM
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Quản lý Category Game";
+    ViewData["Title"] = "Category Game Management";
 }
 
 <div class="card admin-list-card">
     <div class="card-body">
-        <h4 class="card-title">Danh sách thể loại game</h4>
-        <p class="card-subtitle mb-3">Quản lý toàn bộ thể loại game trong hệ thống</p>
+        <h4 class="card-title">List of game genres</h4>
+        <p class="card-subtitle mb-3">Manage all game genres within the system</p>
 
         <!-- Search + Add Button -->
         <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
@@ -17,7 +17,7 @@
                        name="keyword"
                        value="@Model.Keyword"
                        class="form-control me-2"
-                       placeholder="Tìm thể loại theo tên..." />
+                       placeholder="Search for genres by name..." />
 
                 <button type="submit" class="btn btn-success">
                     Search
@@ -48,9 +48,9 @@
             <table class="table table-striped align-middle admin-category-table">
                 <thead>
                     <tr>
-                        <th>Mã thể loại game</th>
-                        <th>Tên loại game</th>
-                        <th>Thao tác</th>
+                        <th>Game category code</th>
+                        <th>Game category name</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -126,12 +126,12 @@
         <div class="modal-content bg-dark text-light">
 
             <div class="modal-header border-secondary">
-                <h5 class="modal-title">Xác nhận xóa thể loại</h5>
+                <h5 class="modal-title">Confirm Delete Category</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body">
-                Bạn có chắc muốn xóa thể loại <strong id="deleteCategoryName"></strong> không? 🛑
+                Are you sure you want to delete the category <strong id="deleteCategoryName"></strong>? 🛑
             </div>
 
             <div class="modal-footer border-secondary flex-wrap">
@@ -139,10 +139,10 @@
                     <input type="hidden" name="keyword" value="@Model.Keyword" />
                     <input type="hidden" name="page" value="@Model.CurrentPage" />
                     <button type="submit" class="btn btn-danger">
-                        Đồng ý xóa
+                        Confirm Delete
                     </button>
                 </form>
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
 
         </div>

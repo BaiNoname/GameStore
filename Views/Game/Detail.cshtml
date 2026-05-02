@@ -2,7 +2,7 @@
 @using GameStore.Models
 
 @{
-    ViewData["Title"] = "Chi tiết game";
+    ViewData["Title"] = "Game details";
 }
 
 @{
@@ -47,7 +47,7 @@
 
                         <div class="gs-detail-info-grid">
                             <div class="gs-info-card">
-                                <span class="label">Mã game</span>
+                                <span class="label">Game code</span>
                                 <span class="value">@Model.MaGame</span>
                             </div>
 
@@ -57,14 +57,14 @@
                             </div>
 
                             <div class="gs-info-card">
-                                <span class="label">Ngày ra mắt</span>
+                                <span class="label">Release Date</span>
                                 <span class="value">
-                                    @(Model.NgayRaMat.HasValue? Model.NgayRaMat.Value.ToString("dd/MM/yyyy") : "Chưa cập nhật")
+                                    @(Model.NgayRaMat.HasValue? Model.NgayRaMat.Value.ToString("dd/MM/yyyy") : "Not updated")
                                 </span>
                             </div>
 
                             <div class="gs-info-card">
-                                <span class="label">Lượt mua</span>
+                                <span class="label">Purchases</span>
                                 <span class="value">
                                     👁 <span id="download-count">@Model.SoLuotTai</span>
                                 </span>
@@ -72,9 +72,9 @@
                         </div>
 
                         <div class="gs-detail-description">
-                            <h5>Mô tả game</h5>
+                            <h5>Game Description</h5>
                             <p>
-                                @(string.IsNullOrWhiteSpace(Model.MoTa) ? "Chưa có mô tả cho game này." : Model.MoTa)
+                                @(string.IsNullOrWhiteSpace(Model.MoTa) ? "No description available for this game." : Model.MoTa)
                             </p>
                         </div>
 
@@ -89,7 +89,7 @@
                             {
                                 <button type="button"
                                         class="btn gs-btn-muted gs-action-btn"
-                                        onclick="showToast('Bạn đã mua game này rồi!', 'error')">
+                                        onclick="showToast('You already own this game!', 'error')">
                                     Owned
                                 </button>
 

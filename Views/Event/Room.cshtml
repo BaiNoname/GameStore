@@ -47,7 +47,7 @@
                         <div class="gs-kicker">Member Area</div>
                         <h1 class="gs-title-small">@Model.Title</h1>
                         <p class="text-secondary mb-3">
-                            Bạn đã tham gia event này. Đây là khu vực dành riêng cho thành viên.
+                            You have joined this event. This area is reserved for members only.
                         </p>
 
                         @if (isArchivedRoom)
@@ -55,8 +55,8 @@
                             <div class="gs-archived-banner">
                                 <div class="gs-archived-title">📁 Archived Event Room</div>
                                 <div class="gs-archived-text">
-                                    Sự kiện này đã kết thúc. Bạn vẫn có thể xem announcement, participants và lịch sử chat,
-                                    nhưng không thể gửi tin nhắn mới hoặc check-in.
+                                    This event has ended. You can still view announcements, participants, and chat history,
+                                    but you cannot send new messages or check-in.
                                 </div>
                             </div>
                         }
@@ -68,7 +68,7 @@
                                 {
                                     <div class="gs-status-pill success">
                                         <span class="gs-status-icon">✓</span>
-                                        <span>Bạn đã check-in lúc @myParticipant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                                        <span>You have checked in at @myParticipant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
                                     </div>
                                 }
                                 else if (isArchivedRoom)
@@ -103,7 +103,7 @@
                             <form method="post" action="/event/room/@Model.EventId/claim-reward">
                                 <input type="hidden" name="returnUrl" value="@returnUrl" />
                                 <button type="submit" class="gs-action-btn primary">
-                                    🎁 Nhận phần thưởng
+                                    🎁 Claim Reward
                                 </button>
                             </form>
                         }
@@ -152,8 +152,8 @@
                         {
                             <div class="gs-empty-chat" id="emptyChat">
                                 <div class="gs-empty-chat-icon">💬</div>
-                                <div class="gs-empty-chat-title">Chưa có tin nhắn nào</div>
-                                <div class="gs-empty-chat-text">Hãy là người đầu tiên bắt đầu cuộc trò chuyện trong event này.</div>
+                                <div class="gs-empty-chat-title">No messages available.</div>
+                                <div class="gs-empty-chat-text">Be the first to start the conversation in this event.</div>
                             </div>
                         }
                     </div>
@@ -179,7 +179,7 @@
                                        id="chatInput"
                                        name="content"
                                        class="gs-chat-input"
-                                       placeholder="Nhập tin nhắn cho mọi người trong event..." />
+                                       placeholder="Enter a message for everyone in the event..." />
 
                                 <button class="gs-chat-send-btn" type="submit">
                                     Send
@@ -209,7 +209,7 @@
                         }
                         else
                         {
-                            <p class="text-secondary mb-0">Chưa có announcement nào.</p>
+                            <p class="text-secondary mb-0">No announcements available.</p>
                         }
                     </div>
                 </div>
@@ -246,7 +246,7 @@
                         }
                         else
                         {
-                            <p class="text-secondary mb-0">Chưa có participant nào.</p>
+                            <p class="text-secondary mb-0">No participants available.</p>
                         }
                     </div>
                 </div>
@@ -782,9 +782,9 @@
 <script>
     function showArchivedRoomToast() {
         if (typeof showToast === "function") {
-            showToast("Sự kiện đã kết thúc. Phòng hiện ở chế độ lưu trữ.", "error");
+            showToast("This event has ended. The room is now in archived mode.", "error");
         } else {
-            alert("Sự kiện đã kết thúc. Phòng hiện ở chế độ lưu trữ.");
+            alert("This event has ended. The room is now in archived mode.");
         }
     }
 </script>

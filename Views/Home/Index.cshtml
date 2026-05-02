@@ -69,7 +69,7 @@
                                     </div>
 
                                     <div class="mt-2 text-light-emphasis">
-                                        👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> lượt mua
+                                        👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> number of purchases
                                     </div>
 
                                     <div class="d-flex gap-2 flex-wrap mt-4">
@@ -78,13 +78,13 @@
                                            asp-route-id="@g.MaGame"
                                            asp-route-returnUrl="@currentPageUrl"
                                            class="btn gs-btn-primary rounded-pill px-4">
-                                            Xem chi tiết
+                                            View Details
                                         </a>
 
                                         @if (owned.Contains(g.MaGame))
                                         {
                                             <button class="btn gs-btn-muted rounded-pill px-4"
-                                                    onclick="showToast('Bạn đã sở hữu game này rồi 🎮', 'error')">
+                                                    onclick="showToast('You already own this game! 🎮', 'error')">
                                                 Owned
                                             </button>
                                         }
@@ -153,8 +153,8 @@
                         <div class="hot-info">
                             <div class="hot-name">@g.TenGame</div>
                             <small class="hot-price">@String.Format("{0:N0}", g.Gia) VNĐ</small>
-                            <div class="small text-secondary mt-1">
-                                👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> lượt mua
+                            <div class="small text-secondary mt-1 gs-purchase-line">
+                                👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> number of purchases
                             </div>
                         </div>
                     </a>
@@ -175,7 +175,7 @@
                         @if (hasFilterResult)
                         {
                             <div class="small text-secondary mt-2">
-                                Tìm thấy <strong>@Model.Count</strong> game phù hợp
+                                Found <strong>@Model.Count</strong> matching games
                             </div>
                         }
                     </div>
@@ -243,8 +243,8 @@
                                 @game.TenGame
                             </h6>
 
-                            <div class="mb-2 small text-secondary">
-                                👁 <span id="download-@game.MaGame">@game.SoLuotTai</span> lượt mua
+                            <div class="mb-2 small text-secondary gs-purchase-line">
+                                👁 <span id="download-@game.MaGame">@game.SoLuotTai</span> number of purchases
                             </div>
 
                             <div class="mb-3">
@@ -259,7 +259,7 @@
                                     {
                                         <button type="button"
                                                 class="btn gs-btn-muted gs-action-btn"
-                                                onclick="showToast('Bạn đã sở hữu game này rồi 🎮', 'error')">
+                                                onclick="showToast('You already own this game! 🎮', 'error')">
                                             Owned
                                         </button>
                                     }
@@ -823,6 +823,15 @@
             grid-template-columns: 1fr;
         }
     }
+
+    .gs-purchase-line {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 24px;
+    line-height: 24px;
+    }
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>

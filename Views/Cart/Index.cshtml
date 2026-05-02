@@ -2,7 +2,7 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Giỏ hàng";
+    ViewData["Title"] = "Cart";
     var total = Model.ChiTietGioHangs.Sum(x => x.DonGiaHienTai);
 }
 
@@ -21,7 +21,7 @@
             <div class="gs-empty-card">
                 <div class="gs-empty-icon">🛒</div>
                 <h4 class="mb-2">Your shopping cart is empty</h4>
-                <p class="text-secondary mb-4">Chưa có game nào trong giỏ hàng của bạn. Hãy quay lại store để tiếp tục mua sắm.</p>
+                <p class="text-secondary mb-4">There are no games in your cart. Please return to the store to continue shopping.</p>
 
                 <a asp-controller="Home"
                    asp-action="Index"
@@ -84,16 +84,16 @@
 
                         <div class="gs-summary-top">
                             <div class="gs-kicker">Order Summary</div>
-                            <h4 class="mb-0">Thanh toán</h4>
+                            <h4 class="mb-0">Checkout</h4>
                         </div>
 
                         <div class="gs-summary-row">
-                            <span>Số sản phẩm</span>
+                            <span>Number of Items</span>
                             <strong>@Model.ChiTietGioHangs.Count</strong>
                         </div>
 
                         <div class="gs-summary-row">
-                            <span>Tổng tiền</span>
+                            <span>Total Price</span>
                             <strong class="gs-total-price">@total.ToString("N0") VND</strong>
                         </div>
 
@@ -141,22 +141,21 @@
                     <div class="modal-content gs-modal-content">
 
                         <div class="modal-header gs-modal-header">
-                            <h5 class="modal-title">Xác nhận</h5>
+                            <h5 class="modal-title">Confirm</h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
 
                         <div class="modal-body gs-modal-body">
-                            Bạn có chắc muốn xóa toàn bộ giỏ hàng không? 🧹
+                            Are you sure you want to clear your entire cart? 🧹
                         </div>
 
                         <div class="modal-footer gs-modal-footer">
-                            <button class="btn gs-btn-muted px-4" data-bs-dismiss="modal">Hủy</button>
-
+                            <button class="btn gs-btn-muted px-4" data-bs-dismiss="modal">Cancel</button>
                             <a asp-controller="Cart"
                                asp-action="Clear"
                                asp-route-returnUrl="@ViewBag.ReturnUrl"
                                class="btn gs-btn-danger px-4">
-                                Đồng ý
+                                Confirm
                             </a>
                         </div>
 
@@ -175,17 +174,16 @@
                         </div>
 
                         <div class="modal-body gs-modal-body">
-                            Bạn có chắc muốn thanh toán bằng số dư không? 💳
+                            Are you sure you want to pay using your balance? 💳
                         </div>
 
                         <div class="modal-footer gs-modal-footer">
-                            <button class="btn gs-btn-muted px-4" data-bs-dismiss="modal">Hủy</button>
-
+                            <button class="btn gs-btn-muted px-4" data-bs-dismiss="modal">Cancel</button>
                             <form method="get" action="/checkout">
                                 <input type="hidden" name="method" value="balance" />
                                 <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                                 <button type="submit" class="btn gs-btn-success px-4">
-                                    Đồng ý thanh toán
+                                    Confirm Payment
                                 </button>
                             </form>
                         </div>
@@ -200,7 +198,7 @@
             <div class="gs-kicker">Wallet</div>
             <h5 class="mb-2">Top up your wallet</h5>
             <p class="small text-secondary mb-3">
-                Thanh toán qua MoMo để nạp tiền vào tài khoản của bạn.
+                Pay via MoMo to top up your account.
             </p>
 
             <form method="get" action="/api/momo/topup" class="row g-2">
@@ -210,20 +208,20 @@
                            min="5000"
                            name="amount"
                            class="form-control gs-form-input"
-                           placeholder="Số tiền (VND)"
+                           placeholder="Amount (VND)"
                            required />
                 </div>
 
                 <div class="col-12">
                     <input type="hidden" name="userId" value="@(int.Parse(User.FindFirst("UserId").Value))" />
                     <button type="submit" class="btn gs-btn-momo w-100 gs-summary-btn">
-                        Nạp MoMo
+                        Top Up MoMo
                     </button>
                 </div>
 
                 <div class="col-12">
                     <small class="text-secondary">
-                        Tối thiểu 5.000 VND. Hệ thống sẽ chuyển bạn đến MoMo để hoàn tất.
+                        Minimum 5,000 VND. The system will redirect you to MoMo to complete the process.
                     </small>
                 </div>
             </form>
