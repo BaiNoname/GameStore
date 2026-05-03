@@ -72,14 +72,25 @@
         }
 
         <div class="gs-pillbar">
-            <a href="/event?eventType=All&status=All&page=1" class="gs-pill @(Model.EventType == "All" ? "active" : "")">All Events</a>
-            <a href="/event?eventType=All&status=Live&page=1" class="gs-pill @(Model.Status == "Live" ? "active" : "")">Live Now</a>
-            <a href="/event?eventType=All&status=Upcoming&page=1" class="gs-pill @(Model.Status == "Upcoming" ? "active" : "")">Upcoming</a>
+            <a href="/event?eventType=All&status=All&page=1"
+               class="gs-pill @((Model.EventType == "All" && Model.Status == "All") ? "active" : "")">
+                All Events
+            </a>
+
+            <a href="/event?eventType=All&status=Live&page=1"
+               class="gs-pill @(Model.Status == "Live" ? "active" : "")">
+                Live Now
+            </a>
+
+            <a href="/event?eventType=All&status=Upcoming&page=1"
+               class="gs-pill @(Model.Status == "Upcoming" ? "active" : "")">
+                Upcoming
+            </a>
 
             @foreach (var t in tabs.Where(x => x != "All"))
             {
                 <a href="/event?eventType=@Uri.EscapeDataString(t)&status=All&page=1"
-                   class="gs-pill @(Model.EventType == t ? "active" : "")">
+                   class="gs-pill @((Model.EventType == t && Model.Status == "All") ? "active" : "")">
                     @t
                 </a>
             }
