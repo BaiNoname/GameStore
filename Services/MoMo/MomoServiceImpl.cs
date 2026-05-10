@@ -8,12 +8,15 @@ namespace GameStore.Services;
 
 public class MomoServiceImpl : IMomoService
 {
+    // Các thông tin cấu hình cần thiết để tích hợp với MoMo
     private readonly string _partnerCode;
     private readonly string _accessKey;
     private readonly string _secretKey;
     private readonly string _endpoint;
     private readonly string _redirectUrl;
     private readonly string _ipnUrl;
+
+    // HttpClient để gửi yêu cầu đến API của MoMo
     private readonly HttpClient _httpClient;
 
     public MomoServiceImpl(IConfiguration config, HttpClient httpClient)
@@ -28,17 +31,20 @@ public class MomoServiceImpl : IMomoService
         _httpClient = httpClient;
     }
 
+    // Tạo URL thanh toán cho đơn hàng
     public async Task<string> CreatePaymentUrlForOrder(int userId, string maGD, decimal amount, string baseUrl)
     {
         return await CreatePaymentUrl($"ORDER_{maGD}", $"Thanh toan don hang {maGD}", amount);
     }
 
+    // Tạo URL thanh toán để nạp tiền vào tài khoản
     public async Task<string> CreatePaymentUrlForTopup(int userId, decimal amount, string baseUrl)
     {
         var requestId = $"TOPUP_{userId}_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
         return await CreatePaymentUrl(requestId, $"Nap tien tai khoan user {userId}", amount);
     }
-
+    
+    // Tạo URL thanh toán chung
     private async Task<string> CreatePaymentUrl(string orderId, string orderInfo, decimal amount)
     {
         var requestId = $"{orderId}_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
@@ -46,6 +52,7 @@ public class MomoServiceImpl : IMomoService
         var extraData = "";
         var amountStr = ((long)amount).ToString();
 
+        // Chuỗi raw signature theo đúng thứ tự và định dạng mà MoMo yêu cầu
         var rawSignature =
             $"accessKey={_accessKey}" +
             $"&amount={amountStr}" +
@@ -60,6 +67,7 @@ public class MomoServiceImpl : IMomoService
 
         var signature = ComputeHmacSha256(rawSignature, _secretKey);
 
+        // Tạo body của yêu cầu theo định dạng JSON mà MoMo yêu cầu
         var body = new
         {
             partnerCode = _partnerCode,
@@ -82,14 +90,17 @@ public class MomoServiceImpl : IMomoService
         var resStr = await response.Content.ReadAsStringAsync();
         var resJson = JsonDocument.Parse(resStr).RootElement;
 
+        // Kiểm tra mã lỗi trả về từ MoMo, nếu không phải 0 thì ném ngoại lệ với thông báo lỗi
         if (resJson.GetProperty("resultCode").GetInt32() != 0)
             throw new Exception($"MoMo error: {resJson.GetProperty("message").GetString()}");
 
         return resJson.GetProperty("payUrl").GetString()!;
     }
-
+    
+    // Xác thực callback từ MoMo
     public bool VerifyCallback(IQueryCollection query)
     {
+        // Chuỗi raw signature theo đúng thứ tự và định dạng mà MoMo yêu cầu
         var rawSignature =
             $"accessKey={_accessKey}" +
             $"&amount={query["amount"]}" +
@@ -105,10 +116,12 @@ public class MomoServiceImpl : IMomoService
             $"&resultCode={query["resultCode"]}" +
             $"&transId={query["transId"]}";
 
+        // Tính HMAC SHA256 và so sánh với chữ ký trong query để xác thực callback
         var expected = ComputeHmacSha256(rawSignature, _secretKey);
         return expected == query["signature"].ToString();
     }
 
+    // Hàm tính HMAC SHA256
     private static string ComputeHmacSha256(string data, string key)
     {
         var keyBytes = Encoding.UTF8.GetBytes(key);

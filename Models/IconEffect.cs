@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameStore.Models
 {
+    // Biểu tượng hiệu ứng (icon effect) có thể được áp dụng cho biểu tượng người dùng
     [Table("iconeffect")]
     public class IconEffect
     {

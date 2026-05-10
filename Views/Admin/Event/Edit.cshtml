@@ -11,6 +11,7 @@
             <h4 class="mb-0">🎮 Edit Event</h4>
         </div>
 
+        <!-- Display message if any -->
         @if (TempData["Msg"] != null)
         {
             var msgType = TempData["MsgType"]?.ToString() ?? "info";
@@ -48,6 +49,7 @@
                 <div class="mb-3">
                     <label class="form-label">Current Banner</label>
                     <div class="mb-2">
+                        <!-- Display current banner if available -->
                         @if (!string.IsNullOrWhiteSpace(Model.Banner))
                         {
                             <img src="~/images/events/@Model.Banner" style="width:180px;height:110px;object-fit:cover;border-radius:12px;border:1px solid #ddd;" />
@@ -116,6 +118,7 @@
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Prize Type</label>
                         <select class="form-select" id="PrizeType" name="PrizeType">
+                            <!-- Hiển thị tùy chọn "-- No Reward --" và đánh dấu nếu không có loại phần thưởng nào được chọn -->
                             @if (string.IsNullOrWhiteSpace(Model.PrizeType))
                             {
                                 <option value="" selected>-- No Reward --</option>
@@ -125,6 +128,7 @@
                                 <option value="">-- No Reward --</option>
                             }
 
+                            <!-- Hiển thị tùy chọn "Balance" và đánh dấu nếu đó là loại phần thưởng đã chọn -->
                             @if (Model.PrizeType == "Balance")
                             {
                                 <option value="Balance" selected>Balance</option>
@@ -134,6 +138,7 @@
                                 <option value="Balance">Balance</option>
                             }
 
+                            <!-- Hiển thị tùy chọn "Effect" và đánh dấu nếu đó là loại phần thưởng đã chọn -->
                             @if (Model.PrizeType == "Effect")
                             {
                                 <option value="Effect" selected>Effect</option>
@@ -160,6 +165,7 @@
                         <label class="form-label">Prize Value (Effect)</label>
                         <select class="form-select" id="PrizeValueEffect">
                             <option value="">-- Select Effect --</option>
+                            <!-- Loop through effects from ViewBag and mark the selected one -->
                             @foreach (var item in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Effects)
                             {
                                 if (item.Selected)
@@ -233,26 +239,33 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Lấy các element cần xử lý động
         const prizeType = document.getElementById("PrizeType");
         const prizeBalanceWrap = document.getElementById("prizeBalanceWrap");
         const prizeEffectWrap = document.getElementById("prizeEffectWrap");
+
+        // Các input để đồng bộ giá trị vào trường ẩn PrizeValue
         const prizeValueHidden = document.getElementById("PrizeValue");
         const prizeValueBalance = document.getElementById("PrizeValueBalance");
         const prizeValueEffect = document.getElementById("PrizeValueEffect");
 
+        // Hàm để đồng bộ UI và giá trị ẩn dựa trên loại phần thưởng được chọn
         function syncPrizeUi() {
             const type = prizeType.value;
 
+            // Hiển thị/ẩn các phần tử input tương ứng và đồng bộ giá trị vào trường ẩn
             if (type === "Balance") {
                 prizeBalanceWrap.style.display = "block";
                 prizeEffectWrap.style.display = "none";
                 prizeValueHidden.value = prizeValueBalance.value || "";
             }
+            // Nếu chọn Effect, ẩn phần Balance và hiển thị phần Effect, đồng thời đồng bộ giá trị vào trường ẩn
             else if (type === "Effect") {
                 prizeBalanceWrap.style.display = "none";
                 prizeEffectWrap.style.display = "block";
                 prizeValueHidden.value = prizeValueEffect.value || "";
             }
+            // Nếu không chọn loại phần thưởng nào, ẩn cả hai phần và xóa giá trị trường ẩn
             else {
                 prizeBalanceWrap.style.display = "none";
                 prizeEffectWrap.style.display = "none";
@@ -260,10 +273,12 @@
             }
         }
 
+        // Gắn sự kiện thay đổi để đồng bộ UI khi người dùng chọn loại phần thưởng hoặc thay đổi giá trị
         prizeType.addEventListener("change", syncPrizeUi);
         prizeValueBalance.addEventListener("input", syncPrizeUi);
         prizeValueEffect.addEventListener("change", syncPrizeUi);
 
+        // Chạy lần đầu khi load page để hiển thị đúng dữ liệu cũ
         syncPrizeUi();
     });
 </script>

@@ -4,19 +4,29 @@
 }
 
 @{
+    // List mã game user đã mua
     var owned = ViewBag.OwnedGames as List<string> ?? new List<string>();
+    // List mã game đang nằm trong giỏ hàng
     var cart = ViewBag.CartGames as List<string> ?? new List<string>();
 
+    // Danh sách game nổi bật/top seller
     var hotGames = ViewBag.HotTop as List<GameStore.Models.Game> ?? new List<GameStore.Models.Game>();
+    // Danh sách game mới phát hành
     var newGames = ViewBag.NewGames as List<GameStore.Models.Game> ?? new List<GameStore.Models.Game>();
 
+    // Search riêng khu vực Home
     var searchValue = ViewBag.SearchValue?.ToString() ?? "";
+    // Search global từ layout/navbar
     var globalSearchValue = ViewBag.GlobalSearchValue?.ToString() ?? "";
+    // Keyword filter hiện tại
     var activeKeyword = ViewBag.ActiveKeyword?.ToString() ?? "";
+    // Category hiện tại trên query string
     var categoryValue = Context.Request.Query["category"].ToString();
 
+    // URL TRANG HIỆN TẠI
     var currentPageUrl = Context.Request.Path + Context.Request.QueryString;
 
+    // URL QUAY LẠI ALL GAMES
     var allGamesReturnUrl = Url.Action("Index", "Home", new
     {
         search = searchValue,
@@ -25,7 +35,12 @@
         page = ViewBag.CurrentPage
     }) + "#all-games-section";
 
+    // Khi search/filter:
+    // -> có thể ẩn Hot Games / New Games
     var hideTopSections = ViewBag.HideTopSections != null && (bool)ViewBag.HideTopSections;
+
+    // Nếu có keyword hoặc category
+    // -> hiển thị text Found games
     var hasFilterResult = !string.IsNullOrWhiteSpace(activeKeyword)
                        || !string.IsNullOrWhiteSpace(categoryValue);
 }
@@ -35,7 +50,11 @@
 
         @if (!hideTopSections)
         {
-                        <!-- ================= HERO ================= -->
+            <!--
+                Chỉ hiển thị Hero section
+                khi không search/filter
+            -->
+            <!-- ================= HERO ================= -->
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                 <div>
                     <div class="gs-kicker">Featured Collection</div>
@@ -43,11 +62,13 @@
                 </div>
             </div>
 
+            <!-- ================= HERO CAROUSEL ================= -->
             <div id="heroCarousel" class="carousel slide mb-5 gs-hero-wrap" data-bs-ride="carousel">
                 <div class="carousel-inner rounded-5 overflow-hidden shadow-lg">
 
                     @for (int i = 0; i < hotGames.Count; i++)
                     {
+                        // Render từng game trong hero carousel
                         var g = hotGames[i];
                         <div class="carousel-item @(i == 0 ? "active" : "")">
                             <div class="hero-slide">
@@ -73,6 +94,7 @@
                                     </div>
 
                                     <div class="d-flex gap-2 flex-wrap mt-4">
+                                        <!-- Detail -->
                                         <a asp-controller="Game"
                                            asp-action="Detail"
                                            asp-route-id="@g.MaGame"
@@ -83,6 +105,9 @@
 
                                         @if (owned.Contains(g.MaGame))
                                         {
+                                            <!--
+                                                User đã sở hữu game
+                                            -->
                                             <button class="btn gs-btn-muted rounded-pill px-4"
                                                     onclick="showToast('You already own this game! 🎮', 'error')">
                                                 Owned
@@ -90,6 +115,9 @@
                                         }
                                         else if (cart.Contains(g.MaGame))
                                         {
+                                            <!--
+                                                Game đã nằm trong cart
+                                            -->
                                             <a asp-controller="Cart"
                                                asp-action="Index"
                                                asp-route-returnUrl="@currentPageUrl"
@@ -99,6 +127,10 @@
                                         }
                                         else
                                         {
+                                             <!--
+                                                Game chưa sở hữu
+                                                và chưa nằm trong cart
+                                            -->
                                             <a asp-controller="Cart"
                                                asp-action="Add"
                                                asp-route-gameId="@g.MaGame"
@@ -837,14 +869,26 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
 <script>
+
+//
+// =========================
+// SIGNALR GAME DOWNLOAD
+// =========================
+//
 const connection = new signalR.HubConnectionBuilder()
     .withUrl("/gameHub")
     .build();
 
+// =========================
+// START SIGNALR CONNECTION
+// =========================
 connection.start().then(function () {
     console.log("Connected to GameHub");
 }).catch(err => console.error(err));
 
+// =========================
+// NHẬN DOWNLOAD REALTIME
+// =========================
 connection.on("UpdateDownload", function (gameId, count) {
     console.log("RECEIVED:", gameId, count);
 
@@ -852,6 +896,11 @@ connection.on("UpdateDownload", function (gameId, count) {
     elements.forEach(el => el.innerText = count);
 });
 
+//
+// =========================
+// AUTO SCROLL TO ALL GAMES
+// =========================
+//
 window.addEventListener("load", function () {
         const params = new URLSearchParams(window.location.search);
         const isLayoutSearch = params.get("layoutSearch") === "1";
@@ -869,6 +918,11 @@ window.addEventListener("load", function () {
         }
     });
 
+//
+// =========================
+// SEARCH FORM
+// =========================
+//
 const homeSearchForm = document.getElementById("homeSearchForm");
 if (homeSearchForm) {
     homeSearchForm.addEventListener("submit", function () {

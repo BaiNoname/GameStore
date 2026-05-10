@@ -63,10 +63,12 @@ namespace GameStore.Helpers
             _resend = resend;
         }
 
+        // Gửi email sử dụng Resend API
         public async Task<bool> SendEmail(string toEmail, string subject, string body)
         {
             try
             {
+                // Tạo đối tượng email message với thông tin cần thiết
                 var message = new EmailMessage()
                 {
                     From = "onboarding@resend.dev",
@@ -76,6 +78,7 @@ namespace GameStore.Helpers
 
                 message.To.Add(toEmail);
 
+                // Gửi email bất đồng bộ và chờ kết quả
                 await _resend.EmailSendAsync(message);
 
                 Console.WriteLine("✅ Email sent");

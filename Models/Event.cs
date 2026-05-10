@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameStore.Models
 {
+    // Lớp Event đại diện cho một sự kiện trong hệ thống
     [Table("event")]
     public class Event
     {

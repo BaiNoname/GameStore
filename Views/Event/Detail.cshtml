@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = Model.Title;
+
+    // Get user join status, event full status, and event ended status from ViewBag or calculate based on model
     bool isJoined = ViewBag.IsJoined != null && (bool)ViewBag.IsJoined;
     bool isFull = Model.MaxParticipants.HasValue && Model.CurrentParticipants >= Model.MaxParticipants.Value;
     bool isEnded = (Model.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase);
@@ -9,6 +11,7 @@
     bool fromMyEvents = string.Equals(returnUrl, "/event/my-events", StringComparison.OrdinalIgnoreCase);
     string backText = fromMyEvents ? "Back to My Events" : "Back to Events";
 
+    // Helper function to get the correct image URL
     string GetImage(string? image)
     {
         if (string.IsNullOrWhiteSpace(image))
@@ -21,6 +24,7 @@
     }
 }
 
+// Main content
 <main class="gs-page">
     <div class="container-xxl">
         <div class="row g-4">
@@ -36,6 +40,7 @@
 
                     <h1 class="gs-article-title">@Model.Title</h1>
 
+                    // Event metadata: start time, end time, participants, price, game
                     <div class="gs-meta mb-4">
                         <span>📅 @Model.StartAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
                         <span>🏁 @Model.EndAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
@@ -57,6 +62,7 @@
                     </div>
 
                     <div class="mt-4 d-flex gap-2 flex-wrap">
+                        // Show different buttons based on join status, event full status, and event ended status
                         @if (isJoined)
                         {
                             if (isEnded)
@@ -68,6 +74,7 @@
                                 <a href="/event/room/@Model.EventId?returnUrl=@Uri.EscapeDataString(returnUrl)" class="gs-btn-primary">Open Member Area</a>
                             }
                         }
+                        // If not joined, show disabled buttons for ended or full events, otherwise show join/buy button
                         else if (isEnded)
                         {
                             <button type="button"
@@ -76,6 +83,7 @@
                                 Event Ended
                             </button>
                         }
+                        // If the event is full, show a disabled button with a toast message on click
                         else if (isFull)
                         {
                             <button type="button"
@@ -84,8 +92,10 @@
                                 Event Full
                             </button>
                         }
+                        // If not joined and event is not full or ended, show join or buy button based on access type
                         else
                         {
+                            // Normalize access type for comparison
                             if ((Model.AccessType ?? "").Trim().ToLower() == "free")
                             {
                                 <button type="button"
@@ -96,6 +106,7 @@
                                     <span>Join Free Event</span>
                                 </button>
                             }
+                            // If the event requires purchase, show the buy button with price
                             else
                             {
                                 <button type="button"
@@ -114,6 +125,7 @@
                         This event has reached the maximum number of participants.
                     </div>
 
+                    // Confirmation modal for joining free event
                     @if (!isJoined && !isFull && !isEnded && (Model.AccessType ?? "").Trim().ToLower() == "free")
                     {
                         <div class="modal fade" id="confirmJoinFreeEventModal" tabindex="-1" aria-labelledby="confirmJoinFreeEventModalLabel" aria-hidden="true">
@@ -160,6 +172,7 @@
                         </div>
                     }
 
+                    // Confirmation modal for buying event access
                     @if (!isJoined && !isFull && !isEnded && (Model.AccessType ?? "").Trim().ToLower() != "free")
                     {
                         <div class="modal fade" id="confirmBuyEventModal" tabindex="-1" aria-labelledby="confirmBuyEventModalLabel" aria-hidden="true">
@@ -223,11 +236,14 @@
                     <h3 class="gs-side-title">Latest Announcements</h3>
 
                     @{
+                        // Get the list of announcements from ViewBag or use an empty list if not available
                         var announcements = ViewBag.Announcements as List<GameStore.Models.EventAnnouncement> ?? new List<GameStore.Models.EventAnnouncement>();
                     }
 
+                    // Display the latest 5 announcements or a message if there are none
                     @if (announcements.Any())
                     {
+                        // Loop through the latest 5 announcements and display their title and creation date
                         @foreach (var item in announcements.Take(5))
                         {
                             <div class="gs-announce-item">
@@ -236,6 +252,7 @@
                             </div>
                         }
                     }
+                    // If there are no announcements, display a placeholder message
                     else
                     {
                         <p class="text-secondary">No announcements available.</p>
@@ -510,6 +527,7 @@
 </style>
 
 <script>
+    // Function to show the "Event Full" toast message
     function showEventFullToast() {
         const toast = document.getElementById("eventFullToast");
         if (!toast) return;

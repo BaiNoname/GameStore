@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace GameStore.Controllers.Admin
 {
+    // Controller quản lý game trong trang admin, chỉ admin mới có quyền truy cập
     [Authorize(Roles = "admin")]
     [Route("admin")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -25,6 +26,7 @@ namespace GameStore.Controllers.Admin
             env = _env;
         }
 
+        // Hiển thị danh sách game với các bộ lọc và phân trang
         [Route("game/index")]
         public IActionResult Index(string keyword = "", string categoryId = "", int page = 1)
         {
@@ -44,6 +46,7 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Game/Index.cshtml", vm);
         }
 
+        // Hiển thị form thêm game mới
         [Route("game/add")]
         public IActionResult Add(string keyword = "", string categoryId = "", int page = 1)
         {
@@ -55,14 +58,17 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Game/Add.cshtml");
         }
 
+        // Xử lý thêm game mới, bao gồm upload hình ảnh và kiểm tra dữ liệu đầu vào
         [HttpPost]
         [Route("game/add")]
         public async Task<IActionResult> Add(Game game, IFormFile photo, string keyword = "", string categoryId = "", int page = 1)
         {
+            // Trim các trường dữ liệu để tránh lỗi do khoảng trắng
             game.MaGame = game.MaGame?.Trim();
             game.TenGame = game.TenGame?.Trim();
             game.MaTheLoai = game.MaTheLoai?.Trim();
 
+            // Kiểm tra dữ liệu đầu vào
             if (string.IsNullOrWhiteSpace(game.MaGame))
             {
                 TempData["Msg"] = "❌ Mã game không được để trống!";
@@ -126,8 +132,10 @@ namespace GameStore.Controllers.Admin
             string fileName = null;
             try
             {
+                // Gán giá trị mặc định cho lượt tải
                 game.SoLuotTai = 0;
 
+                // Xử lý upload hình ảnh nếu có
                 if (photo != null && photo.Length > 0)
                 {
                     var ext = Path.GetExtension(photo.FileName).ToLower();
@@ -168,6 +176,7 @@ namespace GameStore.Controllers.Admin
             }
             catch
             {
+                // Nếu có lỗi xảy ra, xóa hình ảnh đã upload nếu có
                 if (fileName != null)
                 {
                     var path = Path.Combine(env.WebRootPath, "images", fileName);
@@ -185,9 +194,11 @@ namespace GameStore.Controllers.Admin
             }
         }
 
+        // Hiển thị form chỉnh sửa game, nếu game không tồn tại sẽ hiển thị thông báo lỗi
         [Route("game/edit/{id}")]
         public IActionResult Edit(string id, string keyword = "", string categoryId = "", int page = 1)
         {
+            // Tìm game theo ID, nếu không tồn tại thì hiển thị thông báo lỗi và chuyển hướng về trang danh sách
             var game = gameService.findById(id);
             if (game == null)
             {
@@ -204,10 +215,12 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Game/Edit.cshtml", game);
         }
 
+        // Xử lý chỉnh sửa game, bao gồm upload hình ảnh mới và xóa hình ảnh cũ nếu có
         [HttpPost]
         [Route("game/edit/{id}")]
         public async Task<IActionResult> Edit(Game game, IFormFile photo, string keyword = "", string categoryId = "", int page = 1)
         {
+            // Tìm game cũ theo ID, nếu không tồn tại thì hiển thị thông báo lỗi và chuyển hướng về trang danh sách
             var oldGame = gameService.findById(game.MaGame);
             if (oldGame == null)
             {
@@ -216,9 +229,11 @@ namespace GameStore.Controllers.Admin
                 return RedirectToAction("Index", new { keyword, categoryId, page });
             }
 
+            // Trim các trường dữ liệu để tránh lỗi do khoảng trắng
             game.TenGame = game.TenGame?.Trim();
             game.MaTheLoai = game.MaTheLoai?.Trim();
 
+            // Kiểm tra dữ liệu đầu vào
             if (string.IsNullOrWhiteSpace(game.TenGame))
             {
                 TempData["Msg"] = "❌ Tên game không được để trống!";
@@ -257,11 +272,13 @@ namespace GameStore.Controllers.Admin
                 game.NgayRaMat = DateOnly.FromDateTime(DateTime.UtcNow);
             }
 
+            // Biến lưu tên file mới nếu có, để xóa file cũ sau khi cập nhật thành công
             string newFileName = null;
             var oldImage = oldGame.Hinh;
 
             try
             {
+                // Cập nhật các trường dữ liệu của game cũ bằng dữ liệu từ form
                 oldGame.TenGame = game.TenGame;
                 oldGame.MoTa = game.MoTa;
                 oldGame.Gia = game.Gia;
@@ -286,6 +303,7 @@ namespace GameStore.Controllers.Admin
                     newFileName = Guid.NewGuid().ToString() + ext;
                     var filePath = Path.Combine(uploadsFolder, newFileName);
 
+                    // Upload hình ảnh mới
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
                         await photo.CopyToAsync(fileStream);
@@ -296,6 +314,7 @@ namespace GameStore.Controllers.Admin
 
                 gameService.Update(oldGame);
 
+                // Nếu có hình ảnh mới và game cũ có hình ảnh, xóa hình ảnh cũ
                 if (newFileName != null && !string.IsNullOrEmpty(oldImage))
                 {
                     var oldPath = Path.Combine(env.WebRootPath, "images", oldImage);
@@ -315,6 +334,7 @@ namespace GameStore.Controllers.Admin
             }
             catch
             {
+                // Nếu có lỗi xảy ra, xóa hình ảnh mới đã upload nếu có
                 if (newFileName != null)
                 {
                     var path = Path.Combine(env.WebRootPath, "images", newFileName);
@@ -332,10 +352,13 @@ namespace GameStore.Controllers.Admin
             }
         }
 
+        // Xử lý xóa game, bao gồm xóa hình ảnh liên quan nếu có và hiển thị thông báo kết quả
         [Route("game/delete/{id}")]
         public IActionResult Delete(string id, string keyword = "", string categoryId = "", int page = 1)
         {
+            // Tìm game theo ID, nếu không tồn tại thì hiển thị thông báo lỗi và chuyển hướng về trang danh sách
             var game = gameService.findById(id);
+            // Nếu game tồn tại, xóa hình ảnh liên quan nếu có, sau đó xóa game và hiển thị thông báo kết quả
             if (game != null)
             {
                 if (!string.IsNullOrEmpty(game.Hinh))

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace GameStore.Controllers.Admin
 {
+    // Controller quản lý sự kiện, chỉ admin mới có quyền truy cập
     [Authorize(Roles = "admin")]
     [Route("admin")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -29,6 +30,7 @@ namespace GameStore.Controllers.Admin
             db = _db;
         }
 
+        // Tải danh sách game để hiển thị trong dropdown chọn game liên quan
         private void LoadGameSelectList(string? selectedGameId = null)
         {
             ViewBag.Games = new SelectList(
@@ -39,6 +41,7 @@ namespace GameStore.Controllers.Admin
             );
         }
 
+        // Tải danh sách effect để hiển thị trong dropdown chọn effect làm phần thưởng
         private void LoadEffectSelectList(string? selectedEffectCode = null)
         {
             ViewBag.Effects = db.IconEffects
@@ -53,17 +56,20 @@ namespace GameStore.Controllers.Admin
                 .ToList();
         }
 
+        // Tải dữ liệu cần thiết cho form thêm/sửa event, bao gồm danh sách game và effect, đồng thời chọn sẵn giá trị đã chọn nếu có
         private void LoadFormData(string? selectedGameId = null, string? selectedEffectCode = null)
         {
             LoadGameSelectList(selectedGameId);
             LoadEffectSelectList(selectedEffectCode);
         }
 
+        // Lưu ảnh sự kiện lên server và trả về tên file đã lưu, nếu ảnh không hợp lệ thì trả về null
         private string? SaveEventImage(IFormFile? photo)
         {
             if (photo == null || photo.Length == 0)
                 return null;
 
+            // chỉ cho phép các định dạng ảnh phổ biến
             var ext = Path.GetExtension(photo.FileName).ToLowerInvariant();
             var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
             if (!allowed.Contains(ext)) return null;
@@ -83,6 +89,7 @@ namespace GameStore.Controllers.Admin
             return fileName;
         }
 
+        // Xóa ảnh sự kiện khỏi server nếu tồn tại
         private void DeleteEventImage(string? fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName)) return;
@@ -92,14 +99,19 @@ namespace GameStore.Controllers.Admin
                 System.IO.File.Delete(path);
         }
 
+        // Validate thông tin phần thưởng của event, trả về true nếu hợp lệ, ngược lại trả về false và thông báo lỗi
         private bool ValidatePrize(Event ev, out string errorMessage)
         {
             errorMessage = "";
 
+            // nếu không chọn loại phần thưởng thì coi như không có phần thưởng
             ev.PrizeType = string.IsNullOrWhiteSpace(ev.PrizeType) ? null : ev.PrizeType.Trim();
+            // nếu có chọn loại phần thưởng thì giá trị phần thưởng không được để trống
             ev.PrizeValue = string.IsNullOrWhiteSpace(ev.PrizeValue) ? null : ev.PrizeValue.Trim();
+            // nếu có chọn loại phần thưởng thì điều kiện nhận thưởng mặc định là "CheckIn"
             ev.PrizeCondition = string.IsNullOrWhiteSpace(ev.PrizeCondition) ? null : ev.PrizeCondition.Trim();
 
+            // nếu không chọn loại phần thưởng thì bỏ qua các trường liên quan đến phần thưởng
             if (string.IsNullOrWhiteSpace(ev.PrizeType))
             {
                 ev.PrizeType = null;
@@ -108,6 +120,7 @@ namespace GameStore.Controllers.Admin
                 return true;
             }
 
+            // chỉ cho phép 2 loại phần thưởng là Balance (tiền trong game) hoặc Effect (hiệu ứng icon)
             if (ev.PrizeType != "Balance" && ev.PrizeType != "Effect")
             {
                 errorMessage = "❌ Prize Type không hợp lệ!";
@@ -143,6 +156,7 @@ namespace GameStore.Controllers.Admin
             return true;
         }
 
+        // Danh sách event với phân trang và bộ lọc
         [Route("event/index")]
         public IActionResult Index(string keyword = "", string eventType = "", string status = "", int page = 1)
         {
@@ -158,6 +172,7 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Event/Index.cshtml", events);
         }
 
+        // Form thêm event mới
         [Route("event/add")]
         public IActionResult Add(string filterKeyword = "", string filterEventType = "", string filterStatus = "", int currentPage = 1)
         {
@@ -170,6 +185,7 @@ namespace GameStore.Controllers.Admin
 
             var nowUtc = DateTime.UtcNow;
 
+            // mặc định thời gian bắt đầu là ngày mai và kết thúc sau đó 2 tiếng để tránh lỗi thời gian ở quá khứ khi admin tạo event mới
             return View("~/Views/Admin/Event/Add.cshtml", new Event
             {
                 EventType = "Tournament",
@@ -180,9 +196,12 @@ namespace GameStore.Controllers.Admin
             });
         }
 
+        // Xử lý form thêm event mới
         [HttpPost]
         [Route("event/add")]
         public IActionResult Add(
+
+            // bind các trường của event từ form, đồng thời lấy file ảnh nếu có và các giá trị filter để giữ nguyên khi quay lại trang index
             Event ev,
             IFormFile? photo,
             string filterKeyword = "",
@@ -190,6 +209,7 @@ namespace GameStore.Controllers.Admin
             string filterStatus = "",
             int currentPage = 1)
         {
+            // trim các trường chuỗi và chuẩn hóa slug về chữ thường để tránh lỗi khi lưu vào database
             ev.Title = ev.Title?.Trim() ?? "";
             ev.Slug = ev.Slug?.Trim().ToLower() ?? "";
             ev.Summary = ev.Summary?.Trim();
@@ -201,6 +221,7 @@ namespace GameStore.Controllers.Admin
             ev.PrizeValue = Request.Form["PrizeValue"].ToString().Trim();
             ev.PrizeCondition = "CheckIn";
 
+            // nếu có chọn loại phần thưởng là Effect thì truyền giá trị đã chọn để load lại form, nếu không thì truyền null
             LoadFormData(ev.RelatedGameId, ev.PrizeType == "Effect" ? ev.PrizeValue : null);
 
             ViewBag.Keyword = filterKeyword;
@@ -208,6 +229,7 @@ namespace GameStore.Controllers.Admin
             ViewBag.Status = filterStatus;
             ViewBag.CurrentPage = currentPage;
 
+            // validate các trường bắt buộc và hợp lệ, nếu có lỗi thì trả về form với thông báo lỗi
             if (string.IsNullOrWhiteSpace(ev.Title))
             {
                 TempData["Msg"] = "❌ Title không được để trống!";
@@ -273,6 +295,7 @@ namespace GameStore.Controllers.Admin
                 ev.CreatedBy = int.Parse(User.FindFirst("UserId")!.Value);
             }
 
+            // nếu có ảnh được tải lên thì lưu ảnh và gán tên file vào event, nếu ảnh không hợp lệ thì trả về form với thông báo lỗi
             if (photo != null && photo.Length > 0)
             {
                 var saved = SaveEventImage(photo);
@@ -286,6 +309,7 @@ namespace GameStore.Controllers.Admin
                 ev.Banner = saved;
             }
 
+            // khi tạo event mới thì số lượng người tham gia hiện tại là 0
             if (eventService.Create(ev))
             {
                 TempData["Msg"] = "✅ Thêm event thành công!";
@@ -304,9 +328,11 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Event/Add.cshtml", ev);
         }
 
+        // Form sửa event
         [Route("event/edit/{id}")]
         public IActionResult Edit(int id, string filterKeyword = "", string filterEventType = "", string filterStatus = "", int currentPage = 1)
         {
+            // tìm event theo ID, nếu không tồn tại thì trả về trang index với thông báo lỗi
             var ev = eventService.FindById(id);
             if (ev == null)
             {
@@ -321,6 +347,7 @@ namespace GameStore.Controllers.Admin
                 });
             }
 
+            // load dữ liệu cho form, nếu event có phần thưởng là Effect thì truyền giá trị effect đã chọn để load lại form, nếu không thì truyền null
             LoadFormData(ev.RelatedGameId, ev.PrizeType == "Effect" ? ev.PrizeValue : null);
 
             ViewBag.Keyword = filterKeyword;
@@ -331,6 +358,7 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Event/Edit.cshtml", ev);
         }
 
+        // Xử lý form sửa event
         [HttpPost]
         [Route("event/edit/{id}")]
         public IActionResult Edit(
@@ -342,6 +370,7 @@ namespace GameStore.Controllers.Admin
             string filterStatus = "",
             int currentPage = 1)
         {
+            // tìm event theo ID, nếu không tồn tại thì trả về trang index với thông báo lỗi
             var current = eventService.FindById(id);
             if (current == null)
             {
@@ -356,6 +385,7 @@ namespace GameStore.Controllers.Admin
                 });
             }
 
+            // trim các trường chuỗi và chuẩn hóa slug về chữ thường để tránh lỗi khi lưu vào database
             ev.EventId = id;
             ev.Title = string.IsNullOrWhiteSpace(ev.Title) ? current.Title : ev.Title.Trim();
             ev.Slug = string.IsNullOrWhiteSpace(ev.Slug) ? current.Slug : ev.Slug.Trim().ToLower();
@@ -368,6 +398,7 @@ namespace GameStore.Controllers.Admin
             ev.PrizeValue = Request.Form["PrizeValue"].ToString().Trim();
             ev.PrizeCondition = "CheckIn";
 
+            // nếu có chọn loại phần thưởng là Effect thì truyền giá trị đã chọn để load lại form, nếu không thì truyền null
             LoadFormData(ev.RelatedGameId ?? current.RelatedGameId, ev.PrizeType == "Effect" ? ev.PrizeValue : null);
 
             ViewBag.Keyword = filterKeyword;
@@ -375,6 +406,7 @@ namespace GameStore.Controllers.Admin
             ViewBag.Status = filterStatus;
             ViewBag.CurrentPage = currentPage;
 
+            // validate các trường bắt buộc và hợp lệ, nếu có lỗi thì trả về form với thông báo lỗi
             if (string.IsNullOrWhiteSpace(ev.Title))
             {
                 TempData["Msg"] = "❌ Title không được để trống!";
@@ -441,6 +473,7 @@ namespace GameStore.Controllers.Admin
                 }
             }
 
+            // kiểm tra slug có bị trùng với event khác hay không, nếu có thì trả về form với thông báo lỗi
             var duplicateSlug = eventService.FindAll("", "", "", 1, int.MaxValue, out int _)
                 .FirstOrDefault(x => x.Slug == ev.Slug && x.EventId != ev.EventId);
 
@@ -491,10 +524,13 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Event/Edit.cshtml", current);
         }
 
+        // Xóa event, nếu event đã có giao dịch hoặc dữ liệu liên quan thì không cho xóa và trả về thông báo lỗi
         [Route("event/delete/{id}")]
         public IActionResult Delete(int id, string keyword = "", string eventType = "", string status = "", int page = 1)
         {
             var ev = eventService.FindById(id);
+
+            // nếu event không tồn tại thì trả về trang index với thông báo lỗi
             if (ev != null)
                 DeleteEventImage(ev.Banner);
 

@@ -4,6 +4,7 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Event Announcements";
 
+    // Get event and announcements from ViewBag
     var ev = ViewBag.Event as GameStore.Models.Event;
     var announcements = ViewBag.Announcements as List<GameStore.Models.EventAnnouncement> ?? new List<GameStore.Models.EventAnnouncement>();
 }
@@ -22,6 +23,7 @@
         </a>
     </div>
 
+    <!-- Thông báo thành công hoặc lỗi nếu có -->
     @if (TempData["Msg"] != null)
     {
         var msgType = TempData["MsgType"]?.ToString() ?? "info";
@@ -64,6 +66,7 @@
                 </div>
 
                 <div class="card-body">
+                    <!-- Danh sách thông báo -->
                     @if (announcements.Any())
                     {
                         @foreach (var item in announcements)
@@ -141,6 +144,7 @@
 </style>
 
 <script>
+    // Khi modal xóa được hiển thị, cập nhật tiêu đề và URL của form xóa
     document.addEventListener("DOMContentLoaded", function () {
         const deleteModal = document.getElementById("deleteAnnouncementModal");
         if (!deleteModal) return;

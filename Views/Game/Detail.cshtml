@@ -6,11 +6,14 @@
 }
 
 @{
+    // List game user đã mua
     var owned = ViewBag.OwnedGames as List<string> ?? new List<string>();
+    // List game đang nằm trong giỏ hàng
     var cart = ViewBag.CartGames as List<string> ?? new List<string>();
 }
 
 @{
+    // REVIEW CỦA USER HIỆN TẠI
     var myReview = ViewBag.MyReview as DanhGia;
 }
 
@@ -87,6 +90,11 @@
 
                             @if (owned.Contains(Model.MaGame))
                             {
+                                <!--
+                                    User đã sở hữu game:
+                                    - không cho add cart
+                                    - không cho buy
+                                -->
                                 <button type="button"
                                         class="btn gs-btn-muted gs-action-btn"
                                         onclick="showToast('You already own this game!', 'error')">
@@ -100,6 +108,11 @@
                             }
                             else if (cart.Contains(Model.MaGame))
                             {
+                                <!--
+                                    Game đã có trong cart:
+                                    - chỉ hiện Buy now
+                                -->
+
                                 <a asp-controller="Cart"
                                    asp-action="Add"
                                    asp-route-gameId="@Model.MaGame"
@@ -116,6 +129,10 @@
                             }
                             else
                             {
+                                <!--
+                                    User chưa sở hữu
+                                    và game chưa nằm trong cart
+                                -->
                                 <a asp-controller="Cart"
                                    asp-action="Add"
                                    asp-route-gameId="@Model.MaGame"
@@ -199,6 +216,9 @@
                 </div>
             }
 
+            <!-- =========================
+                DANH SÁCH REVIEW
+                ========================= -->
             @foreach (var r in ViewBag.Reviews as List<DanhGia>)
             {
                 <div class="gs-review-card mb-3">

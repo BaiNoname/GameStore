@@ -16,9 +16,10 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        // Đăng ký các dịch vụ cần thiết cho ứng dụng
         builder.Services.AddControllersWithViews();
 
-
+        // Đăng ký HttpContextAccessor để có thể truy cập HttpContext trong các dịch vụ khác
         builder.Services.AddHttpContextAccessor();
 
         var vnpayConfig = builder.Configuration.GetSection("VNPAY");
@@ -32,13 +33,17 @@ public class Program
 
         });
 
+        // Đăng ký ResendClient để gửi email, cấu hình API token từ appsettings.json
         builder.Services.AddHttpClient();
+
+        // Cấu hình ResendClientOptions với API token lấy từ cấu hình
         builder.Services.Configure<ResendClientOptions>(options =>
         {
             options.ApiToken = builder.Configuration["Resend:ApiKey"];
         });
         builder.Services.AddTransient<ResendClient>();
 
+        // Cấu hình cookie authentication để quản lý phiên đăng nhập của người dùng
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
         {
@@ -50,6 +55,7 @@ public class Program
 
             options.Events = new CookieAuthenticationEvents
             {
+                // Khi người dùng chưa đăng nhập mà truy cập vào trang yêu cầu authentication, sẽ redirect về trang login
                 OnRedirectToLogin = context =>
                 {
                     if (context.Request.Path.StartsWithSegments("/auth"))
@@ -66,6 +72,7 @@ public class Program
             };
         });
 
+        // Cấu hình JSON serializer để tránh lỗi vòng tham chiếu khi serialize đối tượng có quan hệ
         builder.Services.AddControllersWithViews()
         .AddJsonOptions(x =>
         {
@@ -73,11 +80,13 @@ public class Program
                 System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
         });
 
+        // Cấu hình Redis cache với StackExchange.Redis, lấy thông tin kết nối từ appsettings.json
         var upstash = builder.Configuration.GetSection("Upstash");
 
         var host = new Uri(upstash["Url"]).Host;
         var token = upstash["Token"];
 
+        // Đăng ký IConnectionMultiplexer để có thể sử dụng Redis trong các dịch vụ khác
         builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
         {
             return ConnectionMultiplexer.Connect(new ConfigurationOptions
@@ -95,11 +104,11 @@ public class Program
         //    options.InstanceName = "GameStore_";
         //});
 
-
+        // Đăng ký SignalR để hỗ trợ realtime communication giữa server và client
         builder.Services.AddSignalR();
         builder.Services.AddScoped<LocalAiService>();
 
-
+        // Cấu hình session để lưu trữ thông tin phiên làm việc của người dùng, thời gian hết hạn 15 phút
         builder.Services.AddSession(options =>
         {
             options.IdleTimeout = TimeSpan.FromMinutes(15);
@@ -107,16 +116,19 @@ public class Program
             options.Cookie.IsEssential = true;
         });
 
+        // Lấy chuỗi kết nối đến database từ appsettings.json
         var connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"];
 
+        // Nếu chuỗi kết nối không tồn tại hoặc rỗng, ném lỗi để thông báo cấu hình bị thiếu
         if (string.IsNullOrWhiteSpace(connectionString))
             throw new InvalidOperationException("Missing ConnectionStrings:DefaultConnection");
 
+        // Đăng ký DbContext với Entity Framework Core, sử dụng PostgreSQL làm database
         builder.Services.AddDbContext<GameStoreContext>(
             option => option.UseNpgsql(connectionString)
         );
 
-
+        // Đăng ký các dịch vụ của ứng dụng, mỗi dịch vụ sẽ có một implementation cụ thể để thực hiện các chức năng liên quan đến game, category, user, auth, payment, cart, review, news, event, v.v.
         builder.Services.AddScoped<GameService, GameServiceImpl>();
         builder.Services.AddScoped<CategoryService, CategoryServiceImpl>();
         builder.Services.AddScoped<UserService, UserServiceImpl>();
@@ -142,17 +154,23 @@ public class Program
 
         var app = builder.Build();
 
+        // Thêm endpoint để kiểm tra server có đang chạy hay không, trả về "Wake up Sever !!!" khi truy cập vào /ping
         app.MapGet("/ping", () => "Wake up Sever !!!");
-        
+
+        // Cấu hình middleware pipeline để xử lý các yêu cầu HTTP, bao gồm phục vụ file tĩnh, định tuyến, session, authentication, authorization, và các hub của SignalR
         app.UseStaticFiles();
 
+        // Cấu hình middleware để kiểm tra quyền truy cập dựa trên role của người dùng, nếu là admin thì không được vào các trang user và ngược lại
         app.UseRouting();
 
+        // Cấu hình session trước authentication để có thể sử dụng session trong quá trình xác thực người dùng
         app.UseSession();
 
+        // Cấu hình authentication và authorization để bảo vệ các trang và API của ứng dụng, chỉ cho phép người dùng đã đăng nhập mới có thể truy cập
         app.UseAuthentication();
         app.UseAuthorization();
 
+        // Middleware tùy chỉnh để kiểm tra role của người dùng và điều hướng nếu họ cố gắng truy cập vào trang không phù hợp với role của mình
         app.Use(async (context, next) =>
         {
             var path = context.Request.Path.ToString().ToLower();
@@ -189,6 +207,7 @@ public class Program
             await next();
         });
 
+        // Định nghĩa các hub của SignalR để hỗ trợ realtime communication, mỗi hub sẽ có một endpoint riêng để client có thể kết nối
         app.MapHub<GameStore.Hubs.GameHub>("/gameHub"); 
         app.MapHub<GameStore.Hubs.AiChatHub>("/aiChatHub");
         app.MapHub<GameStore.Hubs.ChatHub>("/chatHub");
@@ -196,12 +215,13 @@ public class Program
 
         app.MapControllers();
 
-
+        // Định nghĩa route mặc định cho các controller, nếu không có controller hoặc action nào được chỉ định trong URL, sẽ sử dụng HomeController và Index action
         app.MapControllerRoute(
             name: "default",
             pattern: "{controller=Home}/{action=Index}/{id?}"
             );
 
+        // Khi ứng dụng khởi động, tự động chạy migration để cập nhật database schema theo các model đã định nghĩa, đảm bảo rằng database luôn sẵn sàng để sử dụng
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<GameStoreContext>();

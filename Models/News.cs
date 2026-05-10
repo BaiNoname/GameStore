@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameStore.Models
 {
+    // Bảng tin tức (news)
     [Table("news")]
     public class News
     {

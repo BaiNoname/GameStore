@@ -12,11 +12,13 @@ namespace GameStore.Services
             db = _db;
         }
 
+        // Lấy thời gian hiện tại theo UTC
         private DateTime UtcNow()
         {
             return DateTime.UtcNow;
         }
 
+        // Lấy tất cả thông báo sự kiện theo ID sự kiện
         public List<EventAnnouncement> GetByEvent(int eventId)
         {
             return db.EventAnnouncements
@@ -26,22 +28,27 @@ namespace GameStore.Services
                 .ToList();
         }
 
+        // Lấy thông báo sự kiện theo ID thông báo
         public EventAnnouncement? FindById(int id)
         {
+            // Sử dụng Include để lấy thông tin người dùng và sự kiện liên quan
             return db.EventAnnouncements
                 .Include(x => x.NguoiDung)
                 .Include(x => x.Event)
                 .FirstOrDefault(x => x.AnnouncementId == id);
         }
-
+        
+        // Tạo thông báo sự kiện mới
         public bool Create(EventAnnouncement announcement)
         {
             try
             {
+                // Chuẩn hóa dữ liệu đầu vào
                 announcement.Title = announcement.Title?.Trim() ?? "";
                 announcement.Content = announcement.Content?.Trim() ?? "";
                 announcement.CreatedAt = UtcNow();
 
+                // Kiểm tra dữ liệu đầu vào
                 if (string.IsNullOrWhiteSpace(announcement.Title) || string.IsNullOrWhiteSpace(announcement.Content))
                     return false;
 
@@ -54,7 +61,8 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Xóa thông báo sự kiện
         public bool Delete(int id)
         {
             try
@@ -71,7 +79,8 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Lấy thông báo sự kiện mới nhất theo ID sự kiện
         public EventAnnouncement? GetLatestByEvent(int eventId)
         {
             return db.EventAnnouncements

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Admin
 {
+    // Controller quản lý thanh toán, chỉ admin mới có quyền truy cập
     [Authorize(Roles = "admin")]
     [Route("admin/payment")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -17,6 +18,7 @@ namespace GameStore.Controllers.Admin
             paymentService = _paymentService;
         }
 
+        // Hiển thị danh sách thanh toán với phân trang và lọc theo từ khóa và trạng thái
         [Route("index")]
         public IActionResult Index(string keyword = "", string status = "", int page = 1)
         {
@@ -37,6 +39,7 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Payment/Index.cshtml", vm);
         }
 
+        // Cập nhật trạng thái thanh toán, sau đó chuyển hướng về trang danh sách với các tham số hiện tại
         [HttpPost]
         [Route("update-status")]
         public IActionResult UpdateStatus(string id, string status, string keyword = "", string currentStatus = "", int page = 1)

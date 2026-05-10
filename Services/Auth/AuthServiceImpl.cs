@@ -16,15 +16,18 @@ namespace GameStore.Services
             mailHelper = _mailHelper;
         }
 
+        // Lấy thời gian hiện tại theo UTC
         private DateTime UtcNow()
         {
             return DateTime.UtcNow;
         }
 
+        // Đăng ký tài khoản mới
         public bool Register(NguoiDung user, out string message)
         {
             message = "";
 
+            // Kiểm tra các trường bắt buộc
             if (string.IsNullOrWhiteSpace(user.Email) ||
                 string.IsNullOrWhiteSpace(user.MatKhau) ||
                 string.IsNullOrWhiteSpace(user.TenNguoiDung))
@@ -33,26 +36,31 @@ namespace GameStore.Services
                 return false;
             }
 
+            // Kiểm tra định dạng email
             if (!Regex.IsMatch(user.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             {
                 message = "Email không hợp lệ";
                 return false;
             }
 
+            // Kiểm tra độ dài mật khẩu
             if (user.MatKhau.Length < 5)
             {
                 message = "Mật khẩu phải >= 5 ký tự";
                 return false;
             }
 
+            // Chuẩn hóa email (xóa khoảng trắng và chuyển về chữ thường)
             user.Email = user.Email.Trim().ToLower();
 
+            // Kiểm tra email đã tồn tại chưa
             if (db.NguoiDungs.Any(x => x.Email == user.Email))
             {
                 message = "Email đã tồn tại";
                 return false;
             }
 
+            // Hash mật khẩu trước khi lưu vào database
             user.MatKhau = BCrypt.Net.BCrypt.HashPassword(user.MatKhau);
             user.NgayDangKy = DateOnly.FromDateTime(UtcNow());
             user.Quyen = "user";
@@ -66,19 +74,23 @@ namespace GameStore.Services
             message = "Đăng ký thành công 🎉";
             return true;
         }
-
+        
+        // Đăng nhập bằng email và mật khẩu
         public NguoiDung? Login(string email, string password)
         {
+            // Kiểm tra đầu vào
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
                 return null;
 
             email = email.Trim().ToLower();
 
+            // Tìm user theo email và đảm bảo user đó đang hoạt động
             var user = db.NguoiDungs.FirstOrDefault(x => x.Email == email && x.IsActive);
 
             if (user == null || string.IsNullOrWhiteSpace(user.MatKhau))
                 return null;
 
+            // So sánh mật khẩu đã nhập với mật khẩu đã hash trong database
             try
             {
                 bool check = BCrypt.Net.BCrypt.Verify(password, user.MatKhau);
@@ -92,7 +104,8 @@ namespace GameStore.Services
 
             return user;
         }
-
+        
+        // Đổi mật khẩu cho user đang đăng nhập
         public bool ChangePassword(int userId, string oldPass, string newPass, string confirmPass, out string message)
         {
             message = "";
@@ -105,6 +118,7 @@ namespace GameStore.Services
                 return false;
             }
 
+            // Kiểm tra mật khẩu cũ
             bool check = BCrypt.Net.BCrypt.Verify(oldPass, user.MatKhau);
 
             if (!check)
@@ -132,7 +146,8 @@ namespace GameStore.Services
             message = "Đổi mật khẩu thành công ✅";
             return true;
         }
-
+        
+        // Cập nhật tên hiển thị của user
         public bool UpdateName(int userId, string newName, out string message)
         {
             message = "";
@@ -158,7 +173,8 @@ namespace GameStore.Services
             message = "Cập nhật tên thành công ✅";
             return true;
         }
-
+        
+        // Gửi mã reset password về email
         public bool SendResetCode(string email, out string message)
         {
             message = "";
@@ -179,8 +195,10 @@ namespace GameStore.Services
                 return false;
             }
 
+            // Tạo mã reset gồm 6 chữ số ngẫu nhiên
             var code = new Random().Next(100000, 999999).ToString();
 
+            // Lưu mã reset và thời gian hết hạn vào database
             user.ResetCode = code;
             user.ResetCodeExpiry = UtcNow().AddMinutes(5);
             user.IsVerified = false;
@@ -190,6 +208,7 @@ namespace GameStore.Services
             var subject = "Reset Password - GameStore";
             var body = $"<h3>Mã reset của bạn là: <b>{code}</b></h3><p>Hết hạn sau 5 phút</p>";
 
+            // Gửi email bất đồng bộ và chờ kết quả
             bool sent = Task.Run(() => mailHelper.SendEmail(email, subject, body)).Result;
 
             if (!sent)
@@ -201,7 +220,8 @@ namespace GameStore.Services
             message = "Đã gửi mã về email";
             return true;
         }
-
+        
+        // Xác thực mã reset password
         public bool VerifyResetCode(string email, string code, out string message)
         {
             message = "";
@@ -238,7 +258,8 @@ namespace GameStore.Services
             message = "Xác thực thành công";
             return true;
         }
-
+        
+        // Đặt lại mật khẩu sau khi xác thực mã thành công
         public bool ResetPassword(string email, string newPass, string confirmPass, out string message)
         {
             message = "";

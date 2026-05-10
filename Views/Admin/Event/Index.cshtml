@@ -4,6 +4,7 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Manage Events";
 
+    // Get filter and pagination data from ViewBag
     string keyword = ViewBag.Keyword?.ToString() ?? "";
     string eventType = ViewBag.EventType?.ToString() ?? "";
     string status = ViewBag.Status?.ToString() ?? "";
@@ -43,6 +44,7 @@
             </a>
         </div>
 
+        <!-- Display success or error messages if any -->
         @if (TempData["Msg"] != null)
         {
             var msgType = TempData["MsgType"]?.ToString() ?? "info";
@@ -65,6 +67,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Display events if available -->
                     @if (Model.Any())
                     {
                         @foreach (var item in Model)
@@ -128,6 +131,7 @@
                 </tbody>
             </table>
 
+            <!-- Pagination -->
             @if (totalPages > 1)
             {
                 <nav>
@@ -197,16 +201,20 @@
     </style>
 </div>
 <script>
+    // Handle delete modal population
     document.addEventListener("DOMContentLoaded", function () {
+        // Get the delete modal element
         const deleteModal = document.getElementById("deleteModal");
 
         if (!deleteModal) return;
 
+        // Listen for when the modal is about to be shown
         deleteModal.addEventListener("show.bs.modal", function (event) {
             const button = event.relatedTarget;
             const eventId = button.getAttribute("data-event-id");
             const eventTitle = button.getAttribute("data-event-title");
 
+            // Set the event title in the modal
             document.getElementById("deleteEventTitle").textContent = eventTitle;
             document.getElementById("deleteForm").action = "/admin/event/delete/" + eventId;
         });

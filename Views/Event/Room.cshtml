@@ -3,29 +3,44 @@
 @{
     ViewData["Title"] = "Event Room";
 
+    // Danh sách participant của event truyền từ controller qua ViewBag
     var participants = ViewBag.Participants as List<GameStore.Models.EventParticipant> ?? new List<GameStore.Models.EventParticipant>();
+    // Danh sách announcement của event
     var announcements = ViewBag.Announcements as List<GameStore.Models.EventAnnouncement> ?? new List<GameStore.Models.EventAnnouncement>();
+    // Danh sách chat message của room event
     var messages = ViewBag.Messages as List<GameStore.Models.EventMessage> ?? new List<GameStore.Models.EventMessage>();
+    // Thông tin participant hiện tại của user đang đăng nhập
     var myParticipant = ViewBag.MyParticipant as GameStore.Models.EventParticipant;
+    // Kiểm tra room có phải archived không
     bool isArchivedRoom = ViewBag.IsArchivedRoom != null && (bool)ViewBag.IsArchivedRoom;
+    // Kiểm tra user có đủ điều kiện nhận reward không
     bool canClaimReward = ViewBag.CanClaimReward != null && (bool)ViewBag.CanClaimReward;
+    // URL quay lại trang trước đó
     string returnUrl = ViewBag.ReturnUrl as string ?? "/event?eventType=All&status=All&page=1";
+    // Kiểm tra user đi từ My Events hay Event List
     bool fromMyEvents = string.Equals(returnUrl, "/event/my-events", StringComparison.OrdinalIgnoreCase);
+    // Đổi text nút quay lại tương ứng
     string listButtonText = fromMyEvents ? "Back to My Events" : "Event List";
 
+    // Hàm xử lý ảnh banner event
     string GetImage(string? image)
     {
+        // Nếu event chưa có ảnh -> dùng ảnh mặc định
         if (string.IsNullOrWhiteSpace(image))
             return "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1600&q=80";
 
+        // Nếu là link online -> dùng trực tiếp
         if (image.StartsWith("http://") || image.StartsWith("https://"))
             return image;
 
+        // Nếu là file local -> nối với thư mục images/events
         return Url.Content("~/images/events/" + image);
     }
 
+    // Dictionary map: userId -> tên css effect
     var userEffectMap = ViewBag.UserEffectMap as Dictionary<int, string> ?? new Dictionary<int, string>();
 
+    // Hàm lấy css effect avatar của user trong chat
     string GetEffectCssClass(int? userId)
     {
         if (userId.HasValue && userEffectMap.ContainsKey(userId.Value))
@@ -52,6 +67,17 @@
 
                         @if (isArchivedRoom)
                         {
+                            <!--
+                                Room archived khi event kết thúc.
+                                User chỉ được xem:
+                                - chat cũ
+                                - announcements
+                                - participants
+
+                                Không được:
+                                - chat mới
+                                - check-in
+                            -->
                             <div class="gs-archived-banner">
                                 <div class="gs-archived-title">📁 Archived Event Room</div>
                                 <div class="gs-archived-text">
@@ -64,8 +90,13 @@
                         <div class="gs-room-actions">
                             @if (myParticipant != null)
                             {
+                                // User đã tham gia event
                                 if (myParticipant.IsCheckedIn)
                                 {
+                                    <!--
+                                        User đã check-in thành công.
+                                        Hiển thị thời gian check-in.
+                                    -->
                                     <div class="gs-status-pill success">
                                         <span class="gs-status-icon">✓</span>
                                         <span>You have checked in at @myParticipant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
@@ -73,12 +104,19 @@
                                 }
                                 else if (isArchivedRoom)
                                 {
+                                    <!--
+                                        Event đã kết thúc nên khóa check-in.
+                                    -->
                                     <button type="button" class="gs-action-btn disabled-btn" onclick="showArchivedRoomToast()">
                                         Check-in Closed
                                     </button>
                                 }
                                 else
                                 {
+                                    <!--
+                                        User chưa check-in và event còn hoạt động.
+                                        Hiển thị nút check-in.
+                                    -->
                                     <form method="post" action="/event/room/@Model.EventId/checkin">
                                         <input type="hidden" name="returnUrl" value="@returnUrl" />
                                         <button type="submit" class="gs-action-btn primary">
@@ -100,6 +138,13 @@
 
                         @if (canClaimReward)
                         {
+                            <!--
+                                User đủ điều kiện nhận reward.
+                                Điều kiện thường là:
+                                - đã check-in
+                                - event có reward
+                                - chưa claim trước đó
+                            -->
                             <form method="post" action="/event/room/@Model.EventId/claim-reward">
                                 <input type="hidden" name="returnUrl" value="@returnUrl" />
                                 <button type="submit" class="gs-action-btn primary">
@@ -124,6 +169,7 @@
                     <div class="p-4 gs-chat-box" id="chatBox">
                         @if (messages.Any())
                         {
+                            // Render toàn bộ tin nhắn trong room event
                             @foreach (var msg in messages)
                             {
                                 <div class="gs-chat-message">
@@ -150,6 +196,9 @@
                         }
                         else
                         {
+                            <!--
+                                Room chưa có tin nhắn nào
+                            -->
                             <div class="gs-empty-chat" id="emptyChat">
                                 <div class="gs-empty-chat-icon">💬</div>
                                 <div class="gs-empty-chat-title">No messages available.</div>
@@ -191,6 +240,9 @@
             </div>
 
             <div class="col-lg-4">
+                <!-- =========================
+                KHU VỰC ANNOUNCEMENTS
+                ========================= -->
                 <div class="gs-room-card mb-4">
                     <div class="p-4 border-bottom border-secondary">
                         <h5 class="mb-0 text-light">Announcements</h5>
@@ -198,6 +250,7 @@
                     <div class="p-4">
                         @if (announcements.Any())
                         {
+                            // Có announcement trong event
                             @foreach (var item in announcements)
                             {
                                 <div class="gs-mini-item">
@@ -208,12 +261,16 @@
                             }
                         }
                         else
+                        <!-- Event chưa có announcement -->
                         {
                             <p class="text-secondary mb-0">No announcements available.</p>
                         }
                     </div>
                 </div>
 
+                <!-- =========================
+                KHU VỰC PARTICIPANTS
+                ========================= -->
                 <div class="gs-room-card">
                     <div class="p-4 border-bottom border-secondary">
                         <h5 class="mb-0 text-light">Participants</h5>
@@ -221,24 +278,28 @@
                     <div class="p-4">
                         @if (participants.Any())
                         {
+                            // Có participant tham gia event
                             @foreach (var p in participants)
                             {
                                 <div class="gs-mini-item">
                                     <div class="fw-bold text-light">
                                         @(p.NguoiDung?.TenNguoiDung ?? p.NguoiDung?.Email ?? "Member")
                                     </div>
+                                    <!-- Thời gian user tham gia event -->
                                     <div class="small text-secondary">
                                         Joined: @p.JoinedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                                     </div>
 
                                     @if (p.IsCheckedIn)
                                     {
+                                        <!-- User đã check-in event -->
                                         <div class="small text-success">
                                             Checked-in: @p.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                                         </div>
                                     }
                                     else
                                     {
+                                        <!-- User chưa check-in -->
                                         <div class="small text-warning">Not checked-in</div>
                                     }
                                 </div>
@@ -246,6 +307,7 @@
                         }
                         else
                         {
+                            <!-- Chưa có participant nào -->
                             <p class="text-secondary mb-0">No participants available.</p>
                         }
                     </div>
@@ -256,9 +318,18 @@
 
     @if (!isArchivedRoom)
     {
+        <!--
+            Chỉ load realtime chat khi event chưa archived.
+            Event archived:
+            - không được chat
+            - không realtime
+        -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
         <script>
             document.addEventListener("DOMContentLoaded", async function () {
+                 // =========================
+                // DOM & DỮ LIỆU KHỞI TẠO
+                // =========================
                 const eventId = "@Model.EventId";
                 const chatBox = document.getElementById("chatBox");
                 const chatForm = document.getElementById("chatForm");
@@ -305,11 +376,16 @@
                     scrollToBottom();
                 }
 
+                // =========================
+                // SIGNALR CONNECTION
+                // =========================
                 const connection = new signalR.HubConnectionBuilder()
                     .withUrl("/eventChatHub")
                     .build();
 
-
+                 // =========================
+                // NHẬN MESSAGE REALTIME
+                // =========================
                 connection.on("ReceiveEventMessage", function (message) {
                 appendMessage(message.userName, message.content, message.createdAt, message.effectCssClass);
                 });
@@ -736,6 +812,7 @@
 
     }
 
+    <!-- Style effect cua avatar-->
     .gs-chat-avatar.effect-neon-purple {
         box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.22), 0 0 18px rgba(168, 85, 247, 0.72), 0 0 30px rgba(168, 85, 247, 0.42);
     }
@@ -780,6 +857,7 @@
 </style>
 
 <script>
+    // xu ly thong bao cho su kien ket thuc
     function showArchivedRoomToast() {
         if (typeof showToast === "function") {
             showToast("This event has ended. The room is now in archived mode.", "error");

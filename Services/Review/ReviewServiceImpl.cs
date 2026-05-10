@@ -12,19 +12,24 @@ namespace GameStore.Services
             db = _db;
         }
 
+        // Thêm mới hoặc cập nhật đánh giá của người dùng cho một game
         public string AddOrUpdate(int userId, string gameId, int rating, string comment)
         {
             var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
             if (user == null) return "inactive_user";
 
+            // Kiểm tra xem người dùng đã mua game chưa
             bool bought = db.ChiTietGiaoDiches
                 .Any(x => x.GiaoDich.MaNguoiDung == userId && x.MaGame == gameId);
 
+            // Nếu chưa mua, không cho phép đánh giá
             if (!bought) return "not_bought";
 
+            // Kiểm tra xem người dùng đã đánh giá game này chưa
             var existing = db.DanhGias
                 .FirstOrDefault(x => x.MaNguoiDung == userId && x.MaGame == gameId);
 
+            // Nếu đã đánh giá, cập nhật lại điểm và nhận xét
             if (existing != null)
             {
                 existing.MucDiem = rating;
@@ -36,6 +41,7 @@ namespace GameStore.Services
             }
             else
             {
+                // Nếu chưa đánh giá, tạo mới một đánh giá
                 db.DanhGias.Add(new DanhGia
                 {
                     MaDG = Guid.NewGuid().ToString(),
@@ -51,14 +57,18 @@ namespace GameStore.Services
             }
         }
 
+        // Lấy đánh giá của người dùng cho một game cụ thể
         public DanhGia? GetUserReview(int userId, string gameId)
         {
+            // Lấy đánh giá của người dùng cho game, nếu không có thì trả về null
             return db.DanhGias
                 .FirstOrDefault(x => x.MaNguoiDung == userId && x.MaGame == gameId);
         }
-
+        
+        // Lấy tất cả đánh giá của một game
         public List<DanhGia> GetByGame(string gameId)
         {
+            // Lấy tất cả đánh giá của game, bao gồm thông tin người dùng, sắp xếp theo ngày đánh giá giảm dần
             return db.DanhGias
                 .Include(x => x.NguoiDung)
                 .Where(x => x.MaGame == gameId)

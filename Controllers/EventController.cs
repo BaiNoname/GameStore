@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace GameStore.Controllers
 {
+    // Controller quản lý các chức năng liên quan đến sự kiện trong GameStore
     [Route("event")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class EventController : Controller
@@ -45,16 +46,23 @@ namespace GameStore.Controllers
             db = _db;
         }
 
+        // Lấy thông tin người dùng hiện tại nếu còn hoạt động, nếu không sẽ đăng xuất và trả về null
         private async Task<NguoiDung?> GetCurrentActiveUserAsync()
         {
+            // Kiểm tra nếu người dùng chưa xác thực thì trả về null ngay
             if (User.Identity == null || !User.Identity.IsAuthenticated)
                 return null;
 
+            // Lấy claim UserId từ token
             var claim = User.FindFirst("UserId")?.Value;
+            // Nếu claim không tồn tại hoặc không thể chuyển đổi sang int thì trả về null
             if (string.IsNullOrWhiteSpace(claim) || !int.TryParse(claim, out int userId))
                 return null;
 
+            // Truy vấn cơ sở dữ liệu để lấy thông tin người dùng và kiểm tra xem họ còn hoạt động hay không
             var user = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
+
+            // Nếu người dùng không tồn tại hoặc không còn hoạt động thì đăng xuất và trả về null
             if (user == null)
             {
                 HttpContext.Session.Clear();
@@ -65,23 +73,27 @@ namespace GameStore.Controllers
             return user;
         }
 
+        // Các phương thức hỗ trợ để xây dựng URL cho các trang liên quan đến sự kiện, giúp đảm bảo tính nhất quán và dễ bảo trì
         private string BuildEventListUrl(string eventType = "All", string status = "All", int page = 1)
         {
             return Url.Action("Index", "Event", new { eventType, status, page }) ?? "/event?eventType=All&status=All&page=1";
         }
 
+        // Xây dựng URL cho trang chi tiết sự kiện dựa trên slug, có thể kèm theo returnUrl để điều hướng sau khi thực hiện hành động nào đó
         private string BuildEventDetailUrl(string slug, string? returnUrl = null)
         {
             var url = Url.Action("Detail", "Event", new { slug, returnUrl });
             return string.IsNullOrWhiteSpace(url) ? $"/event/detail/{slug}" : url;
         }
 
+        // Xây dựng URL cho phòng sự kiện dựa trên ID, có thể kèm theo returnUrl để điều hướng sau khi thực hiện hành động nào đó
         private string BuildEventRoomUrl(int id, string? returnUrl = null)
         {
             var url = Url.Action("Room", "Event", new { id, returnUrl });
             return string.IsNullOrWhiteSpace(url) ? $"/event/room/{id}" : url;
         }
 
+        // Phương thức để chuẩn hóa returnUrl, đảm bảo rằng nó là một URL hợp lệ và an toàn để chuyển hướng. Nếu returnUrl không hợp lệ, sẽ sử dụng fallback hoặc URL mặc định
         private string NormalizeReturnUrl(string? returnUrl, string? fallback = null)
         {
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -93,11 +105,13 @@ namespace GameStore.Controllers
             return BuildEventListUrl();
         }
 
+        //  Phương thức để chuyển hướng người dùng đến trang đăng nhập với returnUrl được mã hóa, giúp đảm bảo rằng sau khi đăng nhập thành công, người dùng sẽ được chuyển hướng trở lại trang họ đã định trước đó
         private IActionResult RedirectToLoginWithReturnUrl(string returnUrl)
         {
             return Redirect($"/auth/login?returnUrl={Uri.EscapeDataString(returnUrl)}");
         }
 
+        // Trang chính hiển thị danh sách sự kiện với khả năng lọc theo loại sự kiện, trạng thái và phân trang
         [Route("")]
         [Route("index")]
         public IActionResult Index(string eventType = "All", string status = "All", int page = 1)
@@ -112,6 +126,7 @@ namespace GameStore.Controllers
             var live = eventService.GetLive(3);
             var upcoming = eventService.GetUpcoming(6);
 
+            // Chuẩn bị ViewModel để truyền dữ liệu đến view, bao gồm danh sách sự kiện nổi bật, sự kiện theo bộ lọc, sự kiện đang diễn ra và sắp diễn ra, cùng với thông tin phân trang
             var vm = new EventPageVM
             {
                 FeaturedEvents = featured,
@@ -127,17 +142,21 @@ namespace GameStore.Controllers
             return View("~/Views/Event/Index.cshtml", vm);
         }
 
+        // Trang chi tiết của một sự kiện, hiển thị thông tin chi tiết về sự kiện, trạng thái tham gia của người dùng, các thông báo liên quan và các tin nhắn trong phòng sự kiện
         [Route("detail/{slug}")]
         public async Task<IActionResult> Detail(string slug, string? returnUrl = null)
         {
             ViewBag.HideSubBar = true;
 
+            // Chuẩn bị returnUrl để chuyển hướng sau khi thực hiện các hành động như tham gia sự kiện, check-in, v.v. Nếu returnUrl không hợp lệ, sẽ sử dụng URL danh sách sự kiện làm fallback
             var fallbackListUrl = BuildEventListUrl();
             returnUrl = NormalizeReturnUrl(returnUrl, fallbackListUrl);
 
+            // Nếu slug không hợp lệ thì chuyển hướng về trang danh sách sự kiện
             if (string.IsNullOrWhiteSpace(slug))
                 return Redirect(returnUrl);
 
+            // Tìm kiếm sự kiện theo slug, nếu không tìm thấy thì hiển thị thông báo lỗi và chuyển hướng về returnUrl
             var ev = eventService.FindBySlug(slug);
             if (ev == null)
             {
@@ -146,8 +165,10 @@ namespace GameStore.Controllers
                 return Redirect(returnUrl);
             }
 
+            // Kiểm tra xem người dùng hiện tại đã tham gia sự kiện này chưa để hiển thị trạng thái tham gia trên trang chi tiết
             bool joined = false;
 
+            // Nếu người dùng đã đăng nhập và còn hoạt động, kiểm tra xem họ đã tham gia sự kiện này chưa
             var activeUser = await GetCurrentActiveUserAsync();
             if (activeUser != null)
             {
@@ -161,13 +182,16 @@ namespace GameStore.Controllers
             return View("~/Views/Event/Detail.cshtml", ev);
         }
 
+        // Phương thức xử lý yêu cầu tham gia sự kiện, bao gồm cả việc kiểm tra điều kiện tham gia, xử lý thanh toán nếu sự kiện có phí, và chuyển hướng người dùng đến phòng sự kiện nếu tham gia thành công
         [HttpPost]
         [Route("join/{id}")]
         public async Task<IActionResult> Join(int id, string method = "balance", string? returnUrl = null)
         {
+            // Chuẩn bị returnUrl để chuyển hướng sau khi thực hiện hành động tham gia sự kiện. Nếu returnUrl không hợp lệ, sẽ sử dụng URL danh sách sự kiện làm fallback
             var fallbackListUrl = BuildEventListUrl();
             returnUrl = NormalizeReturnUrl(returnUrl, fallbackListUrl);
 
+            // Nếu id không hợp lệ thì chuyển hướng về trang danh sách sự kiện
             var ev = eventService.FindById(id);
             if (ev == null)
             {
@@ -176,6 +200,7 @@ namespace GameStore.Controllers
                 return Redirect(returnUrl);
             }
 
+            // Kiểm tra nếu sự kiện đã kết thúc thì không cho phép tham gia mới và hiển thị thông báo lỗi
             if ((ev.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase))
             {
                 TempData["ToastMessage"] = "Sự kiện đã kết thúc, không thể tham gia mới.";
@@ -183,6 +208,7 @@ namespace GameStore.Controllers
                 return Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
             }
 
+            // Kiểm tra nếu sự kiện đã đủ số lượng người tham gia thì không cho phép tham gia mới và hiển thị thông báo lỗi
             if (ev.MaxParticipants.HasValue && ev.CurrentParticipants >= ev.MaxParticipants.Value)
             {
                 TempData["ToastMessage"] = "Sự kiện đã đủ số lượng người tham gia";
@@ -190,6 +216,9 @@ namespace GameStore.Controllers
                 return Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
             }
 
+            // Kiểm tra nếu sự kiện có phí tham gia mà phương thức thanh toán là số dư thì kiểm tra xem người dùng đã đăng nhập chưa, nếu chưa thì chuyển hướng đến trang đăng nhập.
+            // Nếu đã đăng nhập thì kiểm tra xem họ đã tham gia sự kiện này chưa, nếu rồi thì chuyển hướng đến phòng sự kiện.
+            // Nếu chưa tham gia và sự kiện miễn phí thì cho phép tham gia ngay, nếu sự kiện có phí thì tạo giao dịch thanh toán và xử lý kết quả
             var activeUser = await GetCurrentActiveUserAsync();
             if (activeUser == null)
             {
@@ -233,14 +262,17 @@ namespace GameStore.Controllers
                 : Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
         }
 
+        // Trang phòng sự kiện, nơi người tham gia có thể xem thông tin chi tiết về sự kiện, các thông báo mới nhất, tin nhắn trong phòng và thực hiện các hành động như check-in, gửi tin nhắn, nhận phần thưởng, v.v.
         [Route("room/{id}")]
         public async Task<IActionResult> Room(int id, string? returnUrl = null)
         {
             ViewBag.HideSubBar = true;
 
+            // Chuẩn bị returnUrl để chuyển hướng sau khi thực hiện các hành động trong phòng sự kiện. Nếu returnUrl không hợp lệ, sẽ sử dụng URL danh sách sự kiện làm fallback
             var fallbackListUrl = BuildEventListUrl();
             returnUrl = NormalizeReturnUrl(returnUrl, fallbackListUrl);
 
+            // Nếu id không hợp lệ thì chuyển hướng về trang danh sách sự kiện
             var activeUser = await GetCurrentActiveUserAsync();
             if (activeUser == null)
             {
@@ -248,8 +280,11 @@ namespace GameStore.Controllers
                 return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
+            // Lấy thông tin sự kiện theo id, nếu không tìm thấy thì hiển thị thông báo lỗi và chuyển hướng về returnUrl
             int userId = activeUser.MaNguoiDung;
 
+            // Kiểm tra nếu sự kiện đã kết thúc thì vẫn cho phép người dùng vào phòng nhưng sẽ hiển thị thông báo rằng sự kiện đã kết thúc và chat đã bị khóa.
+            // Nếu sự kiện chưa kết thúc thì kiểm tra xem người dùng đã tham gia sự kiện này chưa, nếu chưa thì hiển thị thông báo lỗi và chuyển hướng về trang chi tiết sự kiện.
             var ev = eventService.FindById(id);
             if (ev == null)
             {
@@ -265,17 +300,22 @@ namespace GameStore.Controllers
                 return Redirect(BuildEventDetailUrl(ev.Slug, returnUrl));
             }
 
+            // Lấy danh sách người tham gia, thông báo và tin nhắn liên quan đến sự kiện để hiển thị trong phòng sự kiện.
+            // Cũng lấy thông tin về người tham gia hiện tại để hiển thị trạng thái check-in và khả năng nhận phần thưởng
             var participants = participantService.GetParticipantsByEvent(id);
             var announcements = announcementService.GetByEvent(id);
             var messages = messageService.GetByEvent(id, 100);
             var myParticipant = participantService.FindParticipant(id, userId);
 
+            // Lấy danh sách userId của những người đã gửi tin nhắn trong phòng sự kiện để lấy hiệu ứng icon tương ứng
             var effectUserIds = messages
                 .Where(x => x.UserId > 0)
                 .Select(x => x.UserId)
                 .Distinct()
                 .ToList();
 
+            // Chuẩn bị dữ liệu để truyền đến view, bao gồm thông tin sự kiện, danh sách người tham gia, thông báo, tin nhắn,
+            // trạng thái của người tham gia hiện tại, khả năng nhận phần thưởng và hiệu ứng icon cho những người đã gửi tin nhắn
             ViewBag.Participants = participants;
             ViewBag.Announcements = announcements;
             ViewBag.Messages = messages;
@@ -288,10 +328,13 @@ namespace GameStore.Controllers
             return View("~/Views/Event/Room.cshtml", ev);
         }
 
+        // Phương thức xử lý việc gửi tin nhắn trong phòng sự kiện, bao gồm kiểm tra điều kiện người dùng có thể gửi tin nhắn hay không,
+        // lưu tin nhắn vào cơ sở dữ liệu và phát tin nhắn mới đến tất cả các client đang kết nối trong phòng sự kiện thông qua SignalR
         [HttpPost]
         [Route("room/{id}/send-message")]
         public async Task<IActionResult> SendMessage(int id, string content, string? returnUrl = null)
         {
+            // Chuẩn bị returnUrl để chuyển hướng sau khi thực hiện hành động gửi tin nhắn. Nếu returnUrl không hợp lệ, sẽ sử dụng URL danh sách sự kiện làm fallback
             var activeUser = await GetCurrentActiveUserAsync();
             if (activeUser == null)
             {
@@ -302,8 +345,12 @@ namespace GameStore.Controllers
                 return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
+            // Lấy thông tin sự kiện theo id
             int userId = activeUser.MaNguoiDung;
 
+            // Kiểm tra nếu sự kiện đã kết thúc thì không cho phép gửi tin nhắn mới và hiển thị thông báo lỗi.
+            // Nếu sự kiện chưa kết thúc thì kiểm tra xem người dùng đã tham gia sự kiện này chưa, nếu chưa thì hiển thị thông báo lỗi và chuyển hướng về trang chi tiết sự kiện.
+            // Nếu nội dung tin nhắn không hợp lệ thì hiển thị thông báo lỗi và chuyển hướng về phòng sự kiện.
             var ev = eventService.FindById(id);
             if (ev == null)
             {
@@ -345,6 +392,7 @@ namespace GameStore.Controllers
                 return Redirect(BuildEventRoomUrl(id, returnUrl));
             }
 
+            // Nếu tất cả điều kiện đều hợp lệ thì lưu tin nhắn vào cơ sở dữ liệu và phát tin nhắn mới đến tất cả các client đang kết nối trong phòng sự kiện thông qua SignalR
             if (messageService.Send(id, userId, content))
             {
                 var latest = messageService.GetLatestMessage(id, userId, content);
@@ -373,19 +421,25 @@ namespace GameStore.Controllers
             return Redirect(BuildEventRoomUrl(id, returnUrl));
         }
 
+        // Phương thức xử lý việc check-in trong phòng sự kiện, bao gồm kiểm tra điều kiện người dùng có thể check-in hay không, cập nhật trạng thái check-in của người tham gia và hiển thị thông báo kết quả
         [HttpPost]
         [Route("room/{id}/checkin")]
         public async Task<IActionResult> CheckIn(int id, string? returnUrl = null)
         {
+            // Chuẩn bị returnUrl để chuyển hướng sau khi thực hiện hành động check-in. Nếu returnUrl không hợp lệ, sẽ sử dụng URL danh sách sự kiện làm fallback
             var activeUser = await GetCurrentActiveUserAsync();
+
+            // Nếu người dùng chưa đăng nhập hoặc không còn hoạt động thì chuyển hướng đến trang đăng nhập với returnUrl được mã hóa để sau khi đăng nhập thành công sẽ được chuyển hướng trở lại phòng sự kiện
             if (activeUser == null)
             {
                 var loginReturnUrl = BuildEventRoomUrl(id, returnUrl);
                 return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
+            // Lấy thông tin sự kiện theo id, nếu không tìm thấy thì hiển thị thông báo lỗi và chuyển hướng về returnUrl
             int userId = activeUser.MaNguoiDung;
 
+            // Kiểm tra nếu sự kiện đã kết thúc thì không cho phép check-in mới và hiển thị thông báo lỗi.
             var ev = eventService.FindById(id);
             if (ev == null)
             {
@@ -422,11 +476,14 @@ namespace GameStore.Controllers
             return Redirect(BuildEventRoomUrl(id, returnUrl));
         }
 
+        //  Trang hiển thị các sự kiện mà người dùng đã tham gia, bao gồm thông tin chi tiết về sự kiện,
+        //  các thông báo mới nhất và tin nhắn trong phòng sự kiện để người dùng có thể dễ dàng theo dõi và quản lý các sự kiện mình đã tham gia
         [Route("my-events")]
         public async Task<IActionResult> MyEvents()
         {
             ViewBag.HideSubBar = true;
 
+            // Kiểm tra nếu người dùng chưa đăng nhập hoặc không còn hoạt động thì chuyển hướng đến trang đăng nhập với returnUrl được mã hóa để sau khi đăng nhập thành công sẽ được chuyển hướng trở lại trang My Events
             var activeUser = await GetCurrentActiveUserAsync();
             if (activeUser == null)
             {
@@ -434,6 +491,7 @@ namespace GameStore.Controllers
                 return RedirectToLoginWithReturnUrl(returnUrl);
             }
 
+            // Lấy danh sách các sự kiện mà người dùng đã tham gia, cùng với thông tin chi tiết về sự kiện, các thông báo mới nhất và tin nhắn trong phòng sự kiện để hiển thị trên trang My Events
             int userId = activeUser.MaNguoiDung;
 
             var myParticipants = participantService.GetMyEvents(userId);
@@ -449,10 +507,12 @@ namespace GameStore.Controllers
             return View("~/Views/Event/MyEvents.cshtml", model);
         }
 
+        // Phương thức xử lý việc nhận phần thưởng sau khi sự kiện kết thúc, bao gồm kiểm tra điều kiện người dùng có thể nhận phần thưởng hay không, cập nhật trạng thái nhận phần thưởng và hiển thị thông báo kết quả
         [HttpPost]
         [Route("room/{id}/claim-reward")]
         public async Task<IActionResult> ClaimReward(int id, string? returnUrl = null)
         {
+            // Chuẩn bị returnUrl để chuyển hướng sau khi thực hiện hành động nhận phần thưởng. Nếu returnUrl không hợp lệ, sẽ sử dụng URL danh sách sự kiện làm fallback
             var activeUser = await GetCurrentActiveUserAsync();
             if (activeUser == null)
             {
@@ -460,6 +520,7 @@ namespace GameStore.Controllers
                 return RedirectToLoginWithReturnUrl(loginReturnUrl);
             }
 
+            // Lấy thông tin sự kiện theo id, nếu không tìm thấy thì hiển thị thông báo lỗi và chuyển hướng về returnUrl
             int userId = activeUser.MaNguoiDung;
 
             var result = eventRewardService.ClaimReward(id, userId);
@@ -469,6 +530,7 @@ namespace GameStore.Controllers
                 TempData["ToastMessage"] = result.Message;
                 TempData["ToastType"] = "success";
 
+                // Nếu có thông báo phần thưởng thì gửi tin nhắn vào phòng sự kiện để tất cả mọi người đều biết rằng người dùng đã nhận phần thưởng thành công
                 if (!string.IsNullOrWhiteSpace(result.RoomNotice))
                 {
                     messageService.Send(id, userId, result.RoomNotice);
@@ -488,6 +550,7 @@ namespace GameStore.Controllers
                     }
                 }
             }
+            // Nếu không thành công thì hiển thị thông báo lỗi, nếu có thông báo lỗi cụ thể từ service thì hiển thị, nếu không thì hiển thị thông báo lỗi mặc định
             else
             {
                 TempData["ToastMessage"] = string.IsNullOrWhiteSpace(result.Message)

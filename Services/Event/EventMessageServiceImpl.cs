@@ -12,11 +12,13 @@ namespace GameStore.Services
             db = _db;
         }
 
+        // Lấy thời gian hiện tại theo UTC
         private DateTime UtcNow()
         {
             return DateTime.UtcNow;
         }
-
+        
+        // Lấy tất cả tin nhắn sự kiện theo ID sự kiện, có thể giới hạn số lượng trả về
         public List<EventMessage> GetByEvent(int eventId, int take = 100)
         {
             return db.EventMessages
@@ -27,7 +29,8 @@ namespace GameStore.Services
                 .OrderBy(x => x.CreatedAt)
                 .ToList();
         }
-
+        
+        // Gửi tin nhắn sự kiện
         public bool Send(int eventId, int userId, string content)
         {
             try
@@ -58,7 +61,8 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Lấy tin nhắn sự kiện mới nhất theo ID sự kiện và ID người dùng
         public EventMessage? GetLatestMessage(int eventId, int userId, string content)
         {
             content = content?.Trim() ?? "";
@@ -72,7 +76,8 @@ namespace GameStore.Services
                 .OrderByDescending(x => x.CreatedAt)
                 .FirstOrDefault();
         }
-
+        
+        // Lấy tin nhắn sự kiện mới nhất theo ID sự kiện
         public EventMessage? GetLatestByEvent(int eventId)
         {
             return db.EventMessages

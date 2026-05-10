@@ -23,6 +23,7 @@
                 <select name="categoryId" class="form-control">
                     <option value="">-- All Categories --</option>
 
+                    <!-- Danh sách thể loại game -->
                     @foreach (var c in Model.Categories)
                     {
                         <option value="@c.MaTheLoai"
@@ -46,6 +47,7 @@
 
         </div>
 
+        <!-- Thông báo thành công hoặc lỗi nếu có -->
         <div class="p-2 text-success admin-inline-msg">
             @TempData["Msg"]
         </div>
@@ -64,6 +66,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Danh sách game -->
                     @foreach (var game in Model.Games)
                     {
                         <tr>
@@ -282,6 +285,7 @@
 </script>
 
 <script>
+    // Khi modal xóa được hiển thị, cập nhật tên và URL của form xóa
     const deleteModal = document.getElementById('deleteModal');
     deleteModal.addEventListener('show.bs.modal', function (event) {
         const button = event.relatedTarget;

@@ -5,9 +5,11 @@
 @inject UserIconEffectService UserIconEffectService
 
 @{
+    // Lấy tên user từ session
     var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");
     string? equippedCssClass = null;
 
+    // Lấy effect đang equip của user hiện tại
     if (User.Identity != null && User.Identity.IsAuthenticated)
     {
         var userIdClaim = User.FindFirst("UserId")?.Value;
@@ -30,6 +32,7 @@
     <link rel="stylesheet" href="~/css/site.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@600;700&display=swap" rel="stylesheet">
 
+    <!-- Cho phép từng view chèn CSS riêng -->
     @RenderSection("Styles", required: false)
 
     <style>
@@ -624,6 +627,8 @@
 
         }
 
+
+        /* Avatar effect */
         .gs-user-avatar {
             width: 30px;
             height: 30px;
@@ -649,6 +654,7 @@
             line-height: 1;
         }
 
+        /* các hiệu ứng effect avatar */
         .gs-user-avatar.effect-neon-purple {
             box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.22), 0 0 18px rgba(168, 85, 247, 0.72), 0 0 30px rgba(168, 85, 247, 0.42);
         }
@@ -724,14 +730,17 @@
                         </li>
                     </ul>
 
+                    <!-- Khu user / cart / AI -->
                     <div class="ms-auto d-flex align-items-center gap-3 flex-wrap">
 
                         @if (!User.Identity.IsAuthenticated)
                         {
+                            <!-- Nút đăng nhập -->
                             <a class="gs-toplink" asp-controller="Auth" asp-action="Login">Sign in</a>
                         }
                         else
                         {
+                            <!-- Dropdown tài khoản người dùng -->
                             <div class="dropdown gs-user-dropdown">
                                 <button class="btn btn-outline-light dropdown-toggle gs-user-toggle"
                                         data-bs-toggle="dropdown">
@@ -743,6 +752,7 @@
 
                                 <ul class="dropdown-menu dropdown-menu-end gs-user-menu">
 
+                                    <!-- Link thư viện game -->
                                     <li>
                                         <a class="dropdown-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Library" ? "active" : "")"
                                            asp-controller="Library"
@@ -751,6 +761,7 @@
                                         </a>
                                     </li>
 
+                                    <!-- Link sự kiện của người dùng -->
                                     <li>
                                         <a class="dropdown-item @(ViewContext.RouteData.Values["action"]?.ToString() == "MyEvents" ? "active" : "")"
                                            asp-controller="Event"
@@ -759,6 +770,7 @@
                                         </a>
                                     </li>
 
+                                    <!-- Link hiệu ứng của người dùng -->
                                     <li>
                                         <a class="dropdown-item"
                                            asp-controller="Profile"
@@ -767,6 +779,7 @@
                                         </a>
                                     </li>
 
+                                    <!-- Link profile-->
                                     <li>
                                         <a class="dropdown-item"
                                            asp-controller="Account"
@@ -778,10 +791,12 @@
                                     <li><hr class="dropdown-divider"></li>
 
                                     @{
+                                        // Lấy số dư hiện tại của user
                                         var uid = int.Parse(User.FindFirst("UserId").Value);
                                         var currentUser = _db.NguoiDungs.Find(uid);
                                     }
 
+                                    <!-- Hiển thị số dư -->
                                     <li>
                                         <span class="dropdown-item-text text-warning fw-bold gs-balance-text">
                                             <span class="gs-balance-label">My Balance:</span>
@@ -791,6 +806,7 @@
 
                                     <li><hr class="dropdown-divider"></li>
 
+                                    <!-- Đăng xuất -->
                                     <li>
                                         <a class="dropdown-item text-danger"
                                            asp-controller="Auth"
@@ -802,10 +818,12 @@
                             </div>
                         }
 
+                        <!-- Link giỏ hàng -->
                         <a href="/cart" class="btn btn-outline-light">
                             🛒 Cart
                         </a>
 
+                        <!-- Link AI Game Assistant -->
                         <a class="gs-toplink gs-accent" href="javascript:void(0)" id="openAiChat">
                             🤖 AI Game Assistant
                         </a>
@@ -850,6 +868,7 @@
     }
 
     <main>
+        <!-- Nơi render nội dung từng trang client -->
         @RenderBody()
     </main>
 

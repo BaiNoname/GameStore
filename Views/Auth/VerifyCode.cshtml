@@ -2,6 +2,7 @@
     ViewData["Title"] = "Enter the verification code";
 }
 
+<!-- Form nhập mã xác thực -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -110,6 +111,7 @@
                 Enter the code sent to your email to continue recovering your account.
             </p>
 
+            <!-- Display error message if there is one -->
             @if (ViewBag.Error != null)
             {
                 <div class="alert alert-danger">

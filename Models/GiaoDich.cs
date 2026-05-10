@@ -1,5 +1,6 @@
 ﻿using GameStore.Models;
 
+// Giao dịch mua game của người dùng
 public class GiaoDich
 {
     public string MaGD { get; set; } = null!;

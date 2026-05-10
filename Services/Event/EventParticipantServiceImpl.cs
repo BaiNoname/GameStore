@@ -12,16 +12,19 @@ namespace GameStore.Services
             db = _db;
         }
 
+        // Kiểm tra user còn hoạt động hay không
         private bool IsUserActive(int userId)
         {
             return db.NguoiDungs.Any(x => x.MaNguoiDung == userId && x.IsActive);
         }
 
+        // Lấy thời gian hiện tại theo UTC
         private DateTime UtcNow()
         {
             return DateTime.UtcNow;
         }
 
+        // Kiểm tra xem user đã tham gia sự kiện chưa
         public bool IsJoined(int eventId, int userId)
         {
             return db.EventParticipants.Any(x =>
@@ -31,6 +34,7 @@ namespace GameStore.Services
                 x.JoinStatus.Trim().ToLower() == "joined");
         }
 
+        // Đếm số lượng người đã tham gia sự kiện
         public int CountJoined(int eventId)
         {
             return db.EventParticipants.Count(x =>
@@ -38,7 +42,8 @@ namespace GameStore.Services
                 x.JoinStatus != null &&
                 x.JoinStatus.Trim().ToLower() == "joined");
         }
-
+        
+        // Lấy danh sách người tham gia theo ID sự kiện
         public List<EventParticipant> GetParticipantsByEvent(int eventId)
         {
             return db.EventParticipants
@@ -47,14 +52,16 @@ namespace GameStore.Services
                 .OrderByDescending(x => x.JoinedAt)
                 .ToList();
         }
-
+        
+        // Tìm người tham gia theo ID sự kiện và ID người dùng
         public EventParticipant? FindParticipant(int eventId, int userId)
         {
             return db.EventParticipants
                 .Include(x => x.NguoiDung)
                 .FirstOrDefault(x => x.EventId == eventId && x.UserId == userId);
         }
-
+        
+        // Tham gia sự kiện miễn phí
         public bool JoinFree(int eventId, int userId)
         {
             if (!IsUserActive(userId))
@@ -68,9 +75,11 @@ namespace GameStore.Services
                 var ev = db.Events.FirstOrDefault(x => x.EventId == eventId);
                 if (ev == null) return false;
 
+                // Kiểm tra nếu sự kiện đã đạt giới hạn người tham gia
                 if (ev.MaxParticipants.HasValue && ev.CurrentParticipants >= ev.MaxParticipants.Value)
                     return false;
 
+                // Tạo đối tượng EventParticipant mới
                 var participant = new EventParticipant
                 {
                     EventId = eventId,
@@ -81,6 +90,7 @@ namespace GameStore.Services
                     IsCheckedIn = false
                 };
 
+                // Thêm người tham gia vào cơ sở dữ liệu
                 db.EventParticipants.Add(participant);
                 ev.CurrentParticipants += 1;
                 ev.UpdatedAt = UtcNow();
@@ -93,7 +103,8 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Tham gia sự kiện có trả phí
         public bool JoinPaid(int eventId, int userId, decimal paidAmount)
         {
             if (!IsUserActive(userId))
@@ -104,12 +115,15 @@ namespace GameStore.Services
                 if (IsJoined(eventId, userId))
                     return true;
 
+                // Kiểm tra nếu sự kiện đã đạt giới hạn người tham gia
                 var ev = db.Events.FirstOrDefault(x => x.EventId == eventId);
                 if (ev == null) return false;
 
+                // Kiểm tra nếu sự kiện đã đạt giới hạn người tham gia
                 if (ev.MaxParticipants.HasValue && ev.CurrentParticipants >= ev.MaxParticipants.Value)
                     return false;
 
+                // Tạo đối tượng EventParticipant mới
                 var participant = new EventParticipant
                 {
                     EventId = eventId,
@@ -120,6 +134,7 @@ namespace GameStore.Services
                     IsCheckedIn = false
                 };
 
+                // Thêm người tham gia vào cơ sở dữ liệu
                 db.EventParticipants.Add(participant);
                 ev.CurrentParticipants += 1;
                 ev.UpdatedAt = UtcNow();
@@ -132,7 +147,8 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Check-in người tham gia
         public bool CheckIn(int eventId, int userId)
         {
             if (!IsUserActive(userId))
@@ -160,7 +176,8 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Tìm người tham gia theo ID
         public EventParticipant? FindById(int participantId)
         {
             return db.EventParticipants
@@ -168,9 +185,11 @@ namespace GameStore.Services
                 .Include(x => x.Event)
                 .FirstOrDefault(x => x.ParticipantId == participantId);
         }
-
+        
+        // Xóa người tham gia khỏi sự kiện
         public bool RemoveParticipant(int participantId)
         {
+            // Lấy người tham gia để kiểm tra và cập nhật số lượng người tham gia của sự kiện
             try
             {
                 var participant = db.EventParticipants
@@ -196,12 +215,14 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Lấy danh sách sự kiện mà người dùng đã tham gia
         public List<EventParticipant> GetMyEvents(int userId)
         {
             if (!IsUserActive(userId))
                 return new List<EventParticipant>();
 
+            // Lấy danh sách sự kiện mà người dùng đã tham gia, bao gồm thông tin về sự kiện và trò chơi
             return db.EventParticipants
                 .Include(x => x.Event)
                     .ThenInclude(e => e.Game)

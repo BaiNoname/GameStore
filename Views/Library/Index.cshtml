@@ -17,6 +17,10 @@
 
         @if (Model == null || Model.Count == 0)
         {
+            <!--
+                Nếu user chưa sở hữu game nào
+                -> hiển thị empty state
+            -->
             <div class="gs-empty-card">
                 <div class="gs-empty-icon">🎮</div>
                 <h4 class="mb-2">You don't own any games yet.</h4>
@@ -33,6 +37,9 @@
         }
         else
         {
+            <!-- =========================
+                 LIBRARY LIST
+                 ========================= -->
             <div class="gs-library-shell">
                 <div class="gs-library-header d-none d-md-grid">
                     <div>Game</div>
@@ -41,6 +48,9 @@
                     <div class="text-end">Action</div>
                 </div>
 
+                <!-- =========================
+                     DANH SÁCH GAME
+                     ========================= -->
                 <div class="gs-library-list">
                     @foreach (var item in Model)
                     {
