@@ -13,10 +13,12 @@
             <h4 class="mb-0">🎮 Add Game</h4>
         </div>
 
+        <!-- Thông báo thành công hoặc lỗi nếu có -->
         <div class="p-2 text-success">
             @TempData["Msg"]
         </div>
 
+        <!-- Form thêm game mới -->
         <div class="card-body">
 
             <form method="post"
@@ -24,6 +26,7 @@
                   asp-controller="game"
                   asp-action="add">
 
+                <!-- Giữ nguyên các tham số tìm kiếm và phân trang để quay lại đúng vị trí sau khi thêm -->
                 <input type="hidden" name="keyword" value="@ViewBag.Keyword" />
                 <input type="hidden" name="categoryId" value="@ViewBag.CategoryId" />
                 <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
@@ -83,6 +86,7 @@
                            accept="image/*" />
                 </div>
 
+                <!-- Mặc định số lượt tải là 0 khi thêm game mới -->
                 <input type="hidden" asp-for="SoLuotTai" value="0" />
 
                 <div class="d-flex justify-content-end gap-2">

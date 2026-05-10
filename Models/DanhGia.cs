@@ -1,5 +1,6 @@
 ﻿namespace GameStore.Models
 {
+    // Lớp DanhGia đại diện cho đánh giá của người dùng về một game
     public class DanhGia
     {
         public string MaDG { get; set; } = null!;

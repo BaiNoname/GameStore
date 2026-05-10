@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameStore.Models
 {
+    // Lớp đại diện cho tin nhắn trong sự kiện
     [Table("eventparticipant")]
     public class EventParticipant
     {

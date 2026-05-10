@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Admin
 {
+    // Controller quản lý thể loại game trong trang admin
     [Authorize(Roles = "admin")]
     [Route("admin")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -18,6 +19,7 @@ namespace GameStore.Controllers.Admin
             categoryService = _categoryService;
         }
 
+        // Hiển thị danh sách thể loại với phân trang và tìm kiếm
         [Route("category")]
         [Route("category/index")]
         public IActionResult Index(string keyword = "", int page = 1)
@@ -37,6 +39,7 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Category/Index.cshtml", vm);
         }
 
+        // Hiển thị form thêm thể loại mới
         [Route("category/add")]
         public IActionResult Add(string keyword = "", int page = 1)
         {
@@ -45,6 +48,7 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Category/Add.cshtml");
         }
 
+        // Xử lý form thêm thể loại mới
         [HttpPost]
         [Route("category/add")]
         public IActionResult Add(TheLoaiGame category, string keyword = "", int page = 1)
@@ -55,6 +59,7 @@ namespace GameStore.Controllers.Admin
             ViewBag.Keyword = keyword;
             ViewBag.CurrentPage = page;
 
+            // Validate dữ liệu đầu vào
             if (string.IsNullOrWhiteSpace(category.MaTheLoai))
             {
                 TempData["Msg"] = "❌ Mã thể loại không được để trống!";
@@ -90,6 +95,7 @@ namespace GameStore.Controllers.Admin
             }
         }
 
+        // Xóa thể loại theo id
         [Route("category/delete/{id}")]
         public IActionResult Delete(string id, string keyword = "", int page = 1)
         {
@@ -113,6 +119,7 @@ namespace GameStore.Controllers.Admin
             return RedirectToAction("Index", new { keyword, page });
         }
 
+        // Hiển thị form chỉnh sửa thể loại
         [Route("category/edit/{id}")]
         public IActionResult Edit(string id, string keyword = "", int page = 1)
         {
@@ -130,11 +137,14 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/Category/Edit.cshtml", category);
         }
 
+        // Xử lý form chỉnh sửa thể loại
         [HttpPost]
         [Route("category/edit/{id}")]
         public IActionResult Edit(TheLoaiGame category, string keyword = "", int page = 1)
         {
             var existing = categoryService.findById(category.MaTheLoai);
+
+            // Validate dữ liệu đầu vào
             if (existing == null)
             {
                 TempData["Msg"] = "❌ Thể loại không tồn tại!";
@@ -147,6 +157,7 @@ namespace GameStore.Controllers.Admin
 
             bool isChanged = false;
 
+            // Chỉ cập nhật nếu có sự thay đổi
             if (!string.IsNullOrWhiteSpace(category.TenLoaiGame) &&
                 category.TenLoaiGame.Trim() != existing.TenLoaiGame)
             {
@@ -161,6 +172,7 @@ namespace GameStore.Controllers.Admin
                 return RedirectToAction("Index", new { keyword, page });
             }
 
+            // Cập nhật thể loại và điều hướng về trang danh sách
             if (categoryService.Update(existing))
             {
                 int targetPage = page;

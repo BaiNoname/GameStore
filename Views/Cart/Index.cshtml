@@ -3,6 +3,8 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Cart";
+
+    // Calculate total price of items in the cart
     var total = Model.ChiTietGioHangs.Sum(x => x.DonGiaHienTai);
 }
 
@@ -16,6 +18,7 @@
             </div>
         </div>
 
+        <!-- If cart is empty, show empty state. Otherwise, show cart items and summary. -->
         @if (Model == null || !Model.ChiTietGioHangs.Any())
         {
             <div class="gs-empty-card">

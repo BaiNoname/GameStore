@@ -8,7 +8,10 @@ namespace GameStore.Services
 {
     public class GameServiceImpl : GameService
     {
+        // Dùng DbContext để truy xuất dữ liệu từ database
         private GameStoreContext db;
+
+        // Cấu hình JsonSerializer để tránh lỗi vòng tham chiếu khi serialize đối tượng có quan hệ
         private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             ReferenceHandler = ReferenceHandler.IgnoreCycles,
@@ -20,6 +23,7 @@ namespace GameStore.Services
             db = _db;
         }
 
+        // Lấy danh sách tên tất cả game, giới hạn 50 game để tránh trả về quá nhiều dữ liệu
         public List<string> GetAllGameNames()
         {
             return db.Games
@@ -28,13 +32,15 @@ namespace GameStore.Services
                 .ToList();
         }
 
+        // Lấy tất cả game, sắp xếp theo mã game
         public List<Game> findAll()
         {
 
             return db.Games.OrderBy(g => g.MaGame).ToList();
 
         }
-
+        
+        // Tìm kiếm game với các bộ lọc và phân trang
         public List<Game> findAll(string keyword, string categoryId, int page, int pageSize, out int totalPages)
         {
             var query = db.Games.Include(g => g.TheLoaiGame).AsQueryable();
@@ -62,7 +68,8 @@ namespace GameStore.Services
                 .Take(pageSize)
                 .ToList();
         }
-
+        
+        // Tìm kiếm game theo ID
         public Game? findById(string maGame)
         {
             return db.Games.FirstOrDefault(x => x.MaGame == maGame);
@@ -118,6 +125,7 @@ namespace GameStore.Services
                 .ToList();
         }
 
+        // Tạo mới game
         public bool Create(Game game)
         {
             try
@@ -130,7 +138,8 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Cập nhật game
         public bool Update(Game game)
         {
             try
@@ -143,7 +152,8 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Xóa game
         public bool Delete(string id)
         {
             try
@@ -159,12 +169,14 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Lấy DbContext hiện tại
         public GameStoreContext GetDb()
         {
             return db;
         }
-
+        
+        // Đếm số lượng game theo các tiêu chí
         public int CountGames(string search, string category)
         {
             var query = db.Games.AsQueryable();

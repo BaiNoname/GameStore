@@ -1,5 +1,6 @@
 ﻿namespace GameStore.Models
 {
+    // Lớp đại diện cho thư viện game của người dùng, lưu trữ thông tin về các game mà người dùng đã mua hoặc tải về
     public class ThuVienGame
     {
         public int MaNguoiDung { get; set; }

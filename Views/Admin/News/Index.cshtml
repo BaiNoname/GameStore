@@ -4,6 +4,7 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "News Management";
 
+    // Get search/filter parameters from ViewBag
     string keyword = ViewBag.Keyword?.ToString() ?? "";
     string newsType = ViewBag.NewsType?.ToString() ?? "";
     string status = ViewBag.Status?.ToString() ?? "";
@@ -16,6 +17,7 @@
         <h4 class="card-title">News List</h4>
         <p class="card-subtitle mb-3">Manage all news articles in the system</p>
 
+        <!-- Search + Add Button -->
         <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
             <form method="get" action="/admin/news/index" class="d-flex gap-2 flex-wrap admin-search-form admin-news-search-form">
                 <input type="text"
@@ -57,6 +59,7 @@
             </a>
         </div>
 
+        <!-- Display success or error messages if any -->
         @if (TempData["Msg"] != null)
         {
             var msgType = TempData["MsgType"]?.ToString() ?? "info";
@@ -82,6 +85,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Danh sách bài viết -->
                     @if (Model.Any())
                     {
                         foreach (var item in Model)
@@ -144,6 +148,7 @@
                 </tbody>
             </table>
 
+            <!-- Pagination UI only -->
             @if (totalPages > 1)
             {
                 <nav>
@@ -271,6 +276,7 @@
 </style>
 
 <script>
+    // When the delete modal is shown, update the news title and form action URL
     document.addEventListener("DOMContentLoaded", function () {
         const deleteModal = document.getElementById("deleteModal");
         deleteModal.addEventListener("show.bs.modal", function (event) {

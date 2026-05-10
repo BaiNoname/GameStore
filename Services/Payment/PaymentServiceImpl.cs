@@ -10,9 +10,13 @@ namespace GameStore.Services
 {
     public class PaymentServiceImpl : PaymentService
     {
+        //
         private GameStoreContext db;
+        // Logger để ghi log thông tin, cảnh báo và lỗi
         private readonly ILogger<PaymentServiceImpl> logger;
+        // HubContext để gửi thông báo realtime đến client khi có thay đổi về lượt tải game
         private readonly IHubContext<Hubs.GameHub> hub;
+        // Service để xử lý logic liên quan đến tham gia sự kiện có trả phí
         private readonly EventParticipantService eventParticipantService;
 
         public PaymentServiceImpl(GameStoreContext _db, ILogger<PaymentServiceImpl> _logger, 
@@ -24,11 +28,13 @@ namespace GameStore.Services
             eventParticipantService = _eventParticipantService;
         }
 
+        // Kiểm tra và lấy thông tin người dùng nếu còn hoạt động
         private NguoiDung? GetActiveUser(int userId)
         {
             return db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == userId && x.IsActive);
         }
 
+        // tất cả giao dịch (admin page)
         public List<GiaoDich> findAll()
         {
             return db.GiaoDiches
@@ -37,6 +43,7 @@ namespace GameStore.Services
                      .ToList();
         }
 
+        // tìm kiếm và phân trang giao dịch (admin page)
         public List<GiaoDich> findAll(string keyword, string status, int page, int pageSize, out int totalPages)
         {
             var query = db.GiaoDiches
@@ -66,13 +73,15 @@ namespace GameStore.Services
                 .Take(pageSize)
                 .ToList();
         }
-
+        
+        // tìm kiếm giao dịch theo ID (admin page)
         public GiaoDich findById(string id)
         {
             return db.GiaoDiches
                      .FirstOrDefault(g => g.MaGD == id);
         }
 
+        // cập nhật trạng thái giao dịch (admin page)
         public bool UpdateStatus(string id, string status)
         {
             try
@@ -95,7 +104,7 @@ namespace GameStore.Services
             }
         }
 
-        // user page 
+        // user page thanh toán bằng balance trong tài khoản
         public async Task<bool> Checkout(int userId)
         {
             using var transaction = db.Database.BeginTransaction();
@@ -227,6 +236,7 @@ namespace GameStore.Services
             }
         }
 
+        // user page thanh toán bằng MoMo (tạo giao dịch pending, chờ callback)
         public void CreatePendingMomo(int userId, string maGD, decimal amount)
         {
             var user = GetActiveUser(userId);
@@ -237,9 +247,11 @@ namespace GameStore.Services
                 .Include(x => x.ChiTietGioHangs)
                 .FirstOrDefault(x => x.MaNguoiDung == userId);
 
+            // 🔥 tạo giao dịch pending trước, chờ callback từ MoMo
             if (cart == null || !cart.ChiTietGioHangs.Any())
                 throw new Exception("Cart empty");
 
+            // tạo giao dịch với trạng thái Pending
             var giaoDich = new GiaoDich
             {
                 MaGD = maGD,
@@ -252,6 +264,7 @@ namespace GameStore.Services
 
             db.GiaoDiches.Add(giaoDich);
 
+            // lưu chi tiết giao dịch để dùng khi callback hoàn tất
             foreach (var item in cart.ChiTietGioHangs)
             {
                 db.ChiTietGiaoDiches.Add(new ChiTietGiaoDich
@@ -265,10 +278,13 @@ namespace GameStore.Services
             db.SaveChanges();
         }
 
+        // callback từ MoMo khi giao dịch hoàn tất
         public async Task CompleteMomo(string maGD)
         {
+            // callback từ MoMo khi giao dịch hoàn tất
             using var transaction = db.Database.BeginTransaction();
 
+            // 🔥 bắt đầu transaction để đảm bảo tính toàn vẹn dữ liệu
             try
             {
                 var gd = db.GiaoDiches
@@ -284,11 +300,13 @@ namespace GameStore.Services
                 if (user == null)
                     throw new Exception("User inactive or not found");
 
+                // 🔥 trừ tiền sau khi xác nhận giao dịch thành công từ MoMo
                 foreach (var item in gd.ChiTietGiaoDiches)
                 {
                     var exists = db.ThuVienGames
                         .Any(x => x.MaNguoiDung == userId && x.MaGame == item.MaGame);
 
+                    // 🔥 nếu chưa có trong thư viện thì mới add, tránh trùng lặp khi callback nhiều lần
                     if (!exists)
                     {
                         db.ThuVienGames.Add(new ThuVienGame
@@ -300,6 +318,7 @@ namespace GameStore.Services
                         });
                     }
 
+                    // 🔥 cập nhật lượt tải và gửi realtime update đến client
                     var game = db.Games.Find(item.MaGame);
                     if (game != null)
                     {
@@ -308,6 +327,7 @@ namespace GameStore.Services
                     }
                 }
 
+                // clear cart sau khi hoàn tất giao dịch
                 var cart = db.GioHangs
                     .Include(x => x.ChiTietGioHangs)
                     .FirstOrDefault(x => x.MaNguoiDung == userId);
@@ -330,6 +350,7 @@ namespace GameStore.Services
             }
         }
 
+        // callback từ MoMo khi giao dịch thất bại hoặc bị hủy
         public Task FailMomo(string maGD)
         {
             var gd = db.GiaoDiches.FirstOrDefault(x => x.MaGD == maGD);
@@ -342,6 +363,7 @@ namespace GameStore.Services
             return Task.CompletedTask;
         }
 
+        // user page nạp tiền vào tài khoản bằng MoMo (tạo giao dịch pending, chờ callback)
         public async Task CompleteTopup(int userId, decimal amount)
         {
             var user = GetActiveUser(userId);
@@ -362,11 +384,14 @@ namespace GameStore.Services
             var user = GetActiveUser(userId);
             if (user == null) throw new Exception("User inactive or not found");
 
+            // kiểm tra sự kiện tồn tại và có giá tiền
             var ev = db.Events.FirstOrDefault(x => x.EventId == eventId);
             if (ev == null) throw new Exception("Event not found");
 
+            // tạo giao dịch pending để chờ thanh toán bằng balance
             var maGD = Guid.NewGuid().ToString();
 
+            // 🔥 tạo giao dịch pending trước, chờ hoàn tất sau khi trừ tiền và tham gia sự kiện
             var giaoDich = new GiaoDich
             {
                 MaGD = maGD,
@@ -386,29 +411,39 @@ namespace GameStore.Services
             return maGD;
         }
 
+        // hoàn tất giao dịch tham gia sự kiện bằng balance, trừ tiền và thêm vào danh sách tham gia
         public async Task<bool> CompleteEventBalance(string maGD)
         {
+            // bắt đầu transaction để đảm bảo tính toàn vẹn dữ liệu khi trừ tiền và thêm vào sự kiện
             using var transaction = db.Database.BeginTransaction();
 
             try
             {
+                // 🔥 lấy giao dịch và kiểm tra hợp lệ
                 var gd = db.GiaoDiches
                     .Include(x => x.Event)
                     .FirstOrDefault(x => x.MaGD == maGD);
 
+                // 🔥 chỉ xử lý giao dịch loại EventJoin và trạng thái Pending
                 if (gd == null) return false;
+                // 🔥 nếu không phải giao dịch tham gia sự kiện thì không xử lý
                 if (gd.LoaiGiaoDich != "EventJoin") return false;
+                // 🔥 nếu đã hoàn tất rồi thì không cần làm gì nữa
                 if (gd.TrangThai == "Success") return true;
+                // 🔥 nếu không phải trạng thái Pending thì không xử lý
                 if (!gd.EventId.HasValue) return false;
 
                 var user = GetActiveUser(gd.MaNguoiDung);
                 if (user == null) return false;
 
+                // 🔥 reload lại user để đảm bảo có số dư mới nhất trước khi trừ tiền
                 db.Entry(user).Reload();
 
+                // 🔥 kiểm tra đủ tiền trước khi trừ
                 if (user.SoDu < gd.ThanhTien)
                     return false;
 
+                // 🔥 kiểm tra nếu đã tham gia sự kiện rồi thì chỉ cần cập nhật trạng thái giao dịch mà không trừ tiền nữa
                 if (eventParticipantService.IsJoined(gd.EventId.Value, gd.MaNguoiDung))
                 {
                     gd.TrangThai = "Success";
@@ -419,6 +454,7 @@ namespace GameStore.Services
 
                 user.SoDu -= gd.ThanhTien;
 
+                // 🔥 gọi service tham gia sự kiện có trả phí, nếu tham gia thất bại thì rollback và trả về false
                 var joined = eventParticipantService.JoinPaid(gd.EventId.Value, gd.MaNguoiDung, gd.ThanhTien);
                 if (!joined)
                 {

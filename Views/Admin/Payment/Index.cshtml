@@ -5,6 +5,7 @@
     ViewData["Title"] = "Payment Management";
 }
 
+<!-- This view displays a list of payments with search and pagination features for admin users to manage payment records. -->
 <div class="card admin-list-card">
     <div class="card-body">
         <h4 class="card-title">Payment List</h4>
@@ -30,6 +31,7 @@
 
         </div>
 
+        <!-- Display success or error messages if any -->
         <div class="p-2 text-success admin-inline-msg">
             @TempData["Msg"]
         </div>
@@ -47,6 +49,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Danh sách thanh toán -->
                     @foreach (var item in Model.Payments)
                     {
                         <tr>

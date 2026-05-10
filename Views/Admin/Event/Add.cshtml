@@ -4,7 +4,12 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Add Event";
 
+    // Lấy thời gian hiện tại của máy client để:
+    // - Giới hạn không cho chọn thời gian trong quá khứ
+    // - Dùng cho thuộc tính min của input datetime-local
     var minLocal = DateTime.UtcNow.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss");
+
+    // Convert thời gian UTC từ database sang giờ local để hiển thị đúng trên form
     var startLocal = Model.StartAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss");
     var endLocal = Model.EndAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss");
 }
@@ -17,12 +22,18 @@
 
         @if (TempData["Msg"] != null)
         {
+            // Hiển thị thông báo sau khi submit form:
+            // Ví dụ: Add success, Update failed...
             var msgType = TempData["MsgType"]?.ToString() ?? "info";
             <div class="alert alert-@msgType mt-2 mx-3 fw-bold">@TempData["Msg"]</div>
         }
 
         <div class="card-body">
             <form method="post" enctype="multipart/form-data" asp-controller="Event" asp-action="Add">
+                <!--
+                    Giữ lại trạng thái filter/search hiện tại.
+                    Sau khi Add/Edit xong sẽ quay về đúng page và đúng filter trước đó.
+                -->
                 <input type="hidden" name="filterKeyword" value="@ViewBag.Keyword" />
                 <input type="hidden" name="filterEventType" value="@ViewBag.EventType" />
                 <input type="hidden" name="filterStatus" value="@ViewBag.Status" />
@@ -50,11 +61,19 @@
 
                 <div class="mb-3">
                     <label class="form-label">Banner</label>
+                    <!--
+                        Upload ảnh banner cho event.
+                        accept="image/*" chỉ cho phép chọn file ảnh.
+                    -->
                     <input type="file" class="form-control" name="photo" accept="image/*" />
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Related Game</label>
+                    <!--
+                        Chọn game liên quan tới event.
+                        Dữ liệu được load từ ViewBag.Games phía controller.
+                    -->
                     <select class="form-select" asp-for="RelatedGameId" asp-items="ViewBag.Games">
                         <option value="">-- Select Game --</option>
                     </select>
@@ -99,6 +118,7 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label class="form-label">Prize Type</label>
+                        <!-- Chọn loại phần thưởng -->
                         <select class="form-select" id="PrizeType" name="PrizeType">
                             @if (string.IsNullOrWhiteSpace(Model.PrizeType))
                             {
@@ -203,26 +223,41 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Lấy các element cần xử lý động
         const prizeType = document.getElementById("PrizeType");
         const prizeBalanceWrap = document.getElementById("prizeBalanceWrap");
         const prizeEffectWrap = document.getElementById("prizeEffectWrap");
+
+         // Input hidden dùng để submit dữ liệu cuối cùng
         const prizeValueHidden = document.getElementById("PrizeValue");
+
+        // Input reward dạng tiền
         const prizeValueBalance = document.getElementById("PrizeValueBalance");
+
+        // Dropdown reward dạng effect
         const prizeValueEffect = document.getElementById("PrizeValueEffect");
 
+        // Hàm đồng bộ giao diện và dữ liệu reward
         function syncPrizeUi() {
+
+            // Lấy loại reward hiện tại user đang chọn
             const type = prizeType.value;
 
+            // Nếu reward là tiền
             if (type === "Balance") {
                 prizeBalanceWrap.style.display = "block";
                 prizeEffectWrap.style.display = "none";
                 prizeValueHidden.value = prizeValueBalance.value || "";
             }
+
+            // Nếu reward là effect/item
             else if (type === "Effect") {
                 prizeBalanceWrap.style.display = "none";
                 prizeEffectWrap.style.display = "block";
                 prizeValueHidden.value = prizeValueEffect.value || "";
             }
+
+            // Nếu không có reward
             else {
                 prizeBalanceWrap.style.display = "none";
                 prizeEffectWrap.style.display = "none";
@@ -230,10 +265,16 @@
             }
         }
 
+        // Khi đổi loại reward -> cập nhật UI
         prizeType.addEventListener("change", syncPrizeUi);
+
+        // Khi nhập tiền -> cập nhật hidden value
         prizeValueBalance.addEventListener("input", syncPrizeUi);
+
+        // Khi đổi effect -> cập nhật hidden value
         prizeValueEffect.addEventListener("change", syncPrizeUi);
 
+        // Chạy lần đầu khi load page để hiển thị đúng dữ liệu cũ
         syncPrizeUi();
     });
 </script>

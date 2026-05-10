@@ -4,6 +4,7 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Add News";
 
+    // Convert PublishedAt and ExpiredAt to local time and format for datetime-local input
     var publishedLocal = Model.PublishedAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm");
     var expiredLocal = Model.ExpiredAt.HasValue
         ? Model.ExpiredAt.Value.ToLocalTime().ToString("yyyy-MM-ddTHH:mm")
@@ -16,6 +17,7 @@
             <h4 class="mb-0">📰 Add News</h4>
         </div>
 
+        <!-- Thông báo thành công hoặc lỗi nếu có -->
         @if (TempData["Msg"] != null)
         {
             var msgType = TempData["MsgType"]?.ToString() ?? "info";
@@ -24,6 +26,7 @@
             </div>
         }
 
+        <!-- Get list of games for the dropdown from ViewBag -->
         <div class="card-body">
             <form method="post" enctype="multipart/form-data" asp-controller="News" asp-action="Add">
                 <input type="hidden" name="keyword" value="@ViewBag.Keyword" />

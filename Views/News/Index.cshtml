@@ -4,18 +4,28 @@
 @{
     ViewData["Title"] = "News";
 
+    // Lấy bài featured đầu tiên
     var featured = Model.FeaturedNews.FirstOrDefault();
 
+    // =========================
+    // CSS BADGE
+    // =========================
     string GetBadgeClass(string? type)
     {
         return type == "Hot" ? "gs-badge hot" : "gs-badge";
     }
 
+    // =========================
+    // HIỂN THỊ NEWS TYPE
+    // =========================
     string GetDisplayType(string? type)
     {
         return string.IsNullOrWhiteSpace(type) ? "NEWS" : type!.ToUpper();
     }
 
+    // =========================
+    // XỬ LÝ ẢNH
+    // =========================
     string GetImage(string? image)
     {
         if (string.IsNullOrWhiteSpace(image))
@@ -27,6 +37,9 @@
         return Url.Content("~/images/news/" + image);
     }
 
+    // =========================
+    // LẤY AUTHOR
+    // =========================
     string GetAuthor(GameStore.Models.News item)
     {
         return item.NguoiDung?.TenNguoiDung
@@ -34,6 +47,9 @@
                ?? "GameStore Editorial";
     }
 
+    // =========================
+    // TÓM TẮT BÀI VIẾT
+    // =========================
     string GetSummary(GameStore.Models.News item)
     {
         if (!string.IsNullOrWhiteSpace(item.Summary))
@@ -49,6 +65,9 @@
         return "This article is currently being updated.";
     }
 
+    // =========================
+    // ƯỚC LƯỢNG THỜI GIAN ĐỌC
+    // =========================
     string GetReadTime(GameStore.Models.News item)
     {
         var text = (item.Content ?? "").Trim();
@@ -59,6 +78,9 @@
         return $"{mins} min read";
     }
 
+    // =========================
+    // DANH SÁCH CATEGORY FILTER
+    // =========================
     var types = new List<string> { "All", "General", "Updates", "Events", "Releases", "Community", "Patch Notes", "Editorial" };
 }
 
@@ -75,6 +97,13 @@
         <div class="gs-pillbar">
             @foreach (var type in types)
             {
+                <!--
+                    Filter theo loại news:
+                    - All
+                    - Events
+                    - Patch Notes
+                    ...
+                -->
                 <a href="/news?newsType=@Uri.EscapeDataString(type)&page=1"
                    class="gs-pill @(Model.NewsType == type ? "active" : "")">
                     @type
@@ -84,6 +113,9 @@
 
         @if (featured != null)
         {
+            <!-- =========================
+                 FEATURED NEWS SECTION
+                 ========================= -->
             <section class="gs-feature-wrap">
                 <div class="row g-4">
                     <div class="col-lg-8">
@@ -109,10 +141,16 @@
                         </article>
                     </div>
 
+                    <!-- =========================
+                        TRENDING SIDEBAR
+                        ========================= -->
                     <div class="col-lg-4">
                         <div class="row g-4 h-100">
                             @foreach (var item in Model.TrendingNews.Take(3))
                             {
+                                <!--
+                                    Hiển thị top 3 bài trending
+                                -->
                                 <div class="col-12">
                                     <a href="/news/detail/@item.Slug?newsType=@Uri.EscapeDataString(Model.NewsType)&page=@Model.CurrentPage">
                                         <article class="gs-feature-side-card">
@@ -134,6 +172,9 @@
             </section>
         }
 
+        <!-- =========================
+             LATEST NEWS
+             ========================= -->
         <section class="mb-5">
             <div class="row align-items-end mb-3">
                 <div class="col-lg-8">
@@ -145,8 +186,12 @@
             <div class="row g-4">
                 @if (Model.LatestNews.Any())
                 {
+                    // Có bài viết latest
                     @foreach (var item in Model.LatestNews)
                     {
+                        <!--
+                            Render từng article card
+                        -->
                         <div class="col-md-6 col-xl-4">
                             <article class="gs-news-card h-100">
                                 <img src="@GetImage(item.Thumbnail)" alt="@item.Title">
@@ -166,6 +211,9 @@
                 }
                 else
                 {
+                    <!--
+                        Không có bài viết phù hợp filter
+                    -->
                     <div class="col-12">
                         <div class="gs-cta-box">
                             <h3>No matching articles found</h3>
@@ -175,6 +223,9 @@
                 }
             </div>
 
+            <!-- =========================
+                 PAGINATION
+                 ========================= -->
             @if (Model.TotalPages > 1)
             {
                 <nav class="mt-5">

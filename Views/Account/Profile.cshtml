@@ -9,10 +9,12 @@
     <div class="container py-4 py-lg-5">
         <div class="mx-auto gs-profile-wrap">
 
+            <!-- xử lý hiệu ứng cho avatar -->
             @{
                 string equippedEffectCssClass = ViewBag.EquippedEffectCssClass as string ?? "";
             }
 
+            <!-- cập nhật hiệu ứng cho profile avatar -->
             <div class="mb-4">
                 <div class="d-flex flex-wrap align-items-center gap-3">
                     <div class="gs-profile-avatar @equippedEffectCssClass">
@@ -27,6 +29,7 @@
                 </div>
             </div>
 
+            <!-- Hiển thị thông báo lỗi nếu có -->
             @if (TempData["Err"] != null)
             {
                 <div class="alert alert-danger gs-alert-danger">
@@ -34,6 +37,7 @@
                 </div>
             }
 
+            <!-- Hiển thị thông báo thành công nếu có -->
             @if (TempData["Msg"] != null)
             {
                 <div class="alert alert-success gs-alert-success">
@@ -327,6 +331,7 @@
         font-weight: 800;
     }
 
+    <!-- các hiệu ứng cho avatar -->
     .gs-profile-avatar.effect-neon-purple {
         box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.22), 0 0 18px rgba(168, 85, 247, 0.72), 0 0 30px rgba(168, 85, 247, 0.42);
     }

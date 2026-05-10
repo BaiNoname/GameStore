@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Admin
 {
+    // Controller để quản lý người tham gia sự kiện, chỉ admin mới có quyền truy cập
     [Authorize(Roles = "admin")]
     [Route("admin/event-participant")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -20,6 +21,7 @@ namespace GameStore.Controllers.Admin
             participantService = _participantService;
         }
 
+        // Hiển thị danh sách người tham gia của một sự kiện cụ thể
         [HttpGet("index/{eventId}")]
         public IActionResult Index(int eventId)
         {
@@ -37,10 +39,13 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/EventParticipant/Index.cshtml");
         }
 
+        // Xóa một người tham gia khỏi sự kiện
         [HttpGet("delete/{participantId}")]
         public IActionResult Delete(int participantId)
         {
+            // Tìm participant theo ID
             var participant = participantService.FindById(participantId);
+            // Kiểm tra nếu participant tồn tại
             if (participant == null)
             {
                 TempData["Msg"] = "❌ Participant không tồn tại!";

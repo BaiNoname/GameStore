@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Admin
 {
+    // Controller quản lý thông tin tài khoản admin
     [Route("admin/account")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class AdminAccountController : Controller
@@ -19,6 +20,7 @@ namespace GameStore.Controllers.Admin
             db = _db;
         }
 
+        // Kiểm tra và lấy thông tin admin hiện tại nếu còn hoạt động
         private async Task<NguoiDung?> GetCurrentActiveAdminAsync()
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
@@ -39,6 +41,8 @@ namespace GameStore.Controllers.Admin
             return user;
         }
 
+        // Hiển thị trang thông tin tài khoản admin
+
         [HttpGet("profile")]
         public async Task<IActionResult> Profile()
         {
@@ -49,6 +53,7 @@ namespace GameStore.Controllers.Admin
             return View(user);
         }
 
+        // Xử lý cập nhật tên người dùng admin
         [HttpPost("update-name")]
         public async Task<IActionResult> UpdateName(string tenNguoiDung)
         {
@@ -63,6 +68,7 @@ namespace GameStore.Controllers.Admin
             return RedirectToAction("Profile");
         }
 
+        // Xử lý đổi mật khẩu admin
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword(string oldPass, string newPass, string confirmPass)
         {

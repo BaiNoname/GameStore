@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor HttpContextAccessor
 
+<!-- Dựa vào thông tin người dùng trong session -->
 @{
     var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");
 }
@@ -548,6 +549,7 @@
             </header>
 
             <!-- Content -->
+            <!-- Nơi render nội dung từng trang admin -->
             <div class="body-wrapper-inner">
                 <div class="container-fluid admin-content-fluid">
                     @RenderBody()
@@ -565,9 +567,11 @@
     <script src="~/assets/js/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 
+    <!-- Cho phép từng view chèn script riêng -->
     @RenderSection("Scripts", required: false)
 
     <!-- TOAST -->
+    <!-- Khung chứa toast -->
     <div id="toastBox"
          style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
 
@@ -608,6 +612,8 @@
             }, 3000);
         }
     </script>
+
+     <!-- Đọc toast từ TempData -->
     @{
         var msg = TempData.Peek("ToastMessage") as string;
         var type = TempData.Peek("ToastType") as string;

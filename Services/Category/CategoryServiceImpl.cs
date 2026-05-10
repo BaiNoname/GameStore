@@ -18,6 +18,7 @@ namespace GameStore.Services
             cache = _cache;
         }
 
+        // Thêm danh mục game mới
         public bool Create(TheLoaiGame category)
         {
             try
@@ -38,7 +39,8 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Xóa danh mục game
         public bool Delete(string id)
         {
             try
@@ -63,6 +65,7 @@ namespace GameStore.Services
             }
         }
 
+        // Cập nhật danh mục game
         public bool Update(TheLoaiGame category)
         {
             try
@@ -84,20 +87,24 @@ namespace GameStore.Services
             }
         }
 
+        // Lấy tất cả danh mục game (có sử dụng cache Redis)
         public List<TheLoaiGame> findAll()
         {
+            
             string cacheKey = "categories";
 
             var totalWatch = Stopwatch.StartNew();
 
             Console.WriteLine("🔍 CHECK CACHE: categories");
 
+            // ⏱ Đo thời gian truy xuất cache
             var cacheWatch = Stopwatch.StartNew();
             var cached = cache.GetString(cacheKey);
             cacheWatch.Stop();
 
             Console.WriteLine($"⏱ REDIS TIME: {cacheWatch.ElapsedMilliseconds} ms");
 
+            // Nếu có cache, trả về dữ liệu từ cache
             if (!string.IsNullOrEmpty(cached))
             {
                 Console.WriteLine("🔥 REDIS HIT: categories");
@@ -106,6 +113,7 @@ namespace GameStore.Services
                 totalWatch.Stop();
                 Console.WriteLine($"⚡ TOTAL TIME (CACHE): {totalWatch.ElapsedMilliseconds} ms");
 
+                // ⏱ Đo thời gian deserialize
                 return JsonSerializer.Deserialize<List<TheLoaiGame>>(cached);
             }
 
@@ -123,11 +131,13 @@ namespace GameStore.Services
 
             var serializeWatch = Stopwatch.StartNew();
 
+            // Chuyển dữ liệu thành JSON để lưu vào cache
             var json = JsonSerializer.Serialize(data, new JsonSerializerOptions
             {
                 ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
             });
 
+            // Lưu vào cache với thời gian hết hạn 10 phút
             cache.SetString(cacheKey, json, new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
@@ -143,6 +153,7 @@ namespace GameStore.Services
             return data;
         }
 
+        // Lấy danh mục game theo từ khóa tìm kiếm (có phân trang)
         public List<TheLoaiGame> findAll(string keyword, int page, int pageSize, out int totalPages)
         {
             var query = db.TheLoaiGames.AsQueryable();
@@ -164,7 +175,8 @@ namespace GameStore.Services
                 .Take(pageSize)
                 .ToList();
         }
-
+        
+        // Lấy danh mục game theo ID
         public TheLoaiGame findById(string id)
         {
             return db.TheLoaiGames

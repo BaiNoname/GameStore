@@ -3,12 +3,20 @@
 @{
     ViewData["Title"] = Model.Title;
 
+    // Danh sách bài viết trending
     var trendingNews = ViewBag.TrendingNews as List<GameStore.Models.News> ?? new List<GameStore.Models.News>();
+    // Danh sách bài viết mới nhất
     var latestNews = ViewBag.LatestNews as List<GameStore.Models.News> ?? new List<GameStore.Models.News>();
+    // Loại news hiện tại
     string newsType = ViewBag.NewsType as string ?? "All";
+    // Page hiện tại
     int currentPage = ViewBag.Page != null ? (int)ViewBag.Page : 1;
+    // URL quay lại news list
     string backUrl = $"/news?newsType={Uri.EscapeDataString(newsType)}&page={currentPage}";
 
+    // =========================
+    // HÀM XỬ LÝ ẢNH
+    // =========================
     string GetImage(string? image)
     {
         if (string.IsNullOrWhiteSpace(image))
@@ -20,6 +28,9 @@
         return Url.Content("~/images/news/" + image);
     }
 
+    // =========================
+    // LẤY TÊN TÁC GIẢ
+    // =========================
     string GetAuthor()
     {
         return Model.NguoiDung?.TenNguoiDung
@@ -27,21 +38,33 @@
                ?? "GameStore Editorial";
     }
 
+    // =========================
+    // LẤY TÊN GAME
+    // =========================
     string GetGameName(GameStore.Models.News item)
     {
         return item.Game?.TenGame ?? "GameStore";
     }
 
+    // =========================
+    // CSS BADGE
+    // =========================
     string GetBadgeClass(string? type)
     {
         return type == "Hot" ? "gs-badge hot" : "gs-badge";
     }
 
+    // =========================
+    // DISPLAY TYPE
+    // =========================
     string GetDisplayType(string? type)
     {
         return string.IsNullOrWhiteSpace(type) ? "NEWS" : type!.ToUpper();
     }
 
+    // =========================
+    // ESTIMATE READ TIME
+    // =========================
     string GetReadTime(GameStore.Models.News item)
     {
         var text = (item.Content ?? "").Trim();
@@ -52,6 +75,9 @@
         return $"{mins} min read";
     }
 
+    // =========================
+    // FORMAT CONTENT
+    // =========================
     string FormatContent(string? content)
     {
         if (string.IsNullOrWhiteSpace(content))
@@ -62,6 +88,7 @@
         return $"<p>{encoded}</p>";
     }
 }
+
 
 <main class="gs-page">
     <div class="container-xxl">
@@ -118,6 +145,8 @@
 
                     @if (trendingNews.Any())
                     {
+                        // Hiển thị tối đa 4 bài
+                        // và bỏ bài hiện tại
                         @foreach (var item in trendingNews.Where(x => x.NewsId != Model.NewsId).Take(4))
                         {
                             <a href="/news/detail/@item.Slug?newsType=@Uri.EscapeDataString(newsType)&page=@currentPage">
@@ -134,6 +163,7 @@
                     }
                     else
                     {
+                        <!-- Không có trending -->
                         <p class="gs-empty-text">No trending articles available.</p>
                     }
                 </div>
@@ -144,6 +174,8 @@
 
                     @if (latestNews.Any())
                     {
+                        // Hiển thị tối đa 4 bài
+                        // và bỏ bài hiện tại
                         @foreach (var item in latestNews.Where(x => x.NewsId != Model.NewsId).Take(4))
                         {
                             <a href="/news/detail/@item.Slug?newsType=@Uri.EscapeDataString(newsType)&page=@currentPage">
@@ -160,6 +192,7 @@
                     }
                     else
                     {
+                        <!-- Không có latest news -->
                         <p class="gs-empty-text">No new posts yet.</p>
                     }
                 </div>

@@ -4,6 +4,7 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Edit News";
 
+    // Convert PublishedAt and ExpiredAt to local time and format for datetime-local input
     var minDateTime = DateTime.Now.ToString("yyyy-MM-ddTHH:mm");
 }
 
@@ -13,6 +14,7 @@
             <h4 class="mb-0">📰 Edit News</h4>
         </div>
 
+        <!-- Thông báo thành công hoặc lỗi nếu có -->
         @if (TempData["Msg"] != null)
         {
             var msgType = TempData["MsgType"]?.ToString() ?? "info";
@@ -21,6 +23,7 @@
             </div>
         }
 
+        <!-- Get list of games for the dropdown from ViewBag -->
         <div class="card-body">
             <form method="post" enctype="multipart/form-data" asp-controller="News" asp-action="Edit" asp-route-id="@Model.NewsId">
                 <input type="hidden" asp-for="NewsId" />

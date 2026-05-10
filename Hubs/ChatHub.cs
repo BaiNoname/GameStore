@@ -12,6 +12,7 @@ namespace GameStore.Hubs
             _ai = ai;
         }
 
+        // Client gọi phương thức này để gửi tin nhắn
         public async Task SendMessage(string message)
         {
             var userId = Context.ConnectionId;
@@ -27,6 +28,7 @@ namespace GameStore.Hubs
         }
 
         // ================= STREAM =================
+        // Phương thức này sẽ gửi từng ký tự của text cho client, tạo hiệu ứng "đang gõ"
         private async Task StreamText(string userId, string text)
         {
             string current = "";

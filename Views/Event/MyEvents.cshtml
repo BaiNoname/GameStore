@@ -3,6 +3,10 @@
 @{
     ViewData["Title"] = "My Events";
 
+    // Hàm xử lý đường dẫn ảnh event.
+    // Nếu event chưa có banner thì dùng ảnh mặc định.
+    // Nếu banner là link online thì dùng trực tiếp.
+    // Nếu banner là tên file trong project thì nối với thư mục /images/events/.
     string GetImage(string? image)
     {
         if (string.IsNullOrWhiteSpace(image))
@@ -14,6 +18,8 @@
         return Url.Content("~/images/events/" + image);
     }
 
+    // Hàm đổi trạng thái event thành class CSS tương ứng.
+    // Mục đích: mỗi trạng thái Live / Upcoming / Ended sẽ có màu badge khác nhau.
     string GetStatusClass(string? status)
     {
         if (string.IsNullOrWhiteSpace(status)) return "gs-badge";
@@ -24,6 +30,10 @@
         return "gs-badge";
     }
 
+    // Tách danh sách event của user thành 3 nhóm theo status.
+    // Việc tách nhóm giúp giao diện dễ hiển thị:
+    // - Live và Upcoming nằm ở khu vực đang/sắp diễn ra.
+    // - Ended nằm ở khu vực sự kiện đã kết thúc.
     var upcoming = Model.Where(x => x.Event != null && (x.Event.Status ?? "").Trim().Equals("Upcoming", StringComparison.OrdinalIgnoreCase)).ToList();
     var live = Model.Where(x => x.Event != null && (x.Event.Status ?? "").Trim().Equals("Live", StringComparison.OrdinalIgnoreCase)).ToList();
     var ended = Model.Where(x => x.Event != null && (x.Event.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase)).ToList();
@@ -54,6 +64,7 @@
                 <div class="row g-4">
                     @foreach (var item in live.Concat(upcoming))
                     {
+                        // Lấy thông tin event từ ViewModel.
                         var ev = item.Event;
                         if (ev == null) { continue; }
 
@@ -76,12 +87,14 @@
                                     <div class="gs-checkin-row">
                                         @if (item.Participant.IsCheckedIn)
                                         {
+                                            <!-- User đã check-in event, hiển thị thời gian check-in -->
                                             <span class="gs-checkin checked">
                                                 ✅ Checked-in @item.Participant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                                             </span>
                                         }
                                         else
                                         {
+                                            <!-- User đã tham gia event nhưng chưa check-in -->
                                             <span class="gs-checkin waiting">⏳ Not checked-in</span>
                                         }
                                     </div>
@@ -90,6 +103,7 @@
                                         <div class="gs-notify-title">📢 Latest Announcement</div>
                                         @if (item.LatestAnnouncement != null)
                                         {
+                                            <!-- Hiển thị thông báo mới nhất của event -->
                                             <div class="gs-notify-item">
                                                 <div class="gs-notify-item-title">@item.LatestAnnouncement.Title</div>
                                                 <div class="gs-notify-time">@item.LatestAnnouncement.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
@@ -97,6 +111,7 @@
                                         }
                                         else
                                         {
+                                            <!-- Event chưa có thông báo nào -->
                                             <div class="gs-notify-empty">No announcements available.</div>
                                         }
                                     </div>
@@ -105,6 +120,7 @@
                                         <div class="gs-notify-title">💬 Latest Chat</div>
                                         @if (item.LatestMessage != null)
                                         {
+                                            <!-- Hiển thị tin nhắn mới nhất trong phòng event -->
                                             <div class="gs-notify-item">
                                                 <div class="gs-notify-item-title">
                                                     @(item.LatestMessage.NguoiDung?.TenNguoiDung ?? item.LatestMessage.NguoiDung?.Email ?? "User")
@@ -115,6 +131,7 @@
                                         }
                                         else
                                         {
+                                            <!-- Phòng event chưa có tin nhắn -->
                                             <div class="gs-notify-empty">No messages available.</div>
                                         }
                                     </div>

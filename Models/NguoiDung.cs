@@ -1,5 +1,6 @@
 ﻿namespace GameStore.Models
 {
+    // 🔥 Lớp NguoiDung đại diện cho người dùng trong hệ thống
     public class NguoiDung
     {
         public int MaNguoiDung { get; set; }

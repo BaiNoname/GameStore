@@ -1,5 +1,6 @@
 ﻿namespace GameStore.Models
 {
+    // Lớp đại diện cho giỏ hàng của người dùng
     public class GioHang
     {
         public string MaGH { get; set; } = null!;

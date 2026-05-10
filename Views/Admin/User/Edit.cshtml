@@ -11,6 +11,7 @@
             <h4 class="mb-0">🎮 Edit Users</h4>
         </div>
 
+        <!-- Display success or error messages if any -->
         @if (TempData["Msg"] != null)
         {
             var msgType = TempData["MsgType"]?.ToString() ?? "info";
@@ -19,6 +20,7 @@
             </div>
         }
 
+        <!-- Form to edit user details -->
         <div class="card-body">
             <form method="post" asp-controller="User" asp-action="Edit">
                 <input type="hidden" name="keyword" value="@ViewBag.Keyword" />
@@ -125,6 +127,7 @@
 </div>
 
 <script>
+    // Auto-hide alert messages after 3 seconds
     setTimeout(() => {
         const alert = document.querySelector('.alert');
         if (alert) alert.style.display = 'none';

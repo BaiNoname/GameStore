@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameStore.Controllers.Admin
 {
+    // Dashboard tổng quan cho admin, hiển thị các chỉ số chính về doanh thu, đơn hàng, người dùng, game, sự kiện
     [Authorize(Roles = "admin")]
     [Route("admin")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -18,21 +19,27 @@ namespace GameStore.Controllers.Admin
             db = _db;
         }
 
+        // Trang admin dashboard, hiển thị các chỉ số tổng quan và chi tiết về doanh thu, đơn hàng, người dùng, game, sự kiện
         [Route("dashboard")]
         [Route("")]
         public IActionResult Index()
         {
             var vm = new DashboardVM();
 
+            // Tính toán các mốc thời gian cần thiết
             var nowUtc = DateTime.UtcNow;
             var todayUtcStart = nowUtc.Date;
             var tomorrowUtcStart = todayUtcStart.AddDays(1);
 
+            // 7 ngày gần nhất tính từ hôm nay (bao gồm cả hôm nay)
             var start7DaysUtc = todayUtcStart.AddDays(-6);
 
+            // Đầu tháng hiện tại
             var monthUtcStart = new DateTime(nowUtc.Year, nowUtc.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            // Đầu tháng tiếp theo
             var nextMonthUtcStart = monthUtcStart.AddMonths(1);
 
+            // Lấy tất cả giao dịch thành công để tái sử dụng cho nhiều chỉ số
             var successQuery = db.GiaoDiches.Where(x => x.TrangThai == "Success");
 
             // Tổng quan chính
@@ -132,6 +139,7 @@ namespace GameStore.Controllers.Admin
                 })
                 .ToList();
 
+            // Top 5 sự kiện có nhiều người tham gia nhất, ưu tiên sự kiện mới tạo nếu bằng nhau
             vm.TopJoinedEvents = db.Events
                 .OrderByDescending(x => x.CurrentParticipants)
                 .ThenByDescending(x => x.CreatedAt)

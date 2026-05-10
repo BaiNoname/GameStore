@@ -2,6 +2,7 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Event Participants";
 
+    // Get event and participants from ViewBag
     var ev = ViewBag.Event as GameStore.Models.Event;
     var participants = ViewBag.Participants as List<GameStore.Models.EventParticipant> ?? new List<GameStore.Models.EventParticipant>();
 }
@@ -20,6 +21,7 @@
         </a>
     </div>
 
+    < !-- Thông báo thành công hoặc lỗi nếu có -->
     @if (TempData["Msg"] != null)
     {
         var msgType = TempData["MsgType"]?.ToString() ?? "info";
@@ -32,6 +34,7 @@
         </div>
 
         <div class="card-body">
+            <!-- Participant Table -->
             @if (participants.Any())
             {
                 <div class="table-responsive">
@@ -49,6 +52,7 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Danh sách người tham gia -->
                             @foreach (var item in participants)
                             {
                                 <tr>
@@ -63,6 +67,7 @@
                                     <td>@item.PaidAmount.ToString("N0") VND</td>
                                     <td>@item.JoinedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                                     <td>
+                                        <!-- Hiển thị trạng thái check-in -->
                                         @if (item.IsCheckedIn)
                                         {
                                             <span class="badge bg-success">Checked-in</span>
@@ -91,6 +96,7 @@
                     </table>
                 </div>
             }
+            <!-- No participants message -->
             else
             {
                 <div class="text-muted">No participants have been registered for this event yet.</div>
@@ -136,6 +142,7 @@
 </style>
 
 <script>
+    // Khi modal xóa được hiển thị, cập nhật tên và URL của form xóa
     document.addEventListener("DOMContentLoaded", function () {
         const deleteModal = document.getElementById("deleteParticipantModal");
         if (!deleteModal) return;

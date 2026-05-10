@@ -1,5 +1,6 @@
 ﻿namespace GameStore.Models
 {
+    // Lớp đại diện cho bảng Game trong cơ sở dữ liệu
     public class Game
     {
         public string MaGame { get; set; } = null!;

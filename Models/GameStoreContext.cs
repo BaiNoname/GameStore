@@ -4,10 +4,12 @@ namespace GameStore.Models
 {
     public class GameStoreContext : DbContext
     {
+        // DbContextOptions được truyền vào qua constructor để cấu hình kết nối database
         public GameStoreContext(DbContextOptions<GameStoreContext> options) : base(options)
         {
         }
 
+        // Định nghĩa DbSet cho mỗi entity để EF Core biết cách ánh xạ các bảng trong database
         public DbSet<Game> Games => Set<Game>();
         public DbSet<TheLoaiGame> TheLoaiGames => Set<TheLoaiGame>();
         public DbSet<NguoiDung> NguoiDungs => Set<NguoiDung>();

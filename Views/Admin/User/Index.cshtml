@@ -3,6 +3,8 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "User Management";
+
+    // Get current status filter from ViewBag or default to "all"
     string status = ViewBag.Status?.ToString() ?? "all";
 }
 
@@ -11,6 +13,7 @@
         <h4 class="card-title">User List</h4>
         <p class="card-subtitle mb-3">Manage all users in the system</p>
 
+        <!-- Search + Add Button -->
         <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
             <form method="get" action="/admin/user/index" class="d-flex flex-wrap gap-2 admin-search-form">
                 <input type="text"
@@ -39,6 +42,7 @@
                 + Add New User
             </a>
 
+            <!-- Display success or error messages if any -->
             @if (TempData["Msg"] != null)
             {
                 var msgType = TempData["MsgType"]?.ToString() ?? "info";
@@ -63,6 +67,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- User list -->
                     @if (Model.Users != null && Model.Users.Any())
                     {
                         @foreach (var user in Model.Users)
@@ -130,6 +135,7 @@
                 </tbody>
             </table>
 
+            <!-- Pagination controls -->
             @if (Model.TotalPages > 1)
             {
                 <nav>
@@ -293,6 +299,7 @@
 </style>
 
 <script>
+    // When the deactivate modal is shown, update the user name and form action URL
     document.addEventListener("DOMContentLoaded", function () {
         var deactivateModal = document.getElementById('deactivateModal');
         if (deactivateModal) {

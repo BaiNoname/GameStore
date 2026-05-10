@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace GameStore.Controllers.Admin
 {
+    /// Controller quản lý tin tức, chỉ admin mới có quyền truy cập
     [Authorize(Roles = "admin")]
     [Route("admin")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -23,6 +24,7 @@ namespace GameStore.Controllers.Admin
             env = _env;
         }
 
+        // Đảm bảo giá trị DateTime được lưu dưới dạng UTC
         private DateTime EnsureUtc(DateTime value)
         {
             if (value.Kind == DateTimeKind.Utc)
@@ -34,6 +36,7 @@ namespace GameStore.Controllers.Admin
             return DateTime.SpecifyKind(value, DateTimeKind.Local).ToUniversalTime();
         }
 
+        // Chuyển đổi DateTime từ UTC sang giờ địa phương để hiển thị
         private DateTime ToLocalDisplay(DateTime value)
         {
             if (value.Kind == DateTimeKind.Utc)
@@ -45,6 +48,7 @@ namespace GameStore.Controllers.Admin
             return value.ToLocalTime();
         }
 
+        // Tải danh sách game để hiển thị trong dropdown khi tạo/sửa tin tức
         private void LoadGameSelectList(string? selectedGameId = null)
         {
             ViewBag.Games = new SelectList(
@@ -55,21 +59,25 @@ namespace GameStore.Controllers.Admin
             );
         }
 
+        // Lưu ảnh tin tức lên server và trả về tên file đã lưu, hoặc null nếu có lỗi
         private string? SaveNewsImage(IFormFile? photo)
         {
             if (photo == null || photo.Length == 0)
                 return null;
 
+            // Chỉ chấp nhận các định dạng ảnh phổ biến
             var ext = Path.GetExtension(photo.FileName).ToLowerInvariant();
             var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
 
             if (!allowed.Contains(ext))
                 return null;
 
+            // Tạo thư mục lưu ảnh nếu chưa tồn tại
             var folder = Path.Combine(env.WebRootPath, "images", "news");
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
 
+            // Tạo tên file ngẫu nhiên để tránh trùng lặp
             var fileName = Guid.NewGuid().ToString("N") + ext;
             var path = Path.Combine(folder, fileName);
 
@@ -81,11 +89,14 @@ namespace GameStore.Controllers.Admin
             return fileName;
         }
 
+        // Xóa ảnh tin tức khỏi server khi bài viết bị xóa hoặc ảnh bị thay đổi
         private void DeleteNewsImage(string? fileName)
         {
+            // Nếu fileName null hoặc rỗng thì không làm gì
             if (string.IsNullOrWhiteSpace(fileName))
                 return;
 
+            // Đảm bảo chỉ xóa file trong thư mục images/news để tránh lỗi bảo mật
             var path = Path.Combine(env.WebRootPath, "images", "news", fileName);
             if (System.IO.File.Exists(path))
             {
@@ -93,6 +104,7 @@ namespace GameStore.Controllers.Admin
             }
         }
 
+        // Danh sách tin tức với phân trang và bộ lọc
         [Route("news/index")]
         public IActionResult Index(string keyword = "", string newsType = "", string status = "", int page = 1)
         {
@@ -108,6 +120,7 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/News/Index.cshtml", newsList);
         }
 
+        // Trang tạo tin tức mới
         [Route("news/add")]
         public IActionResult Add(string keyword = "", string newsType = "", string status = "", int page = 1)
         {
@@ -120,6 +133,7 @@ namespace GameStore.Controllers.Admin
 
             var nowUtc = DateTime.UtcNow;
 
+            // Thiết lập giá trị mặc định cho PublishedAt là thời điểm hiện tại và ExpiredAt là 1 tháng sau
             return View("~/Views/Admin/News/Add.cshtml", new Models.News
             {
                 PublishedAt = nowUtc,
@@ -129,10 +143,12 @@ namespace GameStore.Controllers.Admin
             });
         }
 
+        // Xử lý POST khi tạo tin tức mới
         [HttpPost]
         [Route("news/add")]
         public IActionResult Add(Models.News news, IFormFile? photo, string keyword = "", string newsType = "", string status = "", int page = 1)
         {
+            // Chuẩn hóa dữ liệu đầu vào
             news.Title = news.Title?.Trim() ?? "";
             news.Slug = news.Slug?.Trim().ToLower() ?? "";
 
@@ -149,12 +165,15 @@ namespace GameStore.Controllers.Admin
             ViewBag.Status = status;
             ViewBag.CurrentPage = page;
 
+            // Lấy giá trị NewsType và Status từ form, nếu không có thì dùng mặc định
             var postedNewsType = Request.Form["NewsType"].ToString();
             var postedStatus = Request.Form["Status"].ToString();
 
+            // Nếu người dùng không chọn NewsType hoặc Status thì mặc định là "General" và "Published"
             news.NewsType = string.IsNullOrWhiteSpace(postedNewsType) ? "General" : postedNewsType.Trim();
             news.Status = string.IsNullOrWhiteSpace(postedStatus) ? "Published" : postedStatus.Trim();
 
+            // Kiểm tra các trường bắt buộc
             if (string.IsNullOrWhiteSpace(news.Title))
             {
                 TempData["Msg"] = "❌ Tiêu đề không được để trống!";
@@ -210,11 +229,13 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/News/Add.cshtml", news);
             }
 
+            // Chuyển đổi thời gian sang UTC trước khi lưu vào database
             news.PublishedAt = EnsureUtc(publishedAtLocal);
             news.ExpiredAt = EnsureUtc(expiredAtLocal);
 
             if (photo != null)
             {
+                // Lưu ảnh lên server và lấy tên file đã lưu
                 var savedFile = SaveNewsImage(photo);
                 if (savedFile == null)
                 {
@@ -223,6 +244,7 @@ namespace GameStore.Controllers.Admin
                     return View("~/Views/Admin/News/Add.cshtml", news);
                 }
 
+                // Gán tên file ảnh vào trường Thumbnail của tin tức
                 news.Thumbnail = savedFile;
             }
 
@@ -238,9 +260,11 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/News/Add.cshtml", news);
         }
 
+        // Trang chỉnh sửa tin tức
         [Route("news/edit/{id}")]
         public IActionResult Edit(int id, string keyword = "", string newsType = "", string status = "", int page = 1)
         {
+            // Tìm tin tức theo id, nếu không tồn tại thì hiển thị thông báo lỗi và chuyển về trang danh sách
             var news = newsService.FindById(id);
             if (news == null)
             {
@@ -256,6 +280,7 @@ namespace GameStore.Controllers.Admin
             ViewBag.Status = status;
             ViewBag.CurrentPage = page;
 
+            // Chuyển đổi thời gian từ UTC sang giờ địa phương để hiển thị trên form chỉnh sửa
             news.PublishedAt = ToLocalDisplay(news.PublishedAt);
             if (news.ExpiredAt.HasValue)
                 news.ExpiredAt = ToLocalDisplay(news.ExpiredAt.Value);
@@ -263,10 +288,12 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/News/Edit.cshtml", news);
         }
 
+        // Xử lý POST khi chỉnh sửa tin tức
         [HttpPost]
         [Route("news/edit/{id}")]
         public IActionResult Edit(int id, Models.News news, IFormFile? photo, string keyword = "", string newsType = "", string status = "", int page = 1)
         {
+            // Tìm tin tức theo id, nếu không tồn tại thì hiển thị thông báo lỗi và chuyển về trang danh sách
             var current = newsService.FindById(id);
             if (current == null)
             {
@@ -282,15 +309,18 @@ namespace GameStore.Controllers.Admin
             ViewBag.Status = status;
             ViewBag.CurrentPage = page;
 
+            // Chuẩn hóa dữ liệu đầu vào
             var postedNewsType = Request.Form["NewsType"].ToString();
             var postedStatus = Request.Form["Status"].ToString();
 
+            // Gán lại các trường cần thiết cho đối tượng news để cập nhật
             news.NewsId = id;
             news.Title = news.Title?.Trim() ?? "";
             news.Slug = news.Slug?.Trim().ToLower() ?? "";
             news.NewsType = string.IsNullOrWhiteSpace(postedNewsType) ? current.NewsType : postedNewsType.Trim();
             news.Status = string.IsNullOrWhiteSpace(postedStatus) ? current.Status : postedStatus.Trim();
 
+            // Kiểm tra các trường bắt buộc
             if (string.IsNullOrWhiteSpace(news.Title))
             {
                 TempData["Msg"] = "❌ Tiêu đề không được để trống!";
@@ -322,6 +352,7 @@ namespace GameStore.Controllers.Admin
                 return View("~/Views/Admin/News/Edit.cshtml", current);
             }
 
+            // Đối với các trường ngày tháng, nếu người dùng không nhập gì thì giữ nguyên giá trị cũ, nếu có nhập thì kiểm tra hợp lệ và chuyển sang UTC
             news.PublishedAt = current.PublishedAt;
 
             var expiredAtRaw = Request.Form["ExpiredAt"].ToString();
@@ -329,6 +360,7 @@ namespace GameStore.Controllers.Admin
                 ? ToLocalDisplay(current.ExpiredAt.Value).ToString("yyyy-MM-ddTHH:mm")
                 : "";
 
+            // Nếu người dùng không nhập gì cho ExpiredAt thì giữ nguyên giá trị cũ, nếu có nhập thì kiểm tra hợp lệ và chuyển sang UTC
             if (string.IsNullOrWhiteSpace(expiredAtRaw) || expiredAtRaw == currentExpiredRaw)
             {
                 news.ExpiredAt = current.ExpiredAt;
@@ -370,6 +402,7 @@ namespace GameStore.Controllers.Admin
                 news.Thumbnail = current.Thumbnail;
             }
 
+            // Các trường không cho phép chỉnh sửa sẽ giữ nguyên giá trị cũ
             news.AuthorUserId = current.AuthorUserId;
             news.ViewCount = current.ViewCount;
             news.CreatedAt = current.CreatedAt;
@@ -386,6 +419,7 @@ namespace GameStore.Controllers.Admin
             return View("~/Views/Admin/News/Edit.cshtml", current);
         }
 
+        // Xóa tin tức
         [Route("news/delete/{id}")]
         public IActionResult Delete(int id, string keyword = "", string newsType = "", string status = "", int page = 1)
         {

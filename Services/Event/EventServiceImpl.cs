@@ -12,11 +12,13 @@ namespace GameStore.Services
             db = _db;
         }
 
+        // Lấy thời gian hiện tại theo UTC
         private DateTime UtcNow()
         {
             return DateTime.UtcNow;
         }
 
+        // Đảm bảo giá trị DateTime là UTC, nếu không sẽ chuyển đổi
         private DateTime EnsureUtc(DateTime value)
         {
             if (value.Kind == DateTimeKind.Utc)
@@ -27,7 +29,8 @@ namespace GameStore.Services
 
             return DateTime.SpecifyKind(value, DateTimeKind.Local).ToUniversalTime();
         }
-
+        
+        // Tính toán trạng thái của sự kiện dựa trên thời gian bắt đầu và kết thúc
         private string CalculateStatus(DateTime startAt, DateTime endAt)
         {
             var now = UtcNow();
@@ -43,6 +46,7 @@ namespace GameStore.Services
             return "Live";
         }
 
+        // Cập nhật trạng thái của tất cả sự kiện dựa trên thời gian hiện tại
         public void RefreshEventStatuses()
         {
             try
@@ -54,6 +58,7 @@ namespace GameStore.Services
                 {
                     var newStatus = CalculateStatus(ev.StartAt, ev.EndAt);
 
+                    // Chỉ cập nhật nếu trạng thái mới khác với trạng thái hiện tại để tránh ghi đè không cần thiết
                     if (!string.Equals(ev.Status, newStatus, StringComparison.OrdinalIgnoreCase))
                     {
                         ev.Status = newStatus;
@@ -72,6 +77,7 @@ namespace GameStore.Services
             }
         }
 
+        // Tìm kiếm sự kiện với các bộ lọc và phân trang
         public List<Event> FindAll(string keyword, string eventType, string status, int page, int pageSize, out int totalPages)
         {
             RefreshEventStatuses();
@@ -81,6 +87,7 @@ namespace GameStore.Services
                 .Include(x => x.NguoiDung)
                 .AsQueryable();
 
+            // Bộ lọc tìm kiếm theo từ khóa trong Title hoặc Summary
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 keyword = keyword.Trim().ToLower();
@@ -89,12 +96,14 @@ namespace GameStore.Services
                     x.Summary != null && x.Summary.ToLower().Contains(keyword));
             }
 
+            // Bộ lọc theo loại sự kiện, nếu không phải "all" thì sẽ so sánh sau khi đã chuẩn hóa
             if (!string.IsNullOrWhiteSpace(eventType) && eventType.Trim().ToLower() != "all")
             {
                 var normalizedType = eventType.Trim().ToLower();
                 query = query.Where(x => x.EventType != null && x.EventType.Trim().ToLower() == normalizedType);
             }
 
+            // Bộ lọc theo trạng thái sự kiện, nếu không phải "all" thì sẽ so sánh sau khi đã chuẩn hóa
             if (!string.IsNullOrWhiteSpace(status) && status.Trim().ToLower() != "all")
             {
                 var normalizedStatus = status.Trim().ToLower();
@@ -104,6 +113,7 @@ namespace GameStore.Services
             int totalItems = query.Count();
             totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
 
+            // Sắp xếp sự kiện theo thứ tự ưu tiên: Live > Upcoming > Ended, sau đó theo thời gian bắt đầu và ID để đảm bảo thứ tự nhất quán
             return query
                 .OrderByDescending(x => x.Status == "Live")
                 .ThenByDescending(x => x.Status == "Upcoming")
@@ -114,6 +124,7 @@ namespace GameStore.Services
                 .ToList();
         }
 
+        // Tìm kiếm sự kiện công khai với các bộ lọc và phân trang (chỉ trả về sự kiện có trạng thái Live hoặc Upcoming)
         public List<Event> FindPublic(string eventType, string status, int page, int pageSize, out int totalPages)
         {
             RefreshEventStatuses();
@@ -123,12 +134,14 @@ namespace GameStore.Services
                 .Include(x => x.NguoiDung)
                 .AsQueryable();
 
+            // Chỉ lấy sự kiện có trạng thái Live hoặc Upcoming
             if (!string.IsNullOrWhiteSpace(eventType) && eventType.Trim().ToLower() != "all")
             {
                 var normalizedType = eventType.Trim().ToLower();
                 query = query.Where(x => x.EventType != null && x.EventType.Trim().ToLower() == normalizedType);
             }
 
+            // Bộ lọc theo trạng thái sự kiện, nếu không phải "all" thì sẽ so sánh sau khi đã chuẩn hóa
             if (!string.IsNullOrWhiteSpace(status) && status.Trim().ToLower() != "all")
             {
                 var normalizedStatus = status.Trim().ToLower();
@@ -138,6 +151,7 @@ namespace GameStore.Services
             int totalItems = query.Count();
             totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
 
+            // Sắp xếp sự kiện theo thứ tự ưu tiên: Live > Upcoming > Ended, sau đó theo thời gian bắt đầu và ID để đảm bảo thứ tự nhất quán
             return query
                 .OrderByDescending(x => x.Status == "Live")
                 .ThenByDescending(x => x.Status == "Upcoming")
@@ -148,6 +162,7 @@ namespace GameStore.Services
                 .ToList();
         }
 
+        // Lấy sự kiện nổi bật nhất (Live > Upcoming > Ended) và có nhiều người tham gia nhất
         public List<Event> GetFeatured(int take = 1)
         {
             RefreshEventStatuses();
@@ -162,6 +177,7 @@ namespace GameStore.Services
                 .ToList();
         }
 
+        // Lấy các sự kiện sắp diễn ra (Upcoming) và có thời gian bắt đầu gần nhất
         public List<Event> GetUpcoming(int take = 6)
         {
             RefreshEventStatuses();
@@ -175,6 +191,7 @@ namespace GameStore.Services
                 .ToList();
         }
 
+        // Lấy các sự kiện đang diễn ra (Live) và có nhiều người tham gia nhất
         public List<Event> GetLive(int take = 6)
         {
             RefreshEventStatuses();
@@ -189,6 +206,7 @@ namespace GameStore.Services
                 .ToList();
         }
 
+        // Lấy sự kiện theo ID, bao gồm thông tin liên quan như Game, NguoiDung, EventAnnouncements và EventParticipants
         public Event? FindById(int id)
         {
             RefreshEventStatuses();
@@ -201,6 +219,7 @@ namespace GameStore.Services
                 .FirstOrDefault(x => x.EventId == id);
         }
 
+        // Lấy sự kiện theo Slug, bao gồm thông tin liên quan như Game, NguoiDung, EventAnnouncements và EventParticipants
         public Event? FindBySlug(string slug)
         {
             RefreshEventStatuses();
@@ -218,8 +237,10 @@ namespace GameStore.Services
                 .FirstOrDefault(x => x.Slug != null && x.Slug.Trim().ToLower() == slug);
         }
 
+        // Tạo sự kiện mới với các điều kiện kiểm tra hợp lệ về thời gian và dữ liệu đầu vào
         public bool Create(Event ev)
         {
+            // Kiểm tra các trường bắt buộc và hợp lệ
             try
             {
                 var nowUtc = UtcNow();
@@ -262,9 +283,11 @@ namespace GameStore.Services
                 return false;
             }
         }
+        // Cập nhật sự kiện với các điều kiện kiểm tra hợp lệ về thời gian và dữ liệu đầu vào, chỉ cập nhật những trường được cung cấp
 
         public bool Update(Event ev)
         {
+            // Kiểm tra các trường hợp ngoại lệ và chỉ cập nhật những trường được cung cấp, đồng thời đảm bảo rằng thời gian kết thúc mới hợp lệ nếu có thay đổi
             try
             {
                 var nowUtc = UtcNow();
@@ -317,9 +340,11 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Xóa sự kiện với các điều kiện kiểm tra hợp lệ về dữ liệu liên quan
         public bool Delete(int id)
         {
+            // Kiểm tra xem sự kiện có tồn tại hay không, và nếu có, kiểm tra xem có giao dịch nào liên quan đến sự kiện đó hay không trước khi xóa để tránh mất dữ liệu quan trọng
             try
             {
                 var ev = db.Events.FirstOrDefault(x => x.EventId == id);
@@ -341,7 +366,8 @@ namespace GameStore.Services
                 return false;
             }
         }
-
+        
+        // Kiểm tra xem người dùng đã tham gia sự kiện hay chưa
         public bool IsUserJoined(int eventId, int userId)
         {
             return db.EventParticipants.Any(x =>

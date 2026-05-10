@@ -1,5 +1,6 @@
 ﻿namespace GameStore.Models
 {
+    // Lớp ChiTietGioHang đại diện cho chi tiết của một mục trong giỏ hàng, liên kết giữa GioHang và Game
     public class ChiTietGioHang
     {
         public string MaGH { get; set; } = null!;

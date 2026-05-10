@@ -4,6 +4,7 @@
     ViewData["Title"] = "Register";
 }
 
+<!-- Form đăng ký người dùng mới -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -253,6 +254,7 @@
                         <h2 class="auth-title">Create Your Account</h2>
                         <p class="auth-subtitle">Sign up quickly to start your game shopping experience with a modern interface.</p>
 
+                        <!-- Display error message if registration failed -->
                         @if (ViewBag.Error != null)
                         {
                             <div class="alert alert-danger">

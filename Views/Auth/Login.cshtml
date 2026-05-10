@@ -1,6 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Login";
 }
+<!-- Form đăng nhập người dùng -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -250,6 +251,7 @@
                         <h2 class="auth-title">Sign in to GameStore</h2>
                         <p class="auth-subtitle">Sign in to access your cart, library, and account.</p>
 
+                        <!-- Display success messages for registration and password reset -->
                         @if (TempData["Register Success"] != null)
                         {
                             <div class="alert alert-success text-center">
@@ -257,6 +259,7 @@
                             </div>
                         }
 
+                        <!-- Display error message if login failed -->
                         @if (TempData["Reset Success"] != null)
                         {
                             <div class="alert alert-success text-center">
@@ -264,6 +267,7 @@
                             </div>
                         }
 
+                        <!-- Display error message if login failed -->
                         @if (ViewBag.Error != null)
                         {
                             <div class="alert alert-danger">

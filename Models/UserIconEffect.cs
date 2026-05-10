@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameStore.Models
 {
+    // Bảng liên kết giữa người dùng và hiệu ứng icon, cho phép lưu trữ thông tin về hiệu ứng icon mà người dùng sở hữu, đã trang bị, thời gian hết hạn, v.v.
     [Table("usericoneffect")]
     public class UserIconEffect
     {

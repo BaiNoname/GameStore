@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GameStore.Models
 {
+    // Lớp đại diện cho thông báo sự kiện trong hệ thống
     [Table("eventannouncement")]
     public class EventAnnouncement
     {
