@@ -90,7 +90,6 @@
                         <div class="gs-room-actions">
                             @if (myParticipant != null)
                             {
-                                // User đã tham gia event
                                 if (myParticipant.IsCheckedIn)
                                 {
                                     <!--
@@ -261,8 +260,9 @@
                             }
                         }
                         else
-                        <!-- Event chưa có announcement -->
                         {
+                            <!-- Event chưa có announcement -->
+
                             <p class="text-secondary mb-0">No announcements available.</p>
                         }
                     </div>
