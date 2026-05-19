@@ -24,7 +24,6 @@
     }
 }
 
-// Main content
 <main class="gs-page">
     <div class="container-xxl">
         <div class="row g-4">
@@ -40,7 +39,6 @@
 
                     <h1 class="gs-article-title">@Model.Title</h1>
 
-                    // Event metadata: start time, end time, participants, price, game
                     <div class="gs-meta mb-4">
                         <span>📅 @Model.StartAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
                         <span>🏁 @Model.EndAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
@@ -62,7 +60,6 @@
                     </div>
 
                     <div class="mt-4 d-flex gap-2 flex-wrap">
-                        // Show different buttons based on join status, event full status, and event ended status
                         @if (isJoined)
                         {
                             if (isEnded)
@@ -125,7 +122,6 @@
                         This event has reached the maximum number of participants.
                     </div>
 
-                    // Confirmation modal for joining free event
                     @if (!isJoined && !isFull && !isEnded && (Model.AccessType ?? "").Trim().ToLower() == "free")
                     {
                         <div class="modal fade" id="confirmJoinFreeEventModal" tabindex="-1" aria-labelledby="confirmJoinFreeEventModalLabel" aria-hidden="true">
@@ -172,7 +168,6 @@
                         </div>
                     }
 
-                    // Confirmation modal for buying event access
                     @if (!isJoined && !isFull && !isEnded && (Model.AccessType ?? "").Trim().ToLower() != "free")
                     {
                         <div class="modal fade" id="confirmBuyEventModal" tabindex="-1" aria-labelledby="confirmBuyEventModalLabel" aria-hidden="true">
@@ -240,7 +235,6 @@
                         var announcements = ViewBag.Announcements as List<GameStore.Models.EventAnnouncement> ?? new List<GameStore.Models.EventAnnouncement>();
                     }
 
-                    // Display the latest 5 announcements or a message if there are none
                     @if (announcements.Any())
                     {
                         // Loop through the latest 5 announcements and display their title and creation date
