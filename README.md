@@ -77,6 +77,8 @@ TRUNCATE TABLE
     public.thuviengame
 RESTART IDENTITY;
 
+dùng Resend để gửi OTP
+
 dùng upstash để làm redis online
 
 thông tin thẻ test momo:
