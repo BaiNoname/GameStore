@@ -240,7 +240,7 @@ erDiagram
 Các thông tin nhạy cảm đặt trong `appsettings.json` (không commit lên Git):
 - Chuỗi kết nối PostgreSQL.
 - Thông tin SMTP gửi email.
-- Khóa và thông tin merchant của **VNPay**, **MoMo**.
+- Khóa và thông tin merchant của **MoMo**.
 - Cấu hình dịch vụ AI.
 
 > Khuyến nghị: dùng `appsettings.Development.json` hoặc User Secrets cho môi trường phát triển, và thêm các file chứa khóa vào `.gitignore`.
