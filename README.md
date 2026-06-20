@@ -16,7 +16,7 @@
 
 **Khách hàng**
 - Duyệt, tìm kiếm và lọc game theo thể loại; xem chi tiết game.
-- Giỏ hàng và thanh toán trực tuyến qua **VNPay** và **MoMo**.
+- Giỏ hàng và thanh toán trực tuyến qua **MoMo**.
 - Thư viện game cá nhân (các game đã sở hữu sau khi mua).
 - Đánh giá và nhận xét game.
 - Đọc tin tức, tham gia sự kiện.
