@@ -1,0 +1,155 @@
+@model List<GameStore.Models.KhuyenMai>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Khuyến mãi";
+    var claimed = ViewBag.ClaimedIds as HashSet<int> ?? new HashSet<int>();
+
+    string GiaTriText(GameStore.Models.KhuyenMai k) =>
+        k.LoaiGiam == "Percent" ? $"-{k.GiaTri:0.#}%" : $"-{k.GiaTri:N0}đ";
+}
+
+<div class="gs-coupon-page">
+    <div class="container py-4 py-lg-5">
+
+        <div class="mb-4">
+            <div class="gs-kicker">Ưu đãi</div>
+            <h2 class="gs-coupon-title mb-1">🎁 Mã khuyến mãi</h2>
+            <p class="text-secondary mb-0">Lấy mã về ví của bạn, sau đó áp vào giỏ hàng khi thanh toán. Mỗi mã có giới hạn số lượng — hết lượt là không lấy được nữa.</p>
+        </div>
+
+        @if (Model == null || Model.Count == 0)
+        {
+            <div class="gs-empty-card">
+                <div class="gs-empty-icon">🎫</div>
+                <h4 class="mb-2">Hiện chưa có mã khuyến mãi nào</h4>
+                <p class="text-secondary mb-0">Vui lòng quay lại sau nhé.</p>
+            </div>
+        }
+        else
+        {
+            <div class="gs-coupon-grid">
+                @foreach (var k in Model)
+                {
+                    var daLay = claimed.Contains(k.MaKM);
+                    var hetLuot = k.DaDung >= k.SoLuong;
+                    var conLai = Math.Max(0, k.SoLuong - k.DaDung);
+                    <div class="gs-coupon-card @(hetLuot && !daLay ? "is-out" : "")">
+                        <div class="gs-coupon-left">
+                            <div class="gs-coupon-value">@GiaTriText(k)</div>
+                            <div class="gs-coupon-type">@(k.LoaiGiam == "Percent" ? "Giảm %" : "Giảm tiền")</div>
+                        </div>
+                        <div class="gs-coupon-body">
+                            <div class="gs-coupon-code">@k.Code</div>
+                            @if (!string.IsNullOrWhiteSpace(k.MoTa))
+                            {
+                                <div class="gs-coupon-desc">@k.MoTa</div>
+                            }
+                            <div class="gs-coupon-meta">
+                                @if (k.DonToiThieu.HasValue && k.DonToiThieu.Value > 0)
+                                {
+                                    <span>Đơn tối thiểu @k.DonToiThieu.Value.ToString("N0")đ</span>
+                                }
+                                @if (k.LoaiGiam == "Percent" && k.GiamToiDa.HasValue)
+                                {
+                                    <span>• Giảm tối đa @k.GiamToiDa.Value.ToString("N0")đ</span>
+                                }
+                                @if (k.NgayKetThuc.HasValue)
+                                {
+                                    <span>• HSD @k.NgayKetThuc.Value.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                                }
+                            </div>
+                            <div class="gs-coupon-foot">
+                                <span class="gs-coupon-remain">Còn @conLai / @k.SoLuong lượt</span>
+                                @if (daLay)
+                                {
+                                    <span class="gs-coupon-claimed">✔ Đã lấy</span>
+                                }
+                                else if (hetLuot)
+                                {
+                                    <button class="gs-coupon-btn" disabled>Hết lượt</button>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-controller="Coupon" asp-action="Claim">
+                                        <input type="hidden" name="maKM" value="@k.MaKM" />
+                                        <button type="submit" class="gs-coupon-btn">Lấy mã</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="mt-4">
+                <a href="/cart" class="btn gs-btn-muted px-4 py-2 rounded-pill">🛒 Tới giỏ hàng để áp mã</a>
+            </div>
+        }
+
+    </div>
+</div>
+
+<style>
+    .gs-coupon-page { min-height: 100vh; color: #f3f7ff; }
+    .gs-kicker { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.8px; color:#7dd3fc; margin-bottom:8px; }
+    .gs-coupon-title { font-size:clamp(1.8rem,3vw,2.4rem); font-weight:800; color:#fff; }
+
+    .gs-empty-card {
+        padding:42px 28px; border-radius:24px; text-align:center;
+        background:linear-gradient(180deg, rgba(14,25,43,.92), rgba(9,18,33,.92));
+        border:1px solid rgba(255,255,255,.08);
+    }
+    .gs-empty-icon { font-size:3rem; margin-bottom:10px; }
+
+    .gs-coupon-grid {
+        display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:18px;
+    }
+    .gs-coupon-card {
+        display:flex; overflow:hidden; border-radius:18px;
+        background:linear-gradient(180deg, rgba(16,27,48,.95), rgba(10,20,36,.95));
+        border:1px solid rgba(255,255,255,.09); box-shadow:0 16px 34px rgba(0,0,0,.28);
+    }
+    .gs-coupon-card.is-out { opacity:.55; }
+
+    .gs-coupon-left {
+        flex:0 0 118px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+        gap:4px; padding:16px 10px; color:#fff; text-align:center;
+        background:linear-gradient(135deg, #059669, #0891b2);
+        position:relative;
+    }
+    .gs-coupon-left::after {
+        content:""; position:absolute; right:-8px; top:0; bottom:0; width:16px;
+        background:radial-gradient(circle at left, transparent 0 7px, rgba(16,27,48,.95) 7px) repeat-y;
+        background-size:16px 18px;
+    }
+    .gs-coupon-value { font-size:1.5rem; font-weight:800; line-height:1; }
+    .gs-coupon-type { font-size:.75rem; text-transform:uppercase; letter-spacing:1px; opacity:.9; }
+
+    .gs-coupon-body { flex:1; padding:16px 18px; min-width:0; }
+    .gs-coupon-code {
+        font-weight:800; font-size:1.1rem; color:#fbbf24; letter-spacing:.5px;
+    }
+    .gs-coupon-desc { color:#cbd5e1; font-size:.92rem; margin-top:3px; }
+    .gs-coupon-meta { color:#94a3b8; font-size:.82rem; margin-top:8px; display:flex; flex-wrap:wrap; gap:4px 8px; }
+    .gs-coupon-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; }
+    .gs-coupon-remain { color:#93c5fd; font-size:.82rem; font-weight:600; }
+
+    .gs-coupon-btn {
+        border:none; border-radius:999px; padding:8px 20px; font-weight:700; cursor:pointer;
+        color:#fff; background:linear-gradient(135deg,#7c3aed,#2563eb);
+        box-shadow:0 10px 20px rgba(37,99,235,.28);
+    }
+    .gs-coupon-btn:disabled { background:rgba(148,163,184,.25); color:#cbd5e1; cursor:not-allowed; box-shadow:none; }
+    .gs-coupon-claimed { color:#4ade80; font-weight:700; font-size:.9rem; }
+
+    .gs-btn-muted {
+        background:rgba(148,163,184,.18); color:#e2e8f0; border:1px solid rgba(148,163,184,.15);
+        display:inline-flex; align-items:center; gap:6px; text-decoration:none;
+    }
+    .gs-btn-muted:hover { color:#fff; }
+
+    @@media (max-width:575.98px){
+        .gs-coupon-left { flex-basis:96px; }
+        .gs-coupon-value { font-size:1.25rem; }
+    }
+</style>

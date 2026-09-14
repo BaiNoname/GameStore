@@ -1,0 +1,201 @@
+@model List<GameStore.Models.HoanTra>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Refund Management";
+
+    string status = ViewBag.Status as string ?? "";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+
+    string BadgeClass(string s) => s switch
+    {
+        "Pending" => "bg-warning text-dark",
+        "Approved" => "bg-success",
+        "Rejected" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
+
+<!-- Quản lý yêu cầu hoàn trả game: duyệt (hoàn tiền) hoặc từ chối -->
+<div class="card admin-list-card">
+    <div class="card-body">
+        <h4 class="card-title">Refund Requests</h4>
+        <p class="card-subtitle mb-3">Duyệt yêu cầu hoàn trả game của người dùng (hoàn tiền về số dư)</p>
+
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap admin-list-toolbar">
+            <form method="get" action="/admin/refund/index" class="d-flex gap-2 flex-wrap admin-search-form admin-refund-search-form">
+                <select name="status" class="form-control">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="Pending" selected="@(status == "Pending")">Pending</option>
+                    <option value="Approved" selected="@(status == "Approved")">Approved</option>
+                    <option value="Rejected" selected="@(status == "Rejected")">Rejected</option>
+                </select>
+                <button class="btn btn-success">Lọc</button>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped align-middle admin-refund-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Người dùng</th>
+                        <th>Game</th>
+                        <th>Lý do</th>
+                        <th>Số tiền</th>
+                        <th>Ngày yêu cầu</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model == null || Model.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">Không có yêu cầu hoàn trả nào.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.MaHoanTra</td>
+                                <td class="text-break">
+                                    <div class="fw-semibold">@item.NguoiDung?.TenNguoiDung</div>
+                                    <div class="small text-muted">@item.NguoiDung?.Email</div>
+                                </td>
+                                <td class="text-break">@(item.Game?.TenGame ?? item.MaGame)</td>
+                                <td class="text-break" style="min-width:200px;">
+                                    <div class="fw-semibold">@item.LyDo</div>
+                                    @if (!string.IsNullOrWhiteSpace(item.NoiDung))
+                                    {
+                                        <div class="small text-muted">@item.NoiDung</div>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.GhiChuAdmin))
+                                    {
+                                        <div class="small text-danger mt-1">Admin: @item.GhiChuAdmin</div>
+                                    }
+                                </td>
+                                <td class="text-nowrap">@item.SoTienHoan.ToString("#,##0") đ</td>
+                                <td class="text-nowrap">@item.NgayYeuCau.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <span class="badge @BadgeClass(item.TrangThai)">@item.TrangThai</span>
+                                </td>
+                                <td>
+                                    @if (item.TrangThai == "Pending")
+                                    {
+                                        <div class="d-flex gap-2 flex-nowrap">
+                                            <!-- Duyệt -->
+                                            <form method="post" action="/admin/refund/approve" onsubmit="return confirm('Duyệt hoàn trả và hoàn tiền cho người dùng?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.MaHoanTra" />
+                                                <input type="hidden" name="status" value="@status" />
+                                                <input type="hidden" name="page" value="@currentPage" />
+                                                <button type="submit" class="btn btn-sm btn-success">✔ Duyệt</button>
+                                            </form>
+
+                                            <!-- Từ chối -->
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#rejectModal-@item.MaHoanTra">
+                                                ✖ Từ chối
+                                            </button>
+                                        </div>
+
+                                        <!-- Modal từ chối -->
+                                        <div class="modal fade" id="rejectModal-@item.MaHoanTra" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <form method="post" action="/admin/refund/reject">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@item.MaHoanTra" />
+                                                        <input type="hidden" name="status" value="@status" />
+                                                        <input type="hidden" name="page" value="@currentPage" />
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Từ chối yêu cầu hoàn trả #@item.MaHoanTra</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <label class="form-label">Lý do từ chối (ghi chú cho người dùng)</label>
+                                                            <textarea name="ghiChu" class="form-control" rows="3" placeholder="Ví dụ: Game đã được tải và chơi quá thời gian cho phép..."></textarea>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">
+                                            @(item.NgayXuLy?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "-")
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <nav>
+                <ul class="pagination justify-content-center mt-4 flex-wrap">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="?status=@status&page=@(currentPage - 1)">Previous</a>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="?status=@status&page=@i">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" href="?status=@status&page=@(currentPage + 1)">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-list-card .card-body {
+        padding: 1rem;
+    }
+
+    .admin-refund-search-form > select {
+        min-width: 0;
+        flex: 1 1 220px;
+    }
+
+    .admin-refund-table th,
+    .admin-refund-table td {
+        vertical-align: middle;
+    }
+
+    @@media (max-width: 991.98px) {
+        .admin-refund-table {
+            min-width: 900px;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .admin-list-card .card-body {
+            padding: 0.9rem;
+        }
+
+        .admin-refund-search-form {
+            flex-direction: column;
+            width: 100%;
+        }
+
+            .admin-refund-search-form > select,
+            .admin-refund-search-form > button {
+                width: 100%;
+            }
+    }
+</style>

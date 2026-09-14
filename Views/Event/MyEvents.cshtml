@@ -1,0 +1,547 @@
+﻿@model List<GameStore.Pagination.User.MyEventCardVM>
+@{
+    ViewData["Title"] = "My Events";
+    // Hàm xử lý đường dẫn ảnh event.
+    // Nếu event chưa có banner thì dùng ảnh mặc định.
+    // Nếu banner là link online thì dùng trực tiếp.
+    // Nếu banner là tên file trong project thì nối với thư mục /images/events/.
+    string GetImage(string? image)
+    {
+        if (string.IsNullOrWhiteSpace(image))
+            return "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80";
+        if (image.StartsWith("http://") || image.StartsWith("https://"))
+            return image;
+        return Url.Content("~/images/events/" + image);
+    }
+    // Hàm đổi trạng thái event thành class CSS tương ứng.
+    // Mục đích: mỗi trạng thái Live / Upcoming / Ended sẽ có màu badge khác nhau.
+    string GetStatusClass(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) return "gs-badge";
+        var s = status.Trim().ToLower();
+        if (s == "live") return "gs-badge live";
+        if (s == "upcoming") return "gs-badge upcoming";
+        if (s == "ended") return "gs-badge ended";
+        return "gs-badge";
+    }
+    // Tách danh sách event của user thành 3 nhóm theo status.
+    // Việc tách nhóm giúp giao diện dễ hiển thị:
+    // - Live và Upcoming nằm ở khu vực đang/sắp diễn ra.
+    // - Ended nằm ở khu vực sự kiện đã kết thúc.
+    var upcoming = Model.Where(x => x.Event != null && (x.Event.Status ?? "").Trim().Equals("Upcoming", StringComparison.OrdinalIgnoreCase)).ToList();
+    var live = Model.Where(x => x.Event != null && (x.Event.Status ?? "").Trim().Equals("Live", StringComparison.OrdinalIgnoreCase)).ToList();
+    var ended = Model.Where(x => x.Event != null && (x.Event.Status ?? "").Trim().Equals("Ended", StringComparison.OrdinalIgnoreCase)).ToList();
+    var myEventsReturnUrl = "/event/my-events";
+}
+<main class="gs-page">
+    <div class="container-xxl">
+        <div class="mb-4">
+            <div class="gs-kicker">Personal Area</div>
+            <h1 class="gs-page-title">My Events</h1>
+            <p class="gs-page-subtitle">
+                Track the events you've joined, check-in status, latest announcements, and most recent chat from the event room.
+            </p>
+        </div>
+        <a href="/event?eventType=All&status=All&page=1" class="gs-btn-chip">All Events</a>
+        @if (Model.Any())
+        {
+            <section class="mb-5">
+                <div class="gs-section-head">
+                    <h3>Live & Upcoming</h3>
+                    <span>@(live.Count + upcoming.Count) event</span>
+                </div>
+                <div class="row g-4">
+                    @foreach (var item in live.Concat(upcoming))
+                    {
+                        // Lấy thông tin event từ ViewModel.
+                        var ev = item.Event;
+                        if (ev == null) { continue; }
+                        <div class="col-md-6 col-xl-4">
+                            <div class="gs-event-card h-100">
+                                <div class="gs-event-image-wrap">
+                                    <img src="@GetImage(ev.Banner)" alt="@ev.Title" class="gs-event-image" />
+                                    <span class="@GetStatusClass(ev.Status)">@ev.Status</span>
+                                </div>
+                                <div class="gs-event-body">
+                                    <h4 class="gs-event-title">@ev.Title</h4>
+                                    <div class="gs-event-meta">
+                                        <div>🎮 @(ev.Game?.TenGame ?? "GameStore Event")</div>
+                                        <div>📅 @ev.StartAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                        <div>💰 @(item.Participant.PaidAmount > 0 ? item.Participant.PaidAmount.ToString("N0") + " VND" : "Free")</div>
+                                    </div>
+                                    <div class="gs-checkin-row">
+                                        @if (item.Participant.IsCheckedIn)
+                                        {
+                                            <!-- User đã check-in event, hiển thị thời gian check-in -->
+                                            <span class="gs-checkin checked">
+                                                ✅ Checked-in @item.Participant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <!-- User đã tham gia event nhưng chưa check-in -->
+                                            <span class="gs-checkin waiting">⏳ Not checked-in</span>
+                                        }
+                                    </div>
+                                    <div class="gs-notify-box">
+                                        <div class="gs-notify-title">📢 Latest Announcement</div>
+                                        @if (item.LatestAnnouncement != null)
+                                        {
+                                            <!-- Hiển thị thông báo mới nhất của event -->
+                                            <div class="gs-notify-item">
+                                                <div class="gs-notify-item-title">@item.LatestAnnouncement.Title</div>
+                                                <div class="gs-notify-time">@item.LatestAnnouncement.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <!-- Event chưa có thông báo nào -->
+                                            <div class="gs-notify-empty">No announcements available.</div>
+                                        }
+                                    </div>
+                                    <div class="gs-notify-box">
+                                        <div class="gs-notify-title">💬 Latest Chat</div>
+                                        @if (item.LatestMessage != null)
+                                        {
+                                            <!-- Hiển thị tin nhắn mới nhất trong phòng event -->
+                                            <div class="gs-notify-item">
+                                                <div class="gs-notify-item-title">
+                                                    @(item.LatestMessage.NguoiDung?.TenNguoiDung ?? item.LatestMessage.NguoiDung?.Email ?? "User")
+                                                </div>
+                                                <div class="gs-chat-snippet">@item.LatestMessage.Content</div>
+                                                <div class="gs-notify-time">@item.LatestMessage.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <!-- Phòng event chưa có tin nhắn -->
+                                            <div class="gs-notify-empty">No messages available.</div>
+                                        }
+                                    </div>
+                                    <div class="gs-action-row">
+                                        <a href="/event/detail/@ev.Slug?returnUrl=@Uri.EscapeDataString(myEventsReturnUrl)" class="gs-btn-ghost">Detail</a>
+                                        <a href="/event/room/@ev.EventId?returnUrl=@Uri.EscapeDataString(myEventsReturnUrl)" class="gs-btn-primary">Open Room</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+            <section>
+                <div class="gs-section-head">
+                    <h3>Ended Events</h3>
+                    <span>@ended.Count event</span>
+                </div>
+                <div class="row g-4">
+                    @foreach (var item in ended)
+                    {
+                        var ev = item.Event;
+                        if (ev == null) { continue; }
+                        <div class="col-md-6 col-xl-4">
+                            <div class="gs-event-card h-100 ended-card">
+                                <div class="gs-event-image-wrap">
+                                    <img src="@GetImage(ev.Banner)" alt="@ev.Title" class="gs-event-image" />
+                                    <span class="@GetStatusClass(ev.Status)">@ev.Status</span>
+                                </div>
+                                <div class="gs-event-body">
+                                    <h4 class="gs-event-title">@ev.Title</h4>
+                                    <div class="gs-event-meta">
+                                        <div>🎮 @(ev.Game?.TenGame ?? "GameStore Event")</div>
+                                        <div>📅 @ev.StartAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                        <div>💰 @(item.Participant.PaidAmount > 0 ? item.Participant.PaidAmount.ToString("N0") + " VND" : "Free")</div>
+                                    </div>
+                                    <div class="gs-checkin-row">
+                                        @if (item.Participant.IsCheckedIn)
+                                        {
+                                            <span class="gs-checkin checked">
+                                                ✅ Checked-in @item.Participant.CheckedInAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="gs-checkin waiting">Not checked-in</span>
+                                        }
+                                    </div>
+                                    <div class="gs-notify-box">
+                                        <div class="gs-notify-title">📢 Latest Announcement</div>
+                                        @if (item.LatestAnnouncement != null)
+                                        {
+                                            <div class="gs-notify-item">
+                                                <div class="gs-notify-item-title">@item.LatestAnnouncement.Title</div>
+                                                <div class="gs-notify-time">@item.LatestAnnouncement.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="gs-notify-empty">No announcements available.</div>
+                                        }
+                                    </div>
+                                    <div class="gs-notify-box">
+                                        <div class="gs-notify-title">💬 Latest Chat</div>
+                                        @if (item.LatestMessage != null)
+                                        {
+                                            <div class="gs-notify-item">
+                                                <div class="gs-notify-item-title">
+                                                    @(item.LatestMessage.NguoiDung?.TenNguoiDung ?? item.LatestMessage.NguoiDung?.Email ?? "User")
+                                                </div>
+                                                <div class="gs-chat-snippet">@item.LatestMessage.Content</div>
+                                                <div class="gs-notify-time">@item.LatestMessage.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="gs-notify-empty">No messages available.</div>
+                                        }
+                                    </div>
+                                    <div class="gs-action-row">
+                                        <a href="/event/detail/@ev.Slug?returnUrl=@Uri.EscapeDataString(myEventsReturnUrl)" class="gs-btn-ghost">View Detail</a>
+                                        <a href="/event/room/@ev.EventId?returnUrl=@Uri.EscapeDataString(myEventsReturnUrl)" class="gs-btn-primary">Open Archived Room</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+        else
+        {
+            <div class="gs-empty-state">
+                <div class="gs-empty-icon">🎮</div>
+                <h3>You haven’t joined any events yet</h3>
+                <p>Explore community events, tournaments, and group activities on GameStore.</p>
+                <a href="/event" class="gs-btn-primary">Explore Events</a>
+            </div>
+        }
+    </div>
+</main>
+<style>
+    :root {
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-primary: linear-gradient(135deg, #a855f7, #6366f1 55%, #22d3ee);
+    }
+
+    body {
+        background: radial-gradient(circle at top left, rgba(168,85,247,0.20), transparent 24%), radial-gradient(circle at top right, rgba(34,211,238,0.16), transparent 22%), linear-gradient(180deg, #050b16 0%, #07111f 40%, #091626 100%);
+        color: #f8fbff;
+    }
+
+    .gs-page {
+        padding: 48px 0 70px;
+    }
+
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: #67e8f9;
+        margin-bottom: 8px;
+    }
+
+    .gs-page-title {
+        font-family: 'Orbitron', 'Inter', sans-serif;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 10px;
+    }
+
+    .gs-page-subtitle {
+        color: #94a3b8;
+        max-width: 760px;
+        line-height: 1.7;
+    }
+
+    .gs-section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+        .gs-section-head h3 {
+            margin: 0;
+            color: #fff;
+            font-weight: 800;
+            font-family: 'Orbitron', 'Inter', sans-serif;
+        }
+
+        .gs-section-head span {
+            color: #94a3b8;
+            font-size: .95rem;
+        }
+
+    .gs-event-card {
+        background: linear-gradient(180deg, rgba(14,25,43,0.94), rgba(9,18,33,0.94));
+        border: 1px solid var(--gs-line);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+        transition: .22s ease;
+    }
+
+        .gs-event-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 26px 50px rgba(0,0,0,0.4), 0 0 0 1px rgba(34,211,238,0.25);
+            border-color: rgba(34,211,238,0.3);
+        }
+
+    .gs-event-image-wrap {
+        position: relative;
+    }
+
+    .gs-event-image {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .gs-event-body {
+        padding: 20px;
+    }
+
+    .gs-event-title {
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin-bottom: 14px;
+        line-height: 1.35;
+        min-height: 52px;
+    }
+
+    .gs-event-meta {
+        display: grid;
+        gap: 8px;
+        color: #cbd5e1;
+        font-size: .95rem;
+        margin-bottom: 16px;
+    }
+
+    .gs-badge {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        background: rgba(15,23,42,0.72);
+        color: #fff;
+        border: 1px solid rgba(168,85,247,0.3);
+    }
+
+        .gs-badge.live {
+            background: rgba(34,197,94,0.16);
+            color: #bbf7d0;
+            border-color: rgba(34,197,94,0.22);
+        }
+
+        .gs-badge.upcoming {
+            background: rgba(245,158,11,0.16);
+            color: #fde68a;
+            border-color: rgba(245,158,11,0.22);
+        }
+
+        .gs-badge.ended {
+            background: rgba(148,163,184,0.18);
+            color: #cbd5e1;
+            border-color: rgba(148,163,184,0.22);
+        }
+
+    .gs-checkin-row {
+        margin-bottom: 14px;
+    }
+
+    .gs-checkin {
+        display: inline-flex;
+        align-items: center;
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        font-size: .9rem;
+        font-weight: 600;
+    }
+
+        .gs-checkin.checked {
+            background: rgba(34,197,94,0.12);
+            color: #bbf7d0;
+            border: 1px solid rgba(34,197,94,0.18);
+        }
+
+        .gs-checkin.waiting {
+            background: rgba(245,158,11,0.12);
+            color: #fde68a;
+            border: 1px solid rgba(245,158,11,0.18);
+        }
+
+    .gs-notify-box {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: 14px;
+        margin-bottom: 14px;
+    }
+
+    .gs-notify-title {
+        color: #67e8f9;
+        font-size: .88rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .gs-notify-item-title {
+        color: #fff;
+        font-weight: 700;
+        line-height: 1.45;
+        margin-bottom: 4px;
+    }
+
+    .gs-chat-snippet {
+        color: #dbe6f7;
+        font-size: .92rem;
+        line-height: 1.6;
+        margin-bottom: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .gs-notify-time {
+        color: #94a3b8;
+        font-size: .82rem;
+    }
+
+    .gs-notify-empty {
+        color: #94a3b8;
+        font-size: .9rem;
+    }
+
+    .gs-action-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .gs-btn-primary,
+    .gs-btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 18px;
+        border-radius: 999px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform .18s ease, filter .2s ease;
+    }
+
+    .gs-btn-primary {
+        background: var(--gs-primary);
+        color: #fff;
+        border: none;
+        box-shadow: 0 14px 28px rgba(124,58,237,0.28);
+    }
+
+        .gs-btn-primary:hover {
+            color: #fff;
+            filter: brightness(1.08);
+            transform: translateY(-2px);
+        }
+
+    .gs-btn-ghost {
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+        border: 1px solid rgba(34,211,238,0.22);
+    }
+
+        .gs-btn-ghost:hover {
+            color: #fff;
+            background: rgba(34,211,238,0.12);
+        }
+
+    .gs-empty-state {
+        background: linear-gradient(180deg, rgba(14,25,43,0.94), rgba(9,18,33,0.94));
+        border: 1px solid var(--gs-line);
+        border-radius: 28px;
+        padding: 60px 24px;
+        text-align: center;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+    }
+
+    .gs-empty-icon {
+        font-size: 2.2rem;
+        margin-bottom: 14px;
+    }
+
+    .gs-empty-state h3 {
+        color: #fff;
+        font-weight: 800;
+        margin-bottom: 10px;
+    }
+
+    .gs-empty-state p {
+        color: #94a3b8;
+        max-width: 560px;
+        margin: 0 auto 20px;
+        line-height: 1.7;
+    }
+
+    .ended-card {
+        opacity: .92;
+    }
+
+    @@media (max-width: 575.98px) {
+        .gs-page {
+            padding: 30px 0 50px;
+        }
+
+        .gs-event-body {
+            padding: 16px;
+        }
+
+        .gs-action-row {
+            flex-direction: column;
+        }
+
+        .gs-btn-primary,
+        .gs-btn-ghost {
+            width: 100%;
+        }
+    }
+
+    .gs-btn-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        font-size: .88rem;
+        font-weight: 700;
+        text-decoration: none;
+        color: #dbeafe;
+        background: rgba(34, 211, 238, 0.08);
+        border: 1px solid rgba(34, 211, 238, 0.20);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        transition: all .2s ease;
+        flex: 0 0 auto;
+        white-space: nowrap;
+        margin-bottom: 24px;
+    }
+
+        .gs-btn-chip:hover {
+            color: #ffffff;
+            background: rgba(34, 211, 238, 0.16);
+            border-color: rgba(34, 211, 238, 0.32);
+            transform: translateY(-1px);
+        }
+
+        .gs-btn-chip:active {
+            transform: translateY(0);
+        }
+</style>

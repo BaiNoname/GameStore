@@ -1,0 +1,126 @@
+﻿@model GameStore.Models.Game
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Edit Game";
+}
+
+<div class="container mt-5">
+
+    <div class="card shadow-lg border-0">
+
+        <div class="card-header bg-light">
+            <h4 class="mb-0">✏️ Edit Game</h4>
+        </div>
+
+        <!-- Thông báo thành công hoặc lỗi nếu có -->
+        <div class="p-2 text-success">
+            @TempData["Msg"]
+        </div>
+
+        <!-- Form chỉnh sửa game -->
+        <div class="card-body">
+
+            <form method="post"
+                  enctype="multipart/form-data"
+                  asp-controller="game"
+                  asp-action="edit"
+                  asp-route-id="@Model.MaGame">
+
+                <input type="hidden" name="keyword" value="@ViewBag.Keyword" />
+                <input type="hidden" name="categoryId" value="@ViewBag.CategoryId" />
+                <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
+
+                <div class="mb-3">
+                    <label class="form-label">Game ID</label>
+
+                    <input type="text"
+                           class="form-control"
+                           asp-for="MaGame"
+                           value="@Model.MaGame"
+                           readonly />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Game Name</label>
+                    <input class="form-control" asp-for="TenGame" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control"
+                              asp-for="MoTa"
+                              rows="3"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Category</label>
+
+                    <select class="form-select"
+                            asp-for="MaTheLoai"
+                            asp-items="ViewBag.Categories">
+
+                        <option value="">-- Select Category --</option>
+
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Price</label>
+                    <input type="number"
+                           step="0.01"
+                           class="form-control"
+                           asp-for="Gia" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Release Date</label>
+                    <input type="date"
+                           class="form-control"
+                           asp-for="NgayRaMat" />
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">Current Image</label>
+
+                    <br />
+
+                    <img src="/images/@Model.Hinh"
+                         width="150"
+                         class="mb-2" />
+
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Change Image</label>
+
+                    <input type="file"
+                           class="form-control"
+                           name="photo">
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+
+                    <a asp-controller="Game"
+                       asp-action="Index"
+                       asp-route-keyword="@ViewBag.Keyword"
+                       asp-route-categoryId="@ViewBag.CategoryId"
+                       asp-route-page="@ViewBag.CurrentPage"
+                       class="btn btn-secondary">
+                        Back
+                    </a>
+
+                    <button class="btn btn-primary">
+                        💾 Update
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>

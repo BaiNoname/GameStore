@@ -1,0 +1,913 @@
+/* ============================================================
+   GAMESTORE — GAMING THEME (Neon Cyberpunk)
+   Lop theme toan cuc: nap SAU site.css de ghi de.
+   Ap dung cho toan bo view (Bootstrap 5 + class gs-*).
+   Tac gia: chinh sua giao dien tong the, responsive, animation.
+   ============================================================ */
+
+/* ---------- 1. BANG MAU (design tokens) ---------- */
+:root {
+    /* Nen */
+    /* Nen sang hon (tong xam-xanh kieu Steam, khong den kit) */
+    --gx-bg-0: #223049;
+    --gx-bg-1: #1a2740;
+    --gx-bg-2: #162035;
+    --gx-surface: rgba(40, 54, 88, 0.85);
+    --gx-surface-2: rgba(48, 63, 100, 0.88);
+    --gx-glass: rgba(34, 47, 78, 0.6);
+    /* Mau nen panel/card dung chung khi lam sang */
+    --gx-panel-light: linear-gradient(180deg, rgba(42, 56, 92, 0.94), rgba(31, 43, 74, 0.94));
+    /* Neon */
+    --gx-purple: #a855f7;
+    --gx-violet: #7c3aed;
+    --gx-indigo: #6366f1;
+    --gx-cyan: #22d3ee;
+    --gx-cyan-2: #06b6d4;
+    --gx-pink: #ec4899;
+    /* Gradient chinh */
+    --gx-grad: linear-gradient(135deg, #a855f7 0%, #6366f1 50%, #22d3ee 100%);
+    --gx-grad-soft: linear-gradient(135deg, rgba(168,85,247,.16), rgba(34,211,238,.16));
+    /* Chu */
+    --gx-text: #eaf0fb;
+    --gx-muted: #93a1bd;
+    --gx-heading: #ffffff;
+    /* Vien + do bong */
+    --gx-line: rgba(255, 255, 255, 0.08);
+    --gx-line-neon: rgba(168, 85, 247, 0.35);
+    --gx-radius: 16px;
+    --gx-radius-sm: 12px;
+    --gx-glow-purple: 0 0 0 1px rgba(168,85,247,.35), 0 8px 30px rgba(124,58,237,.35);
+    --gx-glow-cyan: 0 0 0 1px rgba(34,211,238,.35), 0 8px 30px rgba(6,182,212,.30);
+    --gx-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+    /* Ghi de bien cu cua site.css de card/accent cu doi mau */
+    --gs-accent: #22d3ee;
+    --gs-primary: linear-gradient(135deg, #a855f7, #6366f1 55%, #22d3ee);
+    --gs-primary-solid: #7c3aed;
+    /* Ghi de bien Bootstrap */
+    --bs-primary: #7c3aed;
+    --bs-primary-rgb: 124, 58, 237;
+    --bs-link-color: #22d3ee;
+    --bs-link-hover-color: #67e8f9;
+    --bs-border-radius: var(--gx-radius-sm);
+    --bs-body-color: var(--gx-text);
+}
+
+/* ---------- 2. NEN + NEN TONG THE ---------- */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: radial-gradient(1200px 600px at 12% -5%, rgba(168, 85, 247, 0.18), transparent 60%), radial-gradient(1000px 520px at 100% 0%, rgba(34, 211, 238, 0.16), transparent 55%), linear-gradient(180deg, var(--gx-bg-0) 0%, var(--gx-bg-1) 45%, var(--gx-bg-2) 100%) !important;
+    color: var(--gx-text);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background-attachment: fixed;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Tieu de dung font Orbitron neu co */
+h1, h2, h3, .gs-section-title, .gs-card-title, .display-1, .display-2, .display-3, .display-4 {
+    font-family: "Orbitron", "Inter", system-ui, sans-serif;
+    letter-spacing: 0.02em;
+    color: var(--gx-heading);
+}
+
+/* Chu gradient tien ich */
+.gx-gradient-text,
+.gs-section-title {
+    background: var(--gx-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+a {
+    color: var(--gx-cyan);
+    transition: color .2s ease, opacity .2s ease;
+}
+
+    a:hover {
+        color: #7de9ff;
+    }
+
+/* ---------- 3. THANH CUON + BOI DEN ---------- */
+::selection {
+    background: rgba(168, 85, 247, 0.35);
+    color: #fff;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168, 85, 247, 0.6) transparent;
+}
+
+    *::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--gx-purple), var(--gx-cyan));
+        border-radius: 999px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+/* ---------- 4. NUT (buttons) ---------- */
+.btn {
+    border-radius: var(--gx-radius-sm);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: transform .18s ease, box-shadow .25s ease, background .25s ease, filter .25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+    .btn:active {
+        transform: translateY(1px) scale(0.99);
+    }
+
+.btn-primary,
+.gs-btn-primary,
+.btn-gaming {
+    background: var(--gx-grad);
+    border: none;
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(124, 58, 237, 0.35);
+}
+
+    .btn-primary:hover,
+    .gs-btn-primary:hover,
+    .btn-gaming:hover {
+        color: #fff;
+        filter: brightness(1.08);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(124, 58, 237, 0.5), 0 0 0 1px rgba(34, 211, 238, 0.4);
+    }
+
+.btn-outline-primary,
+.gs-btn {
+    background: rgba(168, 85, 247, 0.08);
+    border: 1px solid var(--gx-line-neon);
+    color: #e9d9ff;
+}
+
+    .btn-outline-primary:hover,
+    .gs-btn:hover {
+        background: rgba(168, 85, 247, 0.18);
+        color: #fff;
+        border-color: var(--gx-cyan);
+        box-shadow: var(--gx-glow-cyan);
+        transform: translateY(-2px);
+    }
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981, #22d3ee);
+    border: none;
+    color: #04121a;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444, #ec4899);
+    border: none;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    border: none;
+    color: #1a1200;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--gx-line);
+    color: var(--gx-text);
+}
+
+/* Hieu ung anh sang luot qua nut khi hover */
+.btn::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    transform: skewX(-20deg);
+    transition: left .55s ease;
+    pointer-events: none;
+}
+
+.btn:hover::after {
+    left: 130%;
+}
+
+/* ---------- 5. THE (cards / panels) ---------- */
+.card,
+.gs-card,
+.gx-panel {
+    background: var(--gx-surface);
+    border: 1px solid var(--gx-line);
+    border-radius: var(--gx-radius);
+    box-shadow: var(--gx-shadow);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform .3s cubic-bezier(.2, .7, .2, 1), box-shadow .3s ease, border-color .3s ease;
+    overflow: hidden;
+}
+
+    .card:hover,
+    .gs-card:hover,
+    .gx-panel:hover {
+        transform: translateY(-6px);
+        border-color: var(--gx-line-neon);
+        box-shadow: 0 22px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(168, 85, 247, 0.35), 0 0 30px rgba(124, 58, 237, 0.25);
+    }
+
+/* Vien neon chay quanh the noi bat (them class gx-neon-border) */
+.gx-neon-border {
+    position: relative;
+}
+
+    .gx-neon-border::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        padding: 1px;
+        border-radius: inherit;
+        background: var(--gx-grad);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: .6;
+        pointer-events: none;
+    }
+
+.card-header {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--gx-line);
+    font-weight: 700;
+}
+
+.card-footer {
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid var(--gx-line);
+}
+
+/* Anh trong card zoom nhe khi hover */
+.card img,
+.gs-media img {
+    transition: transform .5s ease, filter .5s ease;
+}
+
+.card:hover img,
+.gs-card:hover .gs-media img {
+    transform: scale(1.06);
+    filter: saturate(1.15) contrast(1.05);
+}
+
+/* ---------- 6. FORM (input / select / textarea) ---------- */
+.form-control,
+.form-select,
+.gs-search-input {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--gx-line);
+    color: var(--gx-text);
+    border-radius: var(--gx-radius-sm);
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+    .form-control::placeholder {
+        color: rgba(147, 161, 189, 0.7);
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    .gs-search-input:focus {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: var(--gx-purple);
+        color: #fff;
+        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.25), 0 0 18px rgba(34, 211, 238, 0.15);
+    }
+
+    .form-select option {
+        background: var(--gx-bg-2);
+        color: var(--gx-text);
+    }
+
+.form-check-input:checked {
+    background-color: var(--gx-purple);
+    border-color: var(--gx-purple);
+}
+
+.input-group-text {
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid var(--gx-line);
+    color: #e9d9ff;
+}
+
+label {
+    color: var(--gx-text);
+    font-weight: 600;
+}
+
+/* ---------- 7. BANG (tables) ---------- */
+.table {
+    color: var(--gx-text);
+    border-color: var(--gx-line);
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--gx-text);
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
+    --bs-table-striped-color: var(--gx-text);
+    --bs-table-hover-bg: rgba(168, 85, 247, 0.12);
+    --bs-table-hover-color: #fff;
+    --bs-table-border-color: var(--gx-line);
+}
+
+    .table thead th {
+        background: rgba(255, 255, 255, 0.04);
+        color: #cbd5f5;
+        text-transform: uppercase;
+        font-size: .78rem;
+        letter-spacing: .06em;
+        border-bottom: 2px solid var(--gx-line-neon);
+        white-space: nowrap;
+    }
+
+    .table tbody tr {
+        transition: background .2s ease;
+    }
+
+/* Bang tu dong cuon ngang tren man nho de khong vo layout */
+.table-responsive {
+    border-radius: var(--gx-radius-sm);
+    border: 1px solid var(--gx-line);
+}
+
+/* ---------- 8. NAV / TAB / DROPDOWN / MODAL ---------- */
+.nav-tabs {
+    border-bottom: 1px solid var(--gx-line);
+}
+
+    .nav-tabs .nav-link {
+        color: var(--gx-muted);
+        border: none;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+    }
+
+        .nav-tabs .nav-link:hover {
+            color: #fff;
+            border-bottom-color: var(--gx-cyan);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #fff;
+            background: transparent;
+            border-bottom: 2px solid var(--gx-purple);
+        }
+
+.dropdown-menu {
+    background: var(--gx-bg-2);
+    border: 1px solid var(--gx-line);
+    box-shadow: var(--gx-shadow);
+    border-radius: var(--gx-radius-sm);
+}
+
+.dropdown-item {
+    color: var(--gx-text);
+}
+
+    .dropdown-item:hover,
+    .dropdown-item:focus {
+        background: rgba(168, 85, 247, 0.15);
+        color: #fff;
+    }
+
+.modal-content {
+    background: var(--gx-bg-2);
+    border: 1px solid var(--gx-line-neon);
+    border-radius: var(--gx-radius);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.2);
+}
+
+.modal-header,
+.modal-footer {
+    border-color: var(--gx-line);
+}
+
+/* ---------- 9. BADGE / ALERT / PAGINATION / PROGRESS ---------- */
+.badge {
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+
+    .badge.bg-primary {
+        background: var(--gx-grad) !important;
+    }
+
+    .badge.bg-success {
+        background: linear-gradient(135deg, #10b981, #22d3ee) !important;
+        color: #04121a;
+    }
+
+.alert {
+    border-radius: var(--gx-radius-sm);
+    border: 1px solid var(--gx-line);
+    background: var(--gx-surface);
+    color: var(--gx-text);
+}
+
+.alert-success {
+    border-color: rgba(16, 185, 129, .4);
+    background: rgba(16, 185, 129, .12);
+}
+
+.alert-danger {
+    border-color: rgba(239, 68, 68, .4);
+    background: rgba(239, 68, 68, .12);
+}
+
+.alert-warning {
+    border-color: rgba(245, 158, 11, .4);
+    background: rgba(245, 158, 11, .12);
+}
+
+.alert-info {
+    border-color: rgba(34, 211, 238, .4);
+    background: rgba(34, 211, 238, .12);
+}
+
+.page-link {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--gx-line);
+    color: var(--gx-text);
+    border-radius: 10px !important;
+    margin: 0 3px;
+    transition: all .2s ease;
+}
+
+    .page-link:hover {
+        background: rgba(168, 85, 247, 0.18);
+        color: #fff;
+        border-color: var(--gx-cyan);
+    }
+
+.page-item.active .page-link {
+    background: var(--gx-grad);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(124, 58, 237, .4);
+}
+
+.progress {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: var(--gx-grad);
+}
+
+.list-group-item {
+    background: var(--gx-surface);
+    border-color: var(--gx-line);
+    color: var(--gx-text);
+}
+
+.breadcrumb {
+    background: transparent;
+}
+
+.breadcrumb-item.active {
+    color: var(--gx-muted);
+}
+
+hr {
+    border-color: var(--gx-line);
+    opacity: 1;
+}
+
+/* ---------- 10. TIEN ICH GAMING ---------- */
+.text-muted,
+.gs-muted {
+    color: var(--gx-muted) !important;
+}
+
+.gx-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--gx-line-neon);
+    background: var(--gx-grad-soft);
+    color: #e9f6ff;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: .04em;
+}
+
+.gx-glow-purple {
+    box-shadow: var(--gx-glow-purple);
+}
+
+.gx-glow-cyan {
+    box-shadow: var(--gx-glow-cyan);
+}
+
+/* ---------- 11. ANIMATION (keyframes) ---------- */
+@keyframes gxFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(26px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes gxFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes gxFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes gxGlowPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 24px 4px rgba(34, 211, 238, 0.4);
+    }
+}
+
+@keyframes gxGradientMove {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes gxShimmer {
+    0% {
+        background-position: -450px 0;
+    }
+
+    100% {
+        background-position: 450px 0;
+    }
+}
+
+@keyframes gxSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Tien ich animation */
+.gx-float {
+    animation: gxFloat 4s ease-in-out infinite;
+}
+
+.gx-pulse {
+    animation: gxGlowPulse 2.6s ease-in-out infinite;
+}
+
+.gx-animated-bg {
+    background-size: 200% 200%;
+    animation: gxGradientMove 8s ease infinite;
+}
+
+/* Hieu ung xuat hien khi cuon toi (dung voi gaming-theme.js) */
+.gx-reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity .7s cubic-bezier(.2, .7, .2, 1), transform .7s cubic-bezier(.2, .7, .2, 1);
+    will-change: opacity, transform;
+}
+
+    .gx-reveal.gx-in {
+        opacity: 1;
+        transform: none;
+    }
+
+/* Do tre theo thu tu (stagger) */
+.gx-in.gx-d1 {
+    transition-delay: .08s;
+}
+
+.gx-in.gx-d2 {
+    transition-delay: .16s;
+}
+
+.gx-in.gx-d3 {
+    transition-delay: .24s;
+}
+
+.gx-in.gx-d4 {
+    transition-delay: .32s;
+}
+
+/* Loading spinner gaming */
+.gx-loader {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    border-top-color: var(--gx-purple);
+    border-right-color: var(--gx-cyan);
+    animation: gxSpin .8s linear infinite;
+    margin: 24px auto;
+}
+
+/* Skeleton shimmer khi tai anh */
+.gx-skeleton {
+    background: #12182b;
+    background-image: linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,.06) 40px, rgba(255,255,255,0) 80px);
+    background-size: 450px 100%;
+    background-repeat: no-repeat;
+    animation: gxShimmer 1.4s infinite linear;
+}
+
+/* ---------- 12. NAVBAR / TOPBAR (khop class gs-*) ---------- */
+.gs-topbar,
+.navbar {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.gs-topnav a,
+.navbar-nav .nav-link {
+    position: relative;
+}
+
+    .gs-topnav a::after,
+    .navbar-nav .nav-link::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        width: 0;
+        height: 2px;
+        background: var(--gx-grad);
+        border-radius: 2px;
+        transition: width .3s ease;
+    }
+
+    .gs-topnav a:hover::after,
+    .navbar-nav .nav-link:hover::after,
+    .navbar-nav .nav-link.active::after {
+        width: 100%;
+    }
+
+/* Logo phat sang */
+.gs-logo-mark {
+    box-shadow: 0 0 18px rgba(168, 85, 247, 0.5);
+    animation: gxGlowPulse 3s ease-in-out infinite;
+}
+
+/* ---------- 13. ADMIN (khop template sidebar) ---------- */
+.left-sidebar {
+    background: linear-gradient(180deg, var(--gx-bg-1), var(--gx-bg-2)) !important;
+    border-right: 1px solid var(--gx-line);
+}
+
+.sidebar-link {
+    border-radius: 10px;
+    transition: all .2s ease;
+}
+
+    .sidebar-link:hover,
+    .sidebar-item.selected > .sidebar-link,
+    .sidebar-link.active {
+        background: var(--gx-grad-soft) !important;
+        color: #fff !important;
+        box-shadow: inset 3px 0 0 var(--gx-purple);
+    }
+
+/* ---------- 14. RESPONSIVE ---------- */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Co chu tieu de tu co gian theo man hinh */
+.gs-card-title {
+    font-size: clamp(1.05rem, 1rem + 0.6vw, 1.4rem);
+}
+
+.gs-section-title {
+    font-size: clamp(1.1rem, 1rem + 0.8vw, 1.6rem);
+}
+
+/* Anh media trong card cao theo man hinh */
+.gs-media {
+    height: clamp(160px, 20vw, 240px);
+}
+
+@media (max-width: 991.98px) {
+    .gs-page {
+        padding: 20px 0 40px;
+    }
+
+    .card, .gs-card {
+        border-radius: var(--gx-radius-sm);
+    }
+}
+
+@media (max-width: 767.98px) {
+    body {
+        font-size: 15px;
+    }
+
+    .container, .container-xxl, .container-xl, .container-lg {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    /* Nut day rong tren dien thoai cho de bam */
+    .gs-actions .btn,
+    .btn-block-mobile {
+        width: 100%;
+    }
+
+    .table thead th {
+        font-size: .72rem;
+    }
+
+    h1, .display-4 {
+        font-size: clamp(1.6rem, 1.2rem + 3vw, 2.4rem);
+    }
+
+    .modal-dialog {
+        margin: 12px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .gs-media {
+        height: 180px;
+    }
+
+    .btn {
+        padding: 8px 14px;
+    }
+}
+
+/* Giam chuyen dong cho nguoi thich giao dien tinh */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================================
+   15. LAM SANG TONG THE (v2) — nen sang hon kieu Steam
+   Nap sau cung nen ghi de mau nen toi cua tung view.
+   ============================================================ */
+
+/* Cac panel/card dung chung -> nen sang hon, noi bat tren nen */
+.gs-card,
+.card,
+.gx-panel,
+.gs-article-card,
+.gs-side-panel,
+.gs-summary-box,
+.gs-feature-main,
+.gs-feature-side-card,
+.gs-news-card,
+.gs-trending-card,
+.gs-event-card,
+.gs-schedule-card,
+.gs-panel,
+.gs-cart-shell,
+.gs-summary-card,
+.gs-topup-card,
+.gs-library-shell,
+.gs-effect-card,
+.gs-detail-shell,
+.gs-room-card,
+.gs-empty-card,
+.gs-empty-state,
+.gs-empty-box,
+.gs-review-form-card,
+.gs-review-card,
+.gs-feature-card,
+.gs-support-card,
+.gs-chat-shell,
+.hot-item {
+    background: var(--gx-panel-light) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Thanh dieu huong (topbar/navbar) sang hon mot chut */
+.gs-topbar,
+.gs-subbar {
+    background: rgba(28, 39, 64, 0.82) !important;
+}
+
+/* Bang & dropdown & modal cho khop nen sang */
+.dropdown-menu,
+.modal-content {
+    background: #1f2b47 !important;
+}
+
+.gs-dd {
+    background: #1f2b47 !important;
+}
+
+/* ============================================================
+   16. FOOTER — can giua can doi kieu Steam
+   ============================================================ */
+.gs-footer {
+    background: rgba(21, 30, 49, 0.96) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+    text-align: center;
+}
+
+    .gs-footer .gs-footer-inner {
+        max-width: 980px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+        padding: 8px 16px 4px;
+    }
+
+    .gs-footer .gs-footer-logos {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 26px;
+        flex-wrap: wrap;
+    }
+
+        .gs-footer .gs-footer-logos img {
+            max-height: 30px;
+            width: auto;
+            opacity: 0.92;
+        }
+
+    .gs-footer .gs-footer-text,
+    .gs-footer .gs-footer-subtext {
+        text-align: center;
+        max-width: 760px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .gs-footer .gs-footer-nav {
+        justify-content: center;
+        gap: 12px 22px;
+    }
+
+    .gs-footer .gs-footer-social {
+        justify-content: center;
+    }
+
+    .gs-footer .gs-footer-divider {
+        width: 100%;
+        max-width: 980px;
+        height: 1px;
+        margin: 6px auto;
+        background: rgba(255, 255, 255, 0.10);
+    }

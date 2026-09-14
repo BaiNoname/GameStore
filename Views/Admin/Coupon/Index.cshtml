@@ -1,0 +1,159 @@
+@using GameStore.Models
+@model List<GameStore.Models.KhuyenMai>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Coupon Management";
+    string keyword = ViewBag.Keyword as string ?? "";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+
+    var newKm = new KhuyenMai { LoaiGiam = "Percent", IsActive = true, SoLuong = 100 };
+}
+
+<div class="card admin-list-card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <div>
+                <h4 class="card-title mb-1">Mã khuyến mãi</h4>
+                <p class="card-subtitle mb-0">Tạo & quản lý mã giảm giá (có giới hạn số lượng)</p>
+            </div>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createModal">+ Thêm mã</button>
+        </div>
+
+        <form method="get" action="/admin/coupon/index" class="d-flex gap-2 flex-wrap my-3">
+            <input type="text" name="keyword" value="@keyword" class="form-control" style="max-width:280px"
+                   placeholder="Tìm theo code / mô tả..." />
+            <button class="btn btn-primary">Tìm</button>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-striped align-middle admin-coupon-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Giảm</th>
+                        <th>Điều kiện</th>
+                        <th>Số lượng</th>
+                        <th>Hiệu lực</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model == null || Model.Count == 0)
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4">Chưa có mã khuyến mãi nào.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var k in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@k.Code</td>
+                                <td>@(k.LoaiGiam == "Percent" ? $"{k.GiaTri:0.#}%" : $"{k.GiaTri:N0}đ")</td>
+                                <td class="small">
+                                    @(k.DonToiThieu.HasValue && k.DonToiThieu > 0 ? $"Đơn ≥ {k.DonToiThieu:N0}đ" : "—")
+                                    @(k.LoaiGiam == "Percent" && k.GiamToiDa.HasValue ? $" · Tối đa {k.GiamToiDa:N0}đ" : "")
+                                </td>
+                                <td>
+                                    <span class="badge @(k.DaDung >= k.SoLuong ? "bg-danger" : "bg-info")">
+                                        @k.DaDung / @k.SoLuong
+                                    </span>
+                                </td>
+                                <td class="small text-nowrap">
+                                    @(k.NgayBatDau?.ToLocalTime().ToString("dd/MM/yy") ?? "—")
+                                    →
+                                    @(k.NgayKetThuc?.ToLocalTime().ToString("dd/MM/yy") ?? "—")
+                                </td>
+                                <td>
+                                    <span class="badge @(k.IsActive ? "bg-success" : "bg-secondary")">
+                                        @(k.IsActive ? "Bật" : "Tắt")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1 flex-nowrap">
+                                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                                data-bs-target="#editModal-@k.MaKM">Sửa</button>
+                                        <form method="post" action="/admin/coupon/toggle">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="maKM" value="@k.MaKM" />
+                                            <button class="btn btn-sm btn-outline-secondary">@(k.IsActive ? "Tắt" : "Bật")</button>
+                                        </form>
+                                        <form method="post" action="/admin/coupon/delete"
+                                              onsubmit="return confirm('Xoá / tắt mã này?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="maKM" value="@k.MaKM" />
+                                            <button class="btn btn-sm btn-danger">Xoá</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+            <nav>
+                <ul class="pagination justify-content-center mt-3 flex-wrap">
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="?keyword=@keyword&page=@i">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+@* ===== Modal Thêm mã ===== *@
+<div class="modal fade" id="createModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form method="post" action="/admin/coupon/create">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm mã khuyến mãi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <partial name="_CouponForm" model="newKm" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">Tạo mã</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* ===== Modal Sửa cho từng mã ===== *@
+@if (Model != null)
+{
+    foreach (var k in Model)
+    {
+        <div class="modal fade" id="editModal-@k.MaKM" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <form method="post" action="/admin/coupon/edit">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="MaKM" value="@k.MaKM" />
+                        <div class="modal-header">
+                            <h5 class="modal-title">Sửa mã @k.Code</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <partial name="_CouponForm" model="k" />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-warning">Lưu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+}

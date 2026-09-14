@@ -1,0 +1,799 @@
+﻿@model List<GameStore.Models.ThuVienGame>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "My Library";
+
+    // ===== Dữ liệu cho chức năng hoàn trả (refund) =====
+    var refundableIds = ViewBag.RefundableIds as HashSet<string> ?? new HashSet<string>();
+    var activeRefundIds = ViewBag.ActiveRefundIds as HashSet<string> ?? new HashSet<string>();
+    var refundReasons = ViewBag.RefundReasons as string[] ?? new string[0];
+    int refundWindow = ViewBag.RefundWindowMinutes ?? 30;
+    var myRefunds = ViewBag.MyRefunds as List<GameStore.Models.HoanTra> ?? new List<GameStore.Models.HoanTra>();
+
+    string RefundBadgeClass(string s) => s switch
+    {
+        "Pending" => "gs-badge-pending",
+        "Approved" => "gs-badge-success",
+        "Rejected" => "gs-badge-danger",
+        _ => "gs-badge-muted"
+    };
+    string RefundBadgeText(string s) => s switch
+    {
+        "Pending" => "⏳ Đang chờ duyệt",
+        "Approved" => "✔ Đã hoàn tiền",
+        "Rejected" => "✖ Bị từ chối",
+        _ => s
+    };
+}
+
+<div class="gs-library-page">
+    <div class="container py-4 py-lg-5">
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+            <div>
+                <div class="gs-kicker">Personal Collection</div>
+                <h2 class="gs-library-title mb-0">🎮 My Library</h2>
+            </div>
+        </div>
+
+        @if (Model == null || Model.Count == 0)
+        {
+            <!--
+                Nếu user chưa sở hữu game nào
+                -> hiển thị empty state
+            -->
+            <div class="gs-empty-card">
+                <div class="gs-empty-icon">🎮</div>
+                <h4 class="mb-2">You don't own any games yet.</h4>
+                <p class="text-secondary mb-4">
+                    Your library is currently empty. Go back to the store to purchase games and start building your collection.
+                </p>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn gs-btn-primary px-4 py-2 rounded-pill">
+                    ← Back to Store
+                </a>
+            </div>
+        }
+        else
+        {
+            <!-- =========================
+                 LIBRARY LIST
+                 ========================= -->
+            <div class="gs-library-shell">
+                <div class="gs-library-header d-none d-md-grid">
+                    <div>Game</div>
+                    <div>Purchased</div>
+                    <div>Status</div>
+                    <div class="text-end">Action</div>
+                </div>
+
+                <!-- =========================
+                     DANH SÁCH GAME
+                     ========================= -->
+                <div class="gs-library-list">
+                    @foreach (var item in Model)
+                    {
+                        <div class="gs-library-item">
+                            <!-- GAME -->
+                            <div class="gs-library-game">
+                                <div class="gs-library-thumb">
+                                    <img src="@Url.Content("~/images/" + item.Game.Hinh)"
+                                         alt="@item.Game.TenGame" />
+                                </div>
+
+                                <div class="gs-library-game-info">
+                                    <div class="gs-library-game-name">@item.Game.TenGame</div>
+                                    <div class="gs-library-sub">Owned game in your library</div>
+                                </div>
+                            </div>
+
+                            <!-- DATE -->
+                            <div class="gs-library-date">
+                                @item.NgayMua.ToString("dd/MM/yyyy")
+                            </div>
+
+                            <!-- STATUS -->
+                            <div class="gs-library-status">
+                                @if (item.DaTai)
+                                {
+                                    <span class="gs-badge gs-badge-success">Installed</span>
+                                }
+                                else
+                                {
+                                    <span class="gs-badge gs-badge-muted">Not Installed</span>
+                                }
+                            </div>
+
+                            <!-- ACTION -->
+                            <div class="gs-library-action">
+                                <div class="gs-action-stack">
+                                    @if (item.DaTai)
+                                    {
+                                        <a asp-controller="Library"
+                                           asp-action="Download"
+                                           asp-route-id="@item.MaGame"
+                                           class="btn gs-btn-success gs-action-btn-sm">
+                                            🎮 Download
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Library"
+                                           asp-action="Download"
+                                           asp-route-id="@item.MaGame"
+                                           class="btn gs-btn-primary gs-action-btn-sm">
+                                            ⬇ Download
+                                        </a>
+                                    }
+
+                                    @if (activeRefundIds.Contains(item.MaGame))
+                                    {
+                                        <span class="gs-badge gs-badge-pending gs-refund-flag">⏳ Đang chờ hoàn trả</span>
+                                    }
+                                    else if (refundableIds.Contains(item.MaGame))
+                                    {
+                                        <button type="button"
+                                                class="btn gs-btn-refund gs-action-btn-sm"
+                                                data-refund-open
+                                                data-game-id="@item.MaGame"
+                                                data-game-name="@item.Game.TenGame">
+                                            ↩ Hoàn trả
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- =========================
+                 MY REFUND REQUESTS
+                 ========================= -->
+            @if (myRefunds.Count > 0)
+            {
+                <div class="gs-refund-history mt-4">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                        <div>
+                            <div class="gs-kicker">Refund</div>
+                            <h4 class="gs-refund-title mb-0">↩ Lịch sử yêu cầu hoàn trả</h4>
+                        </div>
+                    </div>
+
+                    <div class="gs-refund-list">
+                        @foreach (var r in myRefunds)
+                        {
+                            <div class="gs-refund-item">
+                                <div class="gs-refund-main">
+                                    <div class="gs-refund-game">@(r.Game?.TenGame ?? r.MaGame)</div>
+                                    <div class="gs-refund-reason">@r.LyDo</div>
+                                    @if (!string.IsNullOrWhiteSpace(r.NoiDung))
+                                    {
+                                        <div class="gs-refund-note">"@r.NoiDung"</div>
+                                    }
+                                    @if (r.TrangThai == "Rejected" && !string.IsNullOrWhiteSpace(r.GhiChuAdmin))
+                                    {
+                                        <div class="gs-refund-admin">Admin: @r.GhiChuAdmin</div>
+                                    }
+                                </div>
+                                <div class="gs-refund-meta">
+                                    <div class="gs-refund-amount">@r.SoTienHoan.ToString("#,##0") đ</div>
+                                    <div class="gs-refund-date">@r.NgayYeuCau.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                                <div class="gs-refund-state">
+                                    <span class="gs-badge @RefundBadgeClass(r.TrangThai)">@RefundBadgeText(r.TrangThai)</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="mt-4">
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn gs-btn-muted px-4 py-2 rounded-pill">
+                    ← Back to Store
+                </a>
+            </div>
+        }
+
+    </div>
+</div>
+
+<!-- =========================
+     REFUND MODAL (shared)
+     ========================= -->
+<div class="gs-refund-modal" id="gsRefundModal" aria-hidden="true">
+    <div class="gs-refund-backdrop" data-refund-close></div>
+    <div class="gs-refund-dialog" role="dialog" aria-modal="true" aria-labelledby="gsRefundHeading">
+        <form method="post" asp-controller="Library" asp-action="Refund">
+            <input type="hidden" name="gameId" id="gsRefundGameId" />
+
+            <div class="gs-refund-modal-head">
+                <h5 id="gsRefundHeading" class="mb-0">↩ Yêu cầu hoàn trả</h5>
+                <button type="button" class="gs-refund-x" data-refund-close aria-label="Đóng">✕</button>
+            </div>
+
+            <div class="gs-refund-modal-body">
+                <p class="gs-refund-game-name">
+                    Game: <strong id="gsRefundGameName"></strong>
+                </p>
+                <p class="gs-refund-hint">
+                    Chỉ có thể hoàn trả game đã mua trong vòng <strong>@refundWindow phút</strong>.
+                    Sau khi admin duyệt, game sẽ bị gỡ khỏi thư viện và tiền được hoàn về số dư của bạn.
+                </p>
+
+                <label class="gs-refund-label">Lý do hoàn trả</label>
+                <select name="lyDo" class="gs-refund-select" required>
+                    <option value="">-- Chọn lý do --</option>
+                    @foreach (var reason in refundReasons)
+                    {
+                        <option value="@reason">@reason</option>
+                    }
+                </select>
+
+                <label class="gs-refund-label mt-3">Nội dung (mô tả thêm)</label>
+                <textarea name="noiDung" class="gs-refund-textarea" rows="4"
+                          placeholder="Mô tả chi tiết vấn đề bạn gặp phải..."></textarea>
+            </div>
+
+            <div class="gs-refund-modal-foot">
+                <button type="button" class="btn gs-btn-muted" data-refund-close>Hủy</button>
+                <button type="submit" class="btn gs-btn-refund">Gửi yêu cầu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var modal = document.getElementById('gsRefundModal');
+        if (!modal) return;
+
+        var gameIdInput = document.getElementById('gsRefundGameId');
+        var gameNameEl = document.getElementById('gsRefundGameName');
+
+        function openModal(id, name) {
+            gameIdInput.value = id;
+            gameNameEl.textContent = name;
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeModal() {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        document.querySelectorAll('[data-refund-open]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                openModal(btn.getAttribute('data-game-id'), btn.getAttribute('data-game-name'));
+            });
+        });
+        document.querySelectorAll('[data-refund-close]').forEach(function (el) {
+            el.addEventListener('click', closeModal);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    })();
+</script>
+
+<style>
+    :root {
+        --gs-text: #f3f7ff;
+        --gs-muted: #94a3b8;
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+        --gs-success: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+
+    .gs-library-page {
+        min-height: 100vh;
+        color: var(--gs-text);
+        background: transparent;
+    }
+
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: #7dd3fc;
+        margin-bottom: 8px;
+    }
+
+    .gs-library-title {
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.02em;
+    }
+
+    .gs-empty-card {
+        padding: 42px 28px;
+        border-radius: 28px;
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.92), rgba(9, 18, 33, 0.92));
+        border: 1px solid rgba(255,255,255,0.08);
+        text-align: center;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+    }
+
+    .gs-empty-icon {
+        font-size: 3rem;
+        margin-bottom: 12px;
+    }
+
+    .gs-library-shell {
+        border-radius: 26px;
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.92), rgba(9, 18, 33, 0.92));
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+        overflow: hidden;
+    }
+
+    .gs-library-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1.8fr) 170px 160px 150px;
+        gap: 20px;
+        padding: 18px 22px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        color: #cbd5e1;
+        font-weight: 700;
+        letter-spacing: .02em;
+    }
+
+    .gs-library-list {
+        padding: 10px 14px 14px;
+    }
+
+    .gs-library-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1.8fr) 170px 160px 150px;
+        gap: 20px;
+        align-items: center;
+        padding: 16px 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+        .gs-library-item:last-child {
+            border-bottom: none;
+        }
+
+    .gs-library-game {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    .gs-library-thumb {
+        width: 100px;
+        height: 100px;
+        border-radius: 18px;
+        overflow: hidden;
+        flex-shrink: 0;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: #0b1220;
+    }
+
+        .gs-library-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+    .gs-library-game-info {
+        min-width: 0;
+    }
+
+    .gs-library-game-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
+    .gs-library-sub {
+        color: var(--gs-muted);
+        font-size: .9rem;
+        margin-top: 4px;
+    }
+
+    .gs-library-date {
+        color: #dbe6f7;
+        font-weight: 600;
+    }
+
+    .gs-library-status {
+        display: flex;
+        align-items: center;
+    }
+
+    .gs-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 14px;
+        border-radius: 999px;
+        font-size: .88rem;
+        font-weight: 700;
+        border: 1px solid transparent;
+    }
+
+    .gs-badge-success {
+        color: #dcfce7;
+        background: rgba(34, 197, 94, 0.18);
+        border-color: rgba(34, 197, 94, 0.25);
+    }
+
+    .gs-badge-muted {
+        color: #e2e8f0;
+        background: rgba(148, 163, 184, 0.16);
+        border-color: rgba(148, 163, 184, 0.18);
+    }
+
+    .gs-library-action {
+        text-align: right;
+    }
+
+    .gs-action-btn-sm,
+    .gs-btn-primary,
+    .gs-btn-success,
+    .gs-btn-muted {
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-weight: 700;
+        text-align: center;
+        border: none;
+    }
+
+    .gs-action-btn-sm {
+        padding: 0 16px;
+    }
+
+    .gs-btn-primary {
+        background: var(--gs-primary);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(37, 99, 235, 0.25);
+    }
+
+        .gs-btn-primary:hover {
+            color: #fff;
+        }
+
+    .gs-btn-success {
+        background: var(--gs-success);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(34, 197, 94, 0.22);
+    }
+
+        .gs-btn-success:hover {
+            color: #fff;
+        }
+
+    .gs-btn-muted {
+        background: rgba(148, 163, 184, 0.18);
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+        .gs-btn-muted:hover {
+            color: #fff;
+        }
+
+    @@media (max-width: 991.98px) {
+        .gs-library-header {
+            grid-template-columns: minmax(0, 1fr) 140px 140px 130px;
+        }
+
+        .gs-library-item {
+            grid-template-columns: minmax(0, 1fr) 140px 140px 130px;
+        }
+
+        .gs-library-thumb {
+            width: 84px;
+            height: 84px;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .gs-library-header {
+            display: none !important;
+        }
+
+        .gs-library-item {
+            grid-template-columns: 1fr;
+            gap: 14px;
+            padding: 18px 6px;
+        }
+
+        .gs-library-date,
+        .gs-library-action {
+            text-align: left;
+        }
+
+            .gs-library-action .btn {
+                width: 100%;
+            }
+    }
+
+    @@media (max-width: 575.98px) {
+        .gs-empty-card {
+            padding: 28px 18px;
+        }
+
+        .gs-library-thumb {
+            width: 74px;
+            height: 74px;
+        }
+
+        .gs-library-game-name {
+            font-size: .98rem;
+        }
+    }
+
+    /* ===== Refund action ===== */
+    .gs-action-stack {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+    }
+
+    .gs-btn-refund {
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 0 16px;
+        border-radius: 999px;
+        font-weight: 700;
+        border: 1px solid rgba(251, 146, 60, 0.35);
+        background: rgba(251, 146, 60, 0.14);
+        color: #fed7aa;
+        cursor: pointer;
+        transition: all .18s ease;
+    }
+
+        .gs-btn-refund:hover {
+            background: linear-gradient(135deg, #fb923c, #f97316);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 12px 24px rgba(249, 115, 22, 0.28);
+        }
+
+    .gs-badge-pending {
+        color: #fde68a;
+        background: rgba(234, 179, 8, 0.16);
+        border-color: rgba(234, 179, 8, 0.25);
+    }
+
+    .gs-badge-danger {
+        color: #fecaca;
+        background: rgba(239, 68, 68, 0.16);
+        border-color: rgba(239, 68, 68, 0.25);
+    }
+
+    .gs-refund-flag {
+        white-space: nowrap;
+    }
+
+    /* ===== Refund history ===== */
+    .gs-refund-title {
+        font-size: clamp(1.2rem, 2.4vw, 1.5rem);
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .gs-refund-list {
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.92), rgba(9, 18, 33, 0.92));
+        border: 1px solid rgba(255,255,255,0.08);
+        overflow: hidden;
+    }
+
+    .gs-refund-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 190px 180px;
+        gap: 18px;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+        .gs-refund-item:last-child {
+            border-bottom: none;
+        }
+
+    .gs-refund-game {
+        font-weight: 700;
+        color: #fff;
+        font-size: 1.02rem;
+    }
+
+    .gs-refund-reason {
+        color: #cbd5e1;
+        margin-top: 3px;
+    }
+
+    .gs-refund-note {
+        color: var(--gs-muted);
+        font-size: .9rem;
+        margin-top: 4px;
+        font-style: italic;
+    }
+
+    .gs-refund-admin {
+        color: #fca5a5;
+        font-size: .88rem;
+        margin-top: 4px;
+    }
+
+    .gs-refund-amount {
+        font-weight: 800;
+        color: #7dd3fc;
+        font-size: 1.05rem;
+    }
+
+    .gs-refund-date {
+        color: var(--gs-muted);
+        font-size: .88rem;
+        margin-top: 2px;
+    }
+
+    .gs-refund-state {
+        text-align: right;
+    }
+
+    @@media (max-width: 767.98px) {
+        .gs-refund-item {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .gs-refund-state,
+        .gs-refund-meta {
+            text-align: left;
+        }
+    }
+
+    /* ===== Refund modal ===== */
+    .gs-refund-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 4000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+        .gs-refund-modal.is-open {
+            display: flex;
+        }
+
+    .gs-refund-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(3, 7, 18, 0.72);
+        backdrop-filter: blur(4px);
+    }
+
+    .gs-refund-dialog {
+        position: relative;
+        width: 100%;
+        max-width: 520px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, #0f1b30, #0a1424);
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+        overflow: hidden;
+        animation: gsRefundIn .22s ease;
+    }
+
+    @@keyframes gsRefundIn {
+        from { transform: translateY(14px) scale(.98); opacity: 0; }
+        to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .gs-refund-modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 22px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        color: #fff;
+    }
+
+    .gs-refund-x {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 1.1rem;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+        .gs-refund-x:hover {
+            color: #fff;
+        }
+
+    .gs-refund-modal-body {
+        padding: 20px 22px;
+    }
+
+    .gs-refund-game-name {
+        color: #e2e8f0;
+        margin-bottom: 8px;
+    }
+
+    .gs-refund-hint {
+        color: var(--gs-muted);
+        font-size: .9rem;
+        background: rgba(251, 146, 60, 0.08);
+        border: 1px solid rgba(251, 146, 60, 0.18);
+        border-radius: 12px;
+        padding: 10px 12px;
+        margin-bottom: 16px;
+    }
+
+    .gs-refund-label {
+        display: block;
+        color: #cbd5e1;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .gs-refund-select,
+    .gs-refund-textarea {
+        width: 100%;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #fff;
+        padding: 10px 12px;
+        outline: none;
+    }
+
+        .gs-refund-select:focus,
+        .gs-refund-textarea:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+        }
+
+        .gs-refund-select option {
+            background: #0f1b30;
+            color: #fff;
+        }
+
+    .gs-refund-textarea {
+        resize: vertical;
+    }
+
+    .gs-refund-modal-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 16px 22px 20px;
+    }
+
+        .gs-refund-modal-foot .btn {
+            min-height: 42px;
+            padding: 0 20px;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+</style>

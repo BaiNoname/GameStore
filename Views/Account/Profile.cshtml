@@ -1,0 +1,374 @@
+﻿@model GameStore.Models.NguoiDung
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Profile";
+}
+
+<div class="gs-profile-page">
+    <div class="container py-4 py-lg-5">
+        <div class="mx-auto gs-profile-wrap">
+
+            <!-- xử lý hiệu ứng cho avatar -->
+            @{
+                string equippedEffectCssClass = ViewBag.EquippedEffectCssClass as string ?? "";
+            }
+
+            <!-- cập nhật hiệu ứng cho profile avatar -->
+            <div class="mb-4">
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <div class="gs-profile-avatar @equippedEffectCssClass">
+                        <span class="gs-profile-avatar-core">
+                            @((Model.TenNguoiDung ?? Model.Email ?? "U").Substring(0, 1).ToUpper())
+                        </span>
+                    </div>
+
+                    <div>
+                        <h3 class="gs-profile-title mb-1">👤 Account Profile</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hiển thị thông báo lỗi nếu có -->
+            @if (TempData["Err"] != null)
+            {
+                <div class="alert alert-danger gs-alert-danger">
+                    @TempData["Err"]
+                </div>
+            }
+
+            <!-- Hiển thị thông báo thành công nếu có -->
+            @if (TempData["Msg"] != null)
+            {
+                <div class="alert alert-success gs-alert-success">
+                    @TempData["Msg"]
+                </div>
+            }
+
+            <!-- INFO CARD -->
+            <div class="gs-profile-card mb-4">
+                <div class="gs-profile-card-body">
+                    <h5 class="gs-section-heading mb-3">📌 Info Account</h5>
+
+                    <div class="gs-info-list">
+                        <div class="gs-info-row">
+                            <div class="gs-info-label">Email</div>
+                            <div class="gs-info-value">@Model.Email</div>
+                        </div>
+
+                        <div class="gs-info-row">
+                            <div class="gs-info-label">Username</div>
+                            <div class="gs-info-value">@Model.TenNguoiDung</div>
+                        </div>
+
+                        <div class="gs-info-row">
+                            <div class="gs-info-label">Balance</div>
+                            <div class="gs-info-value gs-balance">
+                                @Model.SoDu.ToString("N0") VND
+                            </div>
+                        </div>
+
+                        <div class="gs-info-row">
+                            <div class="gs-info-label">Role</div>
+                            <div class="gs-info-value">@Model.Quyen</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UPDATE NAME -->
+            <div class="gs-profile-card mb-4">
+                <div class="gs-profile-card-body">
+                    <h5 class="gs-section-heading mb-3">✏️ Change Username</h5>
+
+                    <form asp-action="UpdateName" method="post">
+                        <div class="mb-3">
+                            <input type="text"
+                                   name="tenNguoiDung"
+                                   value="@Model.TenNguoiDung"
+                                   class="form-control gs-form-input"
+                                   placeholder="Enter new username"
+                                   required />
+                        </div>
+
+                        <button class="btn gs-btn-primary w-100 gs-main-btn">
+                            💾 Save Username
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- CHANGE PASSWORD -->
+            <div class="gs-profile-card mb-4">
+                <div class="gs-profile-card-body">
+                    <h5 class="gs-section-heading mb-3">🔐 Change Password</h5>
+
+                    <form asp-action="ChangePassword" method="post">
+                        <div class="mb-2">
+                            <input type="password"
+                                   name="oldPass"
+                                   class="form-control gs-form-input"
+                                   placeholder="Current password"
+                                   required />
+                        </div>
+
+                        <div class="mb-2">
+                            <input type="password"
+                                   name="newPass"
+                                   class="form-control gs-form-input"
+                                   placeholder="New password"
+                                   required />
+                        </div>
+
+                        <div class="mb-3">
+                            <input type="password"
+                                   name="confirmPass"
+                                   class="form-control gs-form-input"
+                                   placeholder="Confirm new password"
+                                   required />
+                        </div>
+
+                        <button class="btn gs-btn-warning w-100 gs-main-btn">
+                            🔁 Change Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="btn gs-btn-muted px-4 py-2 rounded-pill">
+                ← Back to Store
+            </a>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --gs-text: #f3f7ff;
+        --gs-muted: #94a3b8;
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
+        --gs-warning: linear-gradient(135deg, #f59e0b, #f97316);
+    }
+
+    .gs-profile-page {
+        min-height: 100vh;
+        color: var(--gs-text);
+        background: transparent;
+    }
+
+    .gs-profile-wrap {
+        max-width: 700px;
+    }
+
+    .gs-kicker {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: #7dd3fc;
+        margin-bottom: 8px;
+    }
+
+    .gs-profile-title {
+        font-size: clamp(1.7rem, 3vw, 2.3rem);
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.02em;
+    }
+
+    .gs-alert-danger,
+    .gs-alert-success {
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 14px 16px;
+        box-shadow: 0 10px 24px rgba(0,0,0,0.14);
+    }
+
+    .gs-profile-card {
+        border-radius: 26px;
+        background: linear-gradient(180deg, rgba(14, 25, 43, 0.92), rgba(9, 18, 33, 0.92));
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 45px rgba(0,0,0,0.24);
+        overflow: hidden;
+    }
+
+    .gs-profile-card-body {
+        padding: 24px;
+    }
+
+    .gs-section-heading {
+        color: #fff;
+        font-weight: 800;
+        margin-bottom: 14px;
+    }
+
+    .gs-info-list {
+        display: grid;
+        gap: 14px;
+    }
+
+    .gs-info-row {
+        display: grid;
+        grid-template-columns: 140px 1fr;
+        gap: 16px;
+        align-items: center;
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .gs-info-label {
+        color: var(--gs-muted);
+        font-weight: 600;
+    }
+
+    .gs-info-value {
+        color: #fff;
+        font-weight: 700;
+        word-break: break-word;
+    }
+
+    .gs-balance {
+        color: #fbbf24;
+    }
+
+    .gs-form-input,
+    .gs-form-input:focus {
+        min-height: 48px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #fff;
+        box-shadow: none;
+    }
+
+        .gs-form-input::placeholder {
+            color: #94a3b8;
+            opacity: 1;
+        }
+
+    .gs-main-btn,
+    .gs-btn-primary,
+    .gs-btn-warning,
+    .gs-btn-muted {
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-weight: 700;
+        border: none;
+    }
+
+    .gs-btn-primary {
+        background: var(--gs-primary);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(37, 99, 235, 0.25);
+    }
+
+        .gs-btn-primary:hover {
+            color: #fff;
+        }
+
+    .gs-btn-warning {
+        background: var(--gs-warning);
+        color: #fff;
+        box-shadow: 0 14px 28px rgba(245, 158, 11, 0.22);
+    }
+
+        .gs-btn-warning:hover {
+            color: #fff;
+        }
+
+    .gs-btn-muted {
+        background: rgba(148, 163, 184, 0.18);
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+        .gs-btn-muted:hover {
+            color: #fff;
+        }
+
+    @@media (max-width: 575.98px) {
+        .gs-profile-card-body {
+            padding: 18px;
+        }
+
+        .gs-info-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+    }
+
+    .gs-profile-avatar {
+        width: 76px;
+        height: 76px;
+        min-width: 76px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        transition: all .25s ease;
+    }
+
+    .gs-profile-avatar-core {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(124, 58, 237, 0.14);
+        color: #fff;
+        font-size: 1.5rem;
+        font-weight: 800;
+    }
+
+    <!-- các hiệu ứng cho avatar -->
+    .gs-profile-avatar.effect-neon-purple {
+        box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.22), 0 0 18px rgba(168, 85, 247, 0.72), 0 0 30px rgba(168, 85, 247, 0.42);
+    }
+
+    .gs-profile-avatar.effect-champion-gold {
+        box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.22), 0 0 18px rgba(234, 179, 8, 0.72), 0 0 30px rgba(234, 179, 8, 0.42);
+    }
+
+    .gs-profile-avatar.effect-community-blue {
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22), 0 0 18px rgba(59, 130, 246, 0.72), 0 0 30px rgba(59, 130, 246, 0.42);
+    }
+
+    .gs-profile-avatar.effect-crimson-blaze {
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.24), 0 0 16px rgba(239, 68, 68, 0.78), 0 0 28px rgba(185, 28, 28, 0.42);
+    }
+
+    .gs-profile-avatar.effect-emerald-pulse {
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22), 0 0 16px rgba(16, 185, 129, 0.76), 0 0 28px rgba(5, 150, 105, 0.35);
+    }
+
+    .gs-profile-avatar.effect-frost-crown {
+        box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.24), 0 0 16px rgba(125, 211, 252, 0.78), 0 0 28px rgba(186, 230, 253, 0.45);
+    }
+
+    .gs-profile-avatar.effect-shadow-rift {
+        box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.24), 0 0 18px rgba(17, 24, 39, 0.82), 0 0 32px rgba(88, 28, 135, 0.38);
+    }
+
+    .gs-profile-avatar.effect-sunset-nova {
+        box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.25), 0 0 16px rgba(249, 115, 22, 0.76), 0 0 28px rgba(244, 114, 182, 0.34);
+    }
+
+    .gs-profile-avatar.effect-cyber-lime {
+        box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.26), 0 0 16px rgba(132, 204, 22, 0.78), 0 0 28px rgba(190, 242, 100, 0.36);
+    }
+
+    .gs-profile-avatar.effect-rose-halo {
+        box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.24), 0 0 16px rgba(236, 72, 153, 0.72), 0 0 28px rgba(192, 132, 252, 0.32);
+    }
+</style>

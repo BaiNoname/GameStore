@@ -1,0 +1,115 @@
+﻿@model GameStore.Models.Game
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Add Game";
+}
+
+<div class="container mt-5">
+
+    <div class="card shadow-lg border-0">
+
+        <div class="card-header bg-light">
+            <h4 class="mb-0">🎮 Add Game</h4>
+        </div>
+
+        <!-- Thông báo thành công hoặc lỗi nếu có -->
+        <div class="p-2 text-success">
+            @TempData["Msg"]
+        </div>
+
+        <!-- Form thêm game mới -->
+        <div class="card-body">
+
+            <form method="post"
+                  enctype="multipart/form-data"
+                  asp-controller="game"
+                  asp-action="add">
+
+                <!-- Giữ nguyên các tham số tìm kiếm và phân trang để quay lại đúng vị trí sau khi thêm -->
+                <input type="hidden" name="keyword" value="@ViewBag.Keyword" />
+                <input type="hidden" name="categoryId" value="@ViewBag.CategoryId" />
+                <input type="hidden" name="page" value="@ViewBag.CurrentPage" />
+
+                <div class="mb-3">
+                    <label class="form-label">Game ID</label>
+                    <input class="form-control"
+                           asp-for="MaGame" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Game Name</label>
+                    <input class="form-control"
+                           asp-for="TenGame" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control"
+                              asp-for="MoTa"
+                              rows="3"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Category</label>
+
+                    <select class="form-select"
+                            asp-for="MaTheLoai"
+                            asp-items="ViewBag.Categories">
+
+                        <option value="">-- Select Category --</option>
+
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Price</label>
+                    <input type="number"
+                           step="0.01"
+                           class="form-control"
+                           asp-for="Gia" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Release Date</label>
+                    <input type="hidden"
+                           class="form-control"
+                           asp-for="NgayRaMat" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Game Image</label>
+
+                    <input type="file"
+                           class="form-control"
+                           name="photo"
+                           accept="image/*" />
+                </div>
+
+                <!-- Mặc định số lượt tải là 0 khi thêm game mới -->
+                <input type="hidden" asp-for="SoLuotTai" value="0" />
+
+                <div class="d-flex justify-content-end gap-2">
+
+                    <a asp-controller="Game"
+                       asp-action="Index"
+                       asp-route-keyword="@ViewBag.Keyword"
+                       asp-route-categoryId="@ViewBag.CategoryId"
+                       asp-route-page="@ViewBag.CurrentPage"
+                       class="btn btn-secondary">
+                        Back
+                    </a>
+
+                    <button class="btn btn-success">
+                        ➕ Add Game
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>

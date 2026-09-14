@@ -1,0 +1,280 @@
+﻿@model GameStore.Models.Event
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Add Event";
+
+    // Lấy thời gian hiện tại của máy client để:
+    // - Giới hạn không cho chọn thời gian trong quá khứ
+    // - Dùng cho thuộc tính min của input datetime-local
+    var minLocal = DateTime.UtcNow.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss");
+
+    // Convert thời gian UTC từ database sang giờ local để hiển thị đúng trên form
+    var startLocal = Model.StartAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss");
+    var endLocal = Model.EndAt.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss");
+}
+
+<div class="container mt-5">
+    <div class="card bg-light shadow-lg border-0">
+        <div class="card-header border-bottom border-secondary">
+            <h4 class="mb-0">🎮 Add Event</h4>
+        </div>
+
+        @if (TempData["Msg"] != null)
+        {
+            // Hiển thị thông báo sau khi submit form:
+            // Ví dụ: Add success, Update failed...
+            var msgType = TempData["MsgType"]?.ToString() ?? "info";
+            <div class="alert alert-@msgType mt-2 mx-3 fw-bold">@TempData["Msg"]</div>
+        }
+
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" asp-controller="Event" asp-action="Add">
+                <!--
+                    Giữ lại trạng thái filter/search hiện tại.
+                    Sau khi Add/Edit xong sẽ quay về đúng page và đúng filter trước đó.
+                -->
+                <input type="hidden" name="filterKeyword" value="@ViewBag.Keyword" />
+                <input type="hidden" name="filterEventType" value="@ViewBag.EventType" />
+                <input type="hidden" name="filterStatus" value="@ViewBag.Status" />
+                <input type="hidden" name="currentPage" value="@ViewBag.CurrentPage" />
+
+                <div class="mb-3">
+                    <label class="form-label">Title</label>
+                    <input class="form-control" asp-for="Title" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Slug</label>
+                    <input class="form-control" asp-for="Slug" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Summary</label>
+                    <textarea class="form-control" asp-for="Summary" rows="3"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-control" asp-for="Content" rows="8"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Banner</label>
+                    <!--
+                        Upload ảnh banner cho event.
+                        accept="image/*" chỉ cho phép chọn file ảnh.
+                    -->
+                    <input type="file" class="form-control" name="photo" accept="image/*" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Related Game</label>
+                    <!--
+                        Chọn game liên quan tới event.
+                        Dữ liệu được load từ ViewBag.Games phía controller.
+                    -->
+                    <select class="form-select" asp-for="RelatedGameId" asp-items="ViewBag.Games">
+                        <option value="">-- Select Game --</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Event Type</label>
+                        <select class="form-select" asp-for="EventType">
+                            <option value="Tournament">Tournament</option>
+                            <option value="Community">Community</option>
+                            <option value="Special Events">Special Events</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Access Type</label>
+                        <select class="form-select" asp-for="AccessType">
+                            <option value="Paid">Paid</option>
+                            <option value="Free">Free</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Price</label>
+                        <input class="form-control" asp-for="Price" type="number" step="0.01" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Max Participants</label>
+                        <input class="form-control" asp-for="MaxParticipants" type="number" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Prize Info</label>
+                        <input class="form-control" asp-for="PrizeInfo" placeholder="Ex: Check in to receive your reward." />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Prize Type</label>
+                        <!-- Chọn loại phần thưởng -->
+                        <select class="form-select" id="PrizeType" name="PrizeType">
+                            @if (string.IsNullOrWhiteSpace(Model.PrizeType))
+                            {
+                                <option value="" selected>-- No Reward --</option>
+                            }
+                            else
+                            {
+                                <option value="">-- No Reward --</option>
+                            }
+
+                            @if (Model.PrizeType == "Balance")
+                            {
+                                <option value="Balance" selected>Balance</option>
+                            }
+                            else
+                            {
+                                <option value="Balance">Balance</option>
+                            }
+
+                            @if (Model.PrizeType == "Effect")
+                            {
+                                <option value="Effect" selected>Effect</option>
+                            }
+                            else
+                            {
+                                <option value="Effect">Effect</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3" id="prizeBalanceWrap">
+                        <label class="form-label">Prize Value (Balance)</label>
+                        <input class="form-control"
+                               id="PrizeValueBalance"
+                               type="number"
+                               step="0.01"
+                               min="0"
+                               value="@(Model.PrizeType == "Balance" ? Model.PrizeValue : "")"
+                               placeholder="Ex: 50000" />
+                    </div>
+
+                    <div class="col-md-4 mb-3" id="prizeEffectWrap">
+                        <label class="form-label">Prize Value (Effect)</label>
+                        <select class="form-select" id="PrizeValueEffect">
+                            <option value="">-- Select Effect --</option>
+                            @foreach (var item in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Effects)
+                            {
+                                if (item.Selected)
+                                {
+                                    <option value="@item.Value" selected>@item.Text</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Prize Condition</label>
+                        <input class="form-control" name="PrizeCondition" value="CheckIn" readonly />
+                    </div>
+                </div>
+
+                <input type="hidden" id="PrizeValue" name="PrizeValue" value="@Model.PrizeValue" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start At</label>
+                        <input type="datetime-local"
+                               class="form-control"
+                               id="StartAt"
+                               name="StartAt"
+                               step="1"
+                               value="@startLocal"
+                               min="@minLocal" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">End At</label>
+                        <input type="datetime-local"
+                               class="form-control"
+                               id="EndAt"
+                               name="EndAt"
+                               step="1"
+                               value="@endLocal"
+                               min="@minLocal" />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/admin/event/index" class="btn btn-secondary">Back</a>
+                    <button class="btn btn-success" type="submit">➕ Add Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Lấy các element cần xử lý động
+        const prizeType = document.getElementById("PrizeType");
+        const prizeBalanceWrap = document.getElementById("prizeBalanceWrap");
+        const prizeEffectWrap = document.getElementById("prizeEffectWrap");
+
+         // Input hidden dùng để submit dữ liệu cuối cùng
+        const prizeValueHidden = document.getElementById("PrizeValue");
+
+        // Input reward dạng tiền
+        const prizeValueBalance = document.getElementById("PrizeValueBalance");
+
+        // Dropdown reward dạng effect
+        const prizeValueEffect = document.getElementById("PrizeValueEffect");
+
+        // Hàm đồng bộ giao diện và dữ liệu reward
+        function syncPrizeUi() {
+
+            // Lấy loại reward hiện tại user đang chọn
+            const type = prizeType.value;
+
+            // Nếu reward là tiền
+            if (type === "Balance") {
+                prizeBalanceWrap.style.display = "block";
+                prizeEffectWrap.style.display = "none";
+                prizeValueHidden.value = prizeValueBalance.value || "";
+            }
+
+            // Nếu reward là effect/item
+            else if (type === "Effect") {
+                prizeBalanceWrap.style.display = "none";
+                prizeEffectWrap.style.display = "block";
+                prizeValueHidden.value = prizeValueEffect.value || "";
+            }
+
+            // Nếu không có reward
+            else {
+                prizeBalanceWrap.style.display = "none";
+                prizeEffectWrap.style.display = "none";
+                prizeValueHidden.value = "";
+            }
+        }
+
+        // Khi đổi loại reward -> cập nhật UI
+        prizeType.addEventListener("change", syncPrizeUi);
+
+        // Khi nhập tiền -> cập nhật hidden value
+        prizeValueBalance.addEventListener("input", syncPrizeUi);
+
+        // Khi đổi effect -> cập nhật hidden value
+        prizeValueEffect.addEventListener("change", syncPrizeUi);
+
+        // Chạy lần đầu khi load page để hiển thị đúng dữ liệu cũ
+        syncPrizeUi();
+    });
+</script>

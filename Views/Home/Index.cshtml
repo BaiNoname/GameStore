@@ -1,0 +1,733 @@
+﻿@model List<GameStore.Models.Game>
+@{
+    ViewData["Title"] = "Home";
+}
+@{
+    // List mã game user đã mua
+    var owned = ViewBag.OwnedGames as List<string> ?? new List<string>();
+    // List mã game đang nằm trong giỏ hàng
+    var cart = ViewBag.CartGames as List<string> ?? new List<string>();
+    // Danh sách game nổi bật/top seller
+    var hotGames = ViewBag.HotTop as List<GameStore.Models.Game> ?? new List<GameStore.Models.Game>();
+    // Danh sách game mới phát hành
+    var newGames = ViewBag.NewGames as List<GameStore.Models.Game> ?? new List<GameStore.Models.Game>();
+    // Search riêng khu vực Home
+    var searchValue = ViewBag.SearchValue?.ToString() ?? "";
+    // Search global từ layout/navbar
+    var globalSearchValue = ViewBag.GlobalSearchValue?.ToString() ?? "";
+    // Keyword filter hiện tại
+    var activeKeyword = ViewBag.ActiveKeyword?.ToString() ?? "";
+    // Category hiện tại trên query string
+    var categoryValue = Context.Request.Query["category"].ToString();
+    // URL TRANG HIỆN TẠI
+    var currentPageUrl = Context.Request.Path + Context.Request.QueryString;
+    // URL QUAY LẠI ALL GAMES
+    var allGamesReturnUrl = Url.Action("Index", "Home", new
+    {
+        search = searchValue,
+        globalSearch = globalSearchValue,
+        category = categoryValue,
+        page = ViewBag.CurrentPage
+    }) + "#all-games-section";
+    // Khi search/filter:
+    // -> có thể ẩn Hot Games / New Games
+    var hideTopSections = ViewBag.HideTopSections != null && (bool)ViewBag.HideTopSections;
+    // Nếu có keyword hoặc category
+    // -> hiển thị text Found games
+    var hasFilterResult = !string.IsNullOrWhiteSpace(activeKeyword)
+                       || !string.IsNullOrWhiteSpace(categoryValue);
+}
+<main class="gs-page">
+    <div class="container-xxl py-4 py-lg-5">
+        @if (!hideTopSections)
+        {
+            <!-- ================= SVG FILTER: lam meo vien thanh LUA / NUOC ================= -->
+            <svg width="0" height="0" aria-hidden="true" style="position:absolute; pointer-events:none;">
+                <filter id="gsFireDistort" x="-20%" y="-20%" width="140%" height="140%">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.018 0.07" numOctaves="2" seed="3" result="n">
+                        <animate attributeName="baseFrequency" dur="5s"
+                                 values="0.018 0.06; 0.03 0.11; 0.018 0.06" repeatCount="indefinite" />
+                    </feTurbulence>
+                    <feDisplacementMap in="SourceGraphic" in2="n" scale="16" xChannelSelector="R" yChannelSelector="G" />
+                </filter>
+                <filter id="gsWaterDistort" x="-20%" y="-20%" width="140%" height="140%">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.012 0.03" numOctaves="2" seed="7" result="n">
+                        <animate attributeName="baseFrequency" dur="9s"
+                                 values="0.012 0.025; 0.018 0.04; 0.012 0.025" repeatCount="indefinite" />
+                    </feTurbulence>
+                    <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G" />
+                </filter>
+            </svg>
+            <!-- ================= HOT GAMES HEADER ================= -->
+            <div class="gs-sec">
+                <span class="gs-sec-bar"></span>
+                <div class="gs-sec-titles">
+                    <div class="gs-kicker">Featured &amp; Recommended</div>
+                    <h2 class="gs-sec-title">🔥 Hot Games</h2>
+                </div>
+                <span class="gs-sec-line"></span>
+            </div>
+            <!-- ================= HERO CAROUSEL ================= -->
+            <div id="heroCarousel" class="carousel slide mb-5 gs-hero-wrap" data-bs-ride="carousel">
+                <div class="carousel-inner rounded-4 overflow-hidden shadow-lg">
+                    @for (int i = 0; i < hotGames.Count; i++)
+                    {
+                        // Render từng game trong hero carousel
+                        var g = hotGames[i];
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <div class="hero-slide">
+                                <a asp-controller="Game" asp-action="Detail" asp-route-id="@g.MaGame" class="hero-imglink">
+                                    <img src="~/images/@g.Hinh" class="w-100 hero-img" alt="@g.TenGame" />
+                                </a>
+                                <div class="hero-backdrop"></div>
+                                <div class="hero-overlay">
+                                    <div class="hero-overlay__inner">
+                                        <span class="hero-tag">⭐ Top Seller</span>
+                                        <h2>@g.TenGame</h2>
+                                        <p class="hero-category">@g.MaTheLoai</p>
+                                        <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
+                                            <span class="hero-price">
+                                                @String.Format("{0:N0} VNĐ", g.Gia)
+                                            </span>
+                                            <span class="hero-purchases">
+                                                👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> purchases
+                                            </span>
+                                        </div>
+                                        <div class="d-flex gap-2 flex-wrap mt-4">
+                                            <!-- Detail -->
+                                            <a asp-controller="Game"
+                                               asp-action="Detail"
+                                               asp-route-id="@g.MaGame"
+                                               asp-route-returnUrl="@currentPageUrl"
+                                               class="btn gs-btn-primary rounded-pill px-4">
+                                                View Details
+                                            </a>
+                                            @if (owned.Contains(g.MaGame))
+                                            {
+                                                <!-- User đã sở hữu game -->
+                                                <button class="btn gs-btn-muted rounded-pill px-4"
+                                                        onclick="showToast('You already own this game! 🎮', 'error')">
+                                                    Owned
+                                                </button>
+                                            }
+                                            else if (cart.Contains(g.MaGame))
+                                            {
+                                                <!-- Game đã nằm trong cart -->
+                                                <a asp-controller="Cart"
+                                                   asp-action="Index"
+                                                   asp-route-returnUrl="@currentPageUrl"
+                                                   class="btn gs-btn-warning rounded-pill px-4">
+                                                    In Cart
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <!-- Game chưa sở hữu và chưa nằm trong cart -->
+                                                <a asp-controller="Cart"
+                                                   asp-action="Add"
+                                                   asp-route-gameId="@g.MaGame"
+                                                   asp-route-returnUrl="@currentPageUrl"
+                                                   asp-route-mode="add"
+                                                   class="btn gs-btn-glass rounded-pill px-4">
+                                                    Add to cart
+                                                </a>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+            </div>
+        }
+        @if (!hideTopSections)
+        {
+            <!-- ================= NEW GAMES ================= -->
+            <div class="gs-sec">
+                <span class="gs-sec-bar cyan"></span>
+                <div class="gs-sec-titles">
+                    <div class="gs-kicker">Just Arrived</div>
+                    <h2 class="gs-sec-title">🆕 New Games</h2>
+                </div>
+                <span class="gs-sec-line"></span>
+            </div>
+            <div class="gs-shelf mb-5">
+                <div class="hot-scroll">
+                    @foreach (var g in newGames)
+                    {
+                        <a class="hot-item"
+                           asp-controller="Game"
+                           asp-action="Detail"
+                           asp-route-id="@g.MaGame"
+                           asp-route-returnUrl="@currentPageUrl">
+                            <div class="hot-thumb-wrap">
+                                <img src="~/images/@g.Hinh" alt="@g.TenGame" />
+                                <span class="hot-badge">NEW</span>
+                            </div>
+                            <div class="hot-info">
+                                <div class="hot-name">@g.TenGame</div>
+                                <small class="hot-price">@String.Format("{0:N0}", g.Gia) VNĐ</small>
+                                <div class="small mt-1 gs-purchase-line">
+                                    👁 <span id="download-@g.MaGame">@g.SoLuotTai</span> purchases
+                                </div>
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- ================= ALL GAMES (STEAM-STYLE CATALOG) ================= -->
+        <div class="gs-sec">
+            <span class="gs-sec-bar"></span>
+            <div class="gs-sec-titles">
+                <div class="gs-kicker">Browse the Store</div>
+                <h2 class="gs-sec-title">@(ViewBag.CategoryName ?? "All Games")</h2>
+            </div>
+            <span class="gs-sec-line"></span>
+        </div>
+
+        <div id="all-games-section" class="gs-catalog">
+            <!-- CATEGORY FILTER BAR (tất cả thể loại) -->
+            <div class="gs-catbar">
+                <a href="@Url.Action("Index", "Home", new { category = "" })#all-games-section"
+                   class="gs-cat-pill @(string.IsNullOrEmpty(categoryValue) ? "active" : "")">
+                    All
+                </a>
+                @if (ViewBag.Categories != null)
+                {
+                    foreach (var c in ViewBag.Categories)
+                    {
+                        <a href="@Url.Action("Index", "Home", new { category = c.MaTheLoai })#all-games-section"
+                           class="gs-cat-pill @(categoryValue == c.MaTheLoai ? "active" : "")">
+                            @c.TenLoaiGame
+                        </a>
+                    }
+                }
+            </div>
+
+            @if (hasFilterResult)
+            {
+                <div class="gs-catalog-meta">
+                    Found <strong class="text-info">@Model.Count</strong> matching games
+                </div>
+            }
+
+            <!-- GAME GRID -->
+            <div class="row g-4 gs-grid">
+                @if (Model == null || Model.Count == 0)
+                {
+                    <div class="col-12">
+                        <div class="gs-empty">
+                            <div class="gs-empty-icon">🎮</div>
+                            <h4 class="mb-1">No games found</h4>
+                            <p class="text-secondary mb-0">Try another category.</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var game in Model)
+                    {
+                        <div class="col-12 col-sm-6 col-lg-4 col-xxl-3">
+                            <article id="game-@game.MaGame" class="gs-card h-100">
+                                <a class="gs-media"
+                                   asp-controller="Game"
+                                   asp-action="Detail"
+                                   asp-route-id="@game.MaGame"
+                                   asp-route-returnUrl="@allGamesReturnUrl"
+                                   aria-label="View details of @game.TenGame">
+                                    <img src="~/images/@game.Hinh"
+                                         alt="@game.TenGame"
+                                         class="gs-img">
+                                    <div class="gs-media-overlay"></div>
+                                    <span class="gs-card-badge">@game.MaTheLoai</span>
+                                </a>
+                                <div class="gs-card-body">
+                                    <h6 class="game-title">@game.TenGame</h6>
+                                    <div class="small gs-purchase-line">
+                                        👁 <span id="download-@game.MaGame">@game.SoLuotTai</span> purchases
+                                    </div>
+                                    <div class="gs-price-row">
+                                        <span class="gs-price">
+                                            @String.Format("{0:N0} VNĐ", game.Gia)
+                                        </span>
+                                    </div>
+                                    <div class="gs-action-wrap mt-auto">
+                                        @if (owned.Contains(game.MaGame))
+                                        {
+                                            <button type="button"
+                                                    class="btn gs-btn-muted gs-action-btn"
+                                                    onclick="showToast('You already own this game! 🎮', 'error')">
+                                                Owned
+                                            </button>
+                                        }
+                                        else if (cart.Contains(game.MaGame))
+                                        {
+                                            <a asp-controller="Cart"
+                                               asp-action="Index"
+                                               asp-route-returnUrl="@allGamesReturnUrl"
+                                               class="btn gs-btn-warning gs-action-btn">
+                                                In Cart
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-controller="Cart"
+                                               asp-action="Add"
+                                               asp-route-gameId="@game.MaGame"
+                                               asp-route-returnUrl="@allGamesReturnUrl"
+                                               asp-route-mode="add"
+                                               class="btn gs-btn-primary gs-action-btn">
+                                                Add to cart
+                                            </a>
+                                        }
+                                        <a asp-controller="Game"
+                                           asp-action="Detail"
+                                           asp-route-id="@game.MaGame"
+                                           asp-route-returnUrl="@allGamesReturnUrl"
+                                           class="btn gs-btn-outline gs-action-btn">
+                                            Detail
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- ================= PAGINATION ================= -->
+            @if (ViewBag.TotalPages != null && (int)ViewBag.TotalPages > 1)
+            {
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center gs-pagination">
+                        <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               href="@Url.Action("Index", "Home", new {
+                                    page = ViewBag.CurrentPage - 1,
+                                    search = searchValue,
+                                    globalSearch = globalSearchValue,
+                                    category = Context.Request.Query["category"].ToString()
+                               })#all-games-section">
+                                Previous
+                            </a>
+                        </li>
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                <a class="page-link"
+                                   href="@Url.Action("Index", "Home", new {
+                                        page = i,
+                                        search = searchValue,
+                                        globalSearch = globalSearchValue,
+                                        category = Context.Request.Query["category"].ToString()
+                                   })#all-games-section">
+                                    @i
+                                </a>
+                            </li>
+                        }
+                        <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               href="@Url.Action("Index", "Home", new {
+                                    page = ViewBag.CurrentPage + 1,
+                                    search = searchValue,
+                                    globalSearch = globalSearchValue,
+                                    category = Context.Request.Query["category"].ToString()
+                               })#all-games-section">
+                                Next
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</main>
+<style>
+    :root {
+        --gs-bg: #07111f;
+        --gs-line: rgba(255,255,255,0.08);
+        --gs-text: #f3f7ff;
+        --gs-muted: #94a3b8;
+        --gs-primary: linear-gradient(135deg, #a855f7, #6366f1 55%, #22d3ee);
+        --gs-neon: #22d3ee;
+        --gs-price: #fbbf24;
+    }
+
+    .gs-page { min-height: 100vh; color: var(--gs-text); background: transparent; }
+
+    /* ===== SECTION HEADER kiểu Steam (thanh nhấn + đường kẻ) ===== */
+    .gs-sec {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 6px 0 18px;
+    }
+    .gs-sec-bar {
+        width: 5px;
+        min-height: 42px;
+        border-radius: 6px;
+        background: linear-gradient(180deg, #a855f7, #6366f1);
+        flex-shrink: 0;
+    }
+    .gs-sec-bar.cyan { background: linear-gradient(180deg, #22d3ee, #6366f1); }
+    .gs-sec-titles { flex-shrink: 0; }
+    .gs-kicker {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.8px;
+        color: #67e8f9;
+        margin-bottom: 2px;
+    }
+    .gs-sec-title {
+        color: #fff;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        font-family: 'Orbitron', 'Inter', sans-serif;
+        font-size: clamp(1.4rem, 1rem + 1.2vw, 1.9rem);
+        margin: 0;
+    }
+    .gs-sec-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(168,85,247,.4), rgba(255,255,255,0.02));
+    }
+
+    /* ===== HERO — VIEN LUA BUNG BUNG & NUOC DAP LUAN PHIEN ===== */
+    .gs-hero-wrap {
+        position: relative;
+        padding: 7px;               /* vien day cho de thay */
+        border-radius: 22px;
+        isolation: isolate;
+        max-width: 1100px;          /* thu hep, khong chiem het chieu ngang */
+        margin-left: auto;          /* can giua, chua khoang 2 ben */
+        margin-right: auto;
+    }
+    /* 2 lop vien phu len nhau: ::before = LUA, ::after = NUOC */
+    .gs-hero-wrap::before,
+    .gs-hero-wrap::after {
+        content: "";
+        position: absolute;
+        inset: -2px;                /* tran ra chut de vet meo khong lo mep */
+        z-index: 0;
+        border-radius: inherit;
+        pointer-events: none;
+    }
+    /* --- LUA bung bung (chay truoc) --- */
+    .gs-hero-wrap::before {
+        background: radial-gradient(120% 90% at 50% 120%,
+            #ffe259 0%, #ffb000 18%, #ff5e00 42%, #d20000 66%, #6a0000 100%);
+        background-size: 160% 220%;
+        filter: url(#gsFireDistort);      /* lam meo thanh ngon lua */
+        animation:
+            gsFireRise 1.3s linear infinite,
+            gsFireFlicker 0.16s steps(2, end) infinite,
+            gsPhaseFire 12s ease-in-out infinite;
+    }
+    /* --- NUOC dap lua (chay sau, luan phien) --- */
+    .gs-hero-wrap::after {
+        background: radial-gradient(120% 90% at 50% -20%,
+            #d7f6ff 0%, #66d2ff 22%, #16a6ef 48%, #0069c8 74%, #00366f 100%);
+        background-size: 160% 220%;
+        filter: url(#gsWaterDistort);     /* gon song nuoc */
+        animation:
+            gsWaterWave 4s ease-in-out infinite,
+            gsWaterGlow 1.4s ease-in-out infinite alternate,
+            gsPhaseWater 12s ease-in-out infinite;
+        opacity: 0;
+    }
+    .gs-hero-wrap .carousel-inner {
+        position: relative;
+        z-index: 1;
+        border: none;
+        border-radius: 16px !important;
+        background: rgba(6, 10, 20, 0.96);
+    }
+
+    /* Lua boc len */
+    @@keyframes gsFireRise {
+        0%   { background-position: 50% 100%; }
+        100% { background-position: 50% 0%; }
+    }
+    /* Quang lua bung bung */
+    @@keyframes gsFireFlicker {
+        0%   { box-shadow: 0 0 18px 3px rgba(255,90,0,0.60),  0 0 40px 8px rgba(255,45,0,0.35); }
+        100% { box-shadow: 0 0 34px 7px rgba(255,150,0,0.90), 0 0 66px 18px rgba(255,60,0,0.50); }
+    }
+    /* Nuoc gon song nhe */
+    @@keyframes gsWaterWave {
+        0%   { background-position: 50% 0%; }
+        50%  { background-position: 50% 45%; }
+        100% { background-position: 50% 0%; }
+    }
+    /* Quang nuoc xanh diu */
+    @@keyframes gsWaterGlow {
+        0%   { box-shadow: 0 0 16px 3px rgba(22,166,239,0.50),  0 0 40px 8px rgba(102,210,255,0.28); }
+        100% { box-shadow: 0 0 30px 6px rgba(102,210,255,0.75), 0 0 60px 16px rgba(22,166,239,0.40); }
+    }
+    /* Luan phien: LUA chay truoc -> NUOC trao len dap (co overlap de thay nuoc phu len lua) */
+    @@keyframes gsPhaseFire {
+        0%   { opacity: 1; }
+        40%  { opacity: 1; }
+        52%  { opacity: 0; }
+        90%  { opacity: 0; }
+        100% { opacity: 1; }
+    }
+    @@keyframes gsPhaseWater {
+        0%   { opacity: 0; }
+        40%  { opacity: 0; }
+        52%  { opacity: 1; }
+        90%  { opacity: 1; }
+        100% { opacity: 0; }
+    }
+
+    .hero-slide {
+        position: relative;
+        min-height: clamp(280px, 26vw, 380px);   /* thap hon, ti le banner kieu Steam */
+        display: flex;
+        align-items: center;                      /* can noi dung ra giua theo chieu doc */
+    }
+    .hero-imglink { position: absolute; inset: 0; display: block; }
+    .hero-img {
+        position: absolute; inset: 0; height: 100%; width: 100%;
+        object-fit: cover; filter: brightness(0.92) saturate(1.06);
+        transform: scale(1.02); transition: transform .6s ease;
+    }
+    .carousel-item.active .hero-img { transform: scale(1.06); }
+    .hero-backdrop {
+        position: absolute; inset: 0; pointer-events: none;
+        background:
+            linear-gradient(90deg, rgba(3,7,18,0.92) 0%, rgba(3,7,18,0.55) 45%, rgba(3,7,18,0.10) 100%),
+            linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(7,12,24,0.85) 100%);
+    }
+    .hero-overlay { position: relative; z-index: 2; width: 100%; padding: clamp(24px, 4vw, 56px); }
+    .hero-overlay__inner { max-width: 640px; font-family: 'Orbitron','Inter',sans-serif; }
+    .hero-tag {
+        display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px;
+        background: rgba(168,85,247,0.18); border: 1px solid rgba(168,85,247,0.45);
+        color: #fff; font-size: 13px; font-weight: 600; backdrop-filter: blur(10px); margin-bottom: 16px;
+    }
+    .hero-overlay h2 { font-size: clamp(1.8rem, 4vw, 3.2rem); font-weight: 800; line-height: 1.08; margin-bottom: 10px; color: #fff; }
+    .hero-category { color: #cbd5e1; margin: 0; text-transform: capitalize; }
+    .hero-price { font-weight: 800; font-size: 1.25rem; color: var(--gs-price); }
+    .hero-purchases { color: #cbd5e1; font-size: .95rem; }
+
+    /* ===== NEW GAMES SHELF ===== */
+    .gs-shelf {
+        background: linear-gradient(180deg, rgba(20,30,52,0.55), rgba(12,20,36,0.55));
+        border: 1px solid var(--gs-line);
+        border-radius: 20px;
+        padding: 18px 18px 10px;
+    }
+    .hot-scroll {
+        display: grid; grid-auto-flow: column; grid-auto-columns: minmax(210px, 210px);
+        gap: 16px; overflow-x: auto; padding: 10px 4px 14px; scroll-snap-type: x proximity;
+    }
+    .hot-scroll::-webkit-scrollbar { height: 8px; }
+    .hot-scroll::-webkit-scrollbar-thumb { background: linear-gradient(90deg,#a855f7,#22d3ee); border-radius: 999px; }
+    .hot-item {
+        background: linear-gradient(180deg, rgba(28,40,66,0.96), rgba(18,28,48,0.96));
+        border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; overflow: hidden;
+        transition: .28s ease; cursor: pointer; color: #fff; box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+        scroll-snap-align: start; display: flex; flex-direction: column;
+        animation: gsCardGlow 3.6s ease-in-out infinite;   /* hieu ung sang tat */
+    }
+    .hot-scroll > .hot-item:nth-child(2n) { animation-delay: 1.2s; }
+    .hot-scroll > .hot-item:nth-child(3n) { animation-delay: 2.2s; }
+    .hot-item:hover { transform: translateY(-6px); color: #fff; box-shadow: 0 20px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(34,211,238,0.3); border-color: rgba(34,211,238,0.3); animation: none; }
+    .hot-thumb-wrap { position: relative; }
+    .hot-thumb-wrap img { width: 100%; height: 130px; object-fit: cover; transition: transform .4s ease; }
+    .hot-item:hover .hot-thumb-wrap img { transform: scale(1.06); }
+    .hot-badge { position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg,#a855f7,#22d3ee); color: #fff; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .hot-info { padding: 14px; display: flex; flex-direction: column; gap: 2px; }
+    .hot-name { font-size: .95rem; font-weight: 700; line-height: 1.4; min-height: 2.8em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .hot-price { color: var(--gs-price); font-weight: 700; font-size: .95rem; }
+
+    /* ===== CATALOG (khung All Games) ===== */
+    .gs-catalog {
+        background: linear-gradient(180deg, rgba(22,32,54,0.6), rgba(12,20,36,0.6));
+        border: 1px solid var(--gs-line);
+        border-radius: 22px;
+        padding: 20px 20px 24px;
+        scroll-margin-top: 90px;
+    }
+    /* Hàng pill thể loại */
+    .gs-catbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding-bottom: 16px;
+        margin-bottom: 18px;
+        border-bottom: 1px solid var(--gs-line);
+    }
+    .gs-cat-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 9px 18px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: .92rem;
+        color: #cbd6e8;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.09);
+        text-decoration: none;
+        transition: all .2s ease;
+        white-space: nowrap;
+    }
+    .gs-cat-pill:hover {
+        color: #fff;
+        border-color: rgba(34,211,238,0.45);
+        background: rgba(34,211,238,0.10);
+        transform: translateY(-1px);
+    }
+    .gs-cat-pill.active {
+        color: #fff;
+        background: var(--gs-primary);
+        border-color: transparent;
+        box-shadow: 0 8px 20px rgba(124,58,237,.4);
+    }
+    .gs-catalog-meta { color: var(--gs-muted); margin-bottom: 14px; }
+
+    /* ===== GAME CARD ===== */
+    .gs-card {
+        position: relative;
+        background: linear-gradient(180deg, rgba(30,42,70,0.98), rgba(18,28,48,0.98));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+        box-shadow: 0 14px 30px rgba(0,0,0,0.28);
+        display: flex; flex-direction: column; overflow: hidden;
+        animation: gsCardGlow 3.2s ease-in-out infinite;   /* hieu ung sang tat */
+    }
+    .gs-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 24px 50px rgba(0,0,0,0.45), 0 0 0 1px rgba(168,85,247,0.35), 0 0 30px rgba(34,211,238,0.2);
+        border-color: rgba(34,211,238,0.35);
+        animation: none;   /* dung nhap nhay khi hover */
+    }
+    /* So le nhip sang giua cac card cho khoi dong bo */
+    .gs-grid > div:nth-child(3n+2) .gs-card { animation-delay: .9s; }
+    .gs-grid > div:nth-child(3n)   .gs-card { animation-delay: 1.8s; }
+
+    @@keyframes gsCardGlow {
+        0%, 100% {
+            box-shadow: 0 14px 30px rgba(0,0,0,0.28);
+            border-color: rgba(255,255,255,0.08);
+        }
+        50% {
+            box-shadow: 0 14px 30px rgba(0,0,0,0.28), 0 0 40px 8px rgba(34,211,238,0.5), 0 0 0 2px rgba(168,85,247,0.6);
+            border-color: rgba(34,211,238,0.5);
+        }
+    }
+    .gs-media { display: block; position: relative; aspect-ratio: 16 / 10; overflow: hidden; flex-shrink: 0; }
+    .gs-media-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(2,6,23,0.02) 0%, rgba(2,6,23,0.10) 50%, rgba(2,6,23,0.68) 100%); }
+    .gs-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+    .gs-card:hover .gs-img { transform: scale(1.08); }
+    .gs-card-badge {
+        position: absolute; top: 14px; left: 14px; z-index: 2; padding: 6px 12px; border-radius: 999px;
+        font-size: 12px; font-weight: 700; color: #fff; background: rgba(15,23,42,0.72);
+        border: 1px solid rgba(168,85,247,0.4); backdrop-filter: blur(10px); text-transform: capitalize;
+    }
+    .gs-card-body { flex: 1 1 auto; display: flex; flex-direction: column; gap: 8px; padding: 16px 16px 18px; }
+    .game-title { margin: 0; font-weight: 700; color: #fff; font-size: 1.02rem; line-height: 1.4; min-height: 2.8em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .gs-purchase-line { color: var(--gs-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 22px; line-height: 22px; }
+    .gs-price-row { margin: 2px 0 4px; }
+    .gs-price { font-size: 1.2rem; font-weight: 800; color: var(--gs-price); }
+    .gs-action-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .gs-action-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 999px; font-weight: 700; text-align: center; white-space: nowrap; padding: 0 12px; }
+
+    /* ===== Buttons ===== */
+    .gs-btn-primary { background: var(--gs-primary); border: none; color: #fff; box-shadow: 0 12px 26px rgba(124,58,237,.3); }
+    .gs-btn-primary:hover { color: #fff; filter: brightness(1.08); }
+    .gs-btn-warning { background: linear-gradient(135deg,#f59e0b,#f97316); color: #fff; border: none; }
+    .gs-btn-warning:hover { color: #fff; }
+    .gs-btn-muted { background: rgba(148,163,184,0.18); color: #e2e8f0; border: 1px solid rgba(148,163,184,0.15); }
+    .gs-btn-muted:hover { color: #fff; }
+    .gs-btn-outline { background: rgba(255,255,255,0.03); color: #fff; border: 1px solid rgba(34,211,238,0.3); }
+    .gs-btn-outline:hover { color: #fff; background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.5); }
+    .gs-btn-glass { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); color: #fff; backdrop-filter: blur(12px); }
+    .gs-btn-glass:hover { color: #fff; background: rgba(255,255,255,0.14); }
+
+    /* ===== Empty state ===== */
+    .gs-empty { text-align: center; padding: 50px 20px; border: 1px dashed rgba(255,255,255,0.12); border-radius: 18px; background: rgba(255,255,255,0.02); color: #fff; }
+    .gs-empty-icon { font-size: 3rem; margin-bottom: 10px; }
+
+    /* ===== Pagination ===== */
+    .gs-pagination .page-link { background: rgba(255,255,255,0.04); color: #dbe6f7; border: 1px solid rgba(255,255,255,0.08); margin: 0 4px; border-radius: 14px !important; min-width: 44px; text-align: center; box-shadow: none; }
+    .gs-pagination .page-link:hover { background: rgba(168,85,247,0.18); color: #fff; border-color: rgba(34,211,238,0.4); }
+    .gs-pagination .page-item.active .page-link { background: var(--gs-primary); border-color: transparent; color: #fff; box-shadow: 0 8px 20px rgba(124,58,237,.4); }
+
+    .carousel-control-prev, .carousel-control-next { width: 6%; z-index: 20; }
+
+    /* ===== Responsive ===== */
+    @@media (max-width: 767.98px) {
+        .gs-catbar { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 14px; }
+        .gs-cat-pill { flex: 0 0 auto; }
+        .gs-catbar::-webkit-scrollbar { height: 6px; }
+        .gs-catbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 999px; }
+    }
+    @@media (max-width: 575.98px) {
+        .hot-scroll { grid-auto-columns: minmax(180px, 180px); }
+        .gs-catalog { padding: 16px; }
+        .gs-action-wrap { grid-template-columns: 1fr; }
+        .gs-sec-bar { min-height: 36px; }
+    }
+
+    /* Ton trong che do giam chuyen dong: tat vien LED + nhap nhay */
+    @@media (prefers-reduced-motion: reduce) {
+        .gs-hero-wrap::before,
+        .gs-hero-wrap::after { animation: none; }
+        .gs-card, .hot-item { animation: none !important; }
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    //
+    // =========================
+    // SIGNALR GAME DOWNLOAD
+    // =========================
+    //
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/gameHub")
+        .build();
+    // =========================
+    // START SIGNALR CONNECTION
+    // =========================
+    connection.start().then(function () {
+        console.log("Connected to GameHub");
+    }).catch(err => console.error(err));
+    // =========================
+    // NHẬN DOWNLOAD REALTIME
+    // =========================
+    connection.on("UpdateDownload", function (gameId, count) {
+        console.log("RECEIVED:", gameId, count);
+        const elements = document.querySelectorAll(`[id='download-${gameId}']`);
+        elements.forEach(el => el.innerText = count);
+    });
+    //
+    // =========================
+    // AUTO SCROLL TO ALL GAMES
+    // =========================
+    //
+    window.addEventListener("load", function () {
+        const params = new URLSearchParams(window.location.search);
+        const isLayoutSearch = params.get("layoutSearch") === "1";
+        if (isLayoutSearch) {
+            const target = document.getElementById("all-games-section");
+            if (target) {
+                setTimeout(() => {
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 120);
+            }
+        }
+    });
+</script>
