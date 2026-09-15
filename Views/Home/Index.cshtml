@@ -68,7 +68,7 @@
                 <span class="gs-sec-line"></span>
             </div>
             <!-- ================= HERO CAROUSEL ================= -->
-            <div id="heroCarousel" class="carousel slide mb-5 gs-hero-wrap" data-bs-ride="carousel">
+            <div id="heroCarousel" class="carousel slide mb-5 gs-hero-wrap" data-bs-ride="carousel" data-bs-interval="4000" data-bs-pause="hover" data-bs-touch="true">
                 <div class="carousel-inner rounded-4 overflow-hidden shadow-lg">
                     @for (int i = 0; i < hotGames.Count; i++)
                     {
@@ -728,6 +728,24 @@
                     target.scrollIntoView({ behavior: "smooth", block: "start" });
                 }, 120);
             }
+        }
+    });
+    //
+    // =========================
+    // HOT GAMES CAROUSEL - TU DONG CHUYEN SLIDE
+    // =========================
+    //
+    document.addEventListener("DOMContentLoaded", function () {
+        var heroEl = document.getElementById("heroCarousel");
+        if (heroEl && window.bootstrap && bootstrap.Carousel) {
+            var hero = bootstrap.Carousel.getOrCreateInstance(heroEl, {
+                interval: 4000,   // 4 giay doi 1 slide
+                ride: "carousel",
+                pause: "hover",   // re chuot vao thi dung
+                wrap: true,       // chay vong lap vo tan
+                touch: true       // vuot tren dien thoai
+            });
+            hero.cycle();
         }
     });
 </script>

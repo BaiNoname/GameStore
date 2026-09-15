@@ -3,13 +3,15 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject GameStore.Models.GameStoreContext _db
 @inject UserIconEffectService UserIconEffectService
+@inject NotificationService NotificationService
 
 @{
     // Lấy tên user từ session
     var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");
     string? equippedCssClass = null;
+    string? userAvatar = null;
 
-    // Lấy effect đang equip của user hiện tại
+    // Lấy effect đang equip + avatar của user hiện tại
     if (User.Identity != null && User.Identity.IsAuthenticated)
     {
         var userIdClaim = User.FindFirst("UserId")?.Value;
@@ -17,6 +19,8 @@
         {
             int userId = int.Parse(userIdClaim);
             equippedCssClass = UserIconEffectService.GetEquippedCssClass(userId);
+            userAvatar = _db.NguoiDungs.Where(x => x.MaNguoiDung == userId)
+                                       .Select(x => x.Avatar).FirstOrDefault();
         }
     }
 }
@@ -233,6 +237,91 @@
 
         .btn-outline-light {
             border-radius: 999px;
+        }
+
+        /* ===== Thanh thông báo chạy ngang (marquee) ===== */
+        .gs-ticker {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(90deg, #0b1220, #111c33);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .gs-ticker-label {
+            flex: 0 0 auto;
+            z-index: 2;
+            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            color: #fff;
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 1px;
+            padding: 8px 16px;
+            white-space: nowrap;
+        }
+
+        .gs-ticker-viewport {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .gs-ticker-track {
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            will-change: transform;
+            animation: gsTicker 45s linear infinite;
+        }
+
+        .gs-ticker:hover .gs-ticker-track {
+            animation-play-state: paused;
+        }
+
+        .gs-ticker-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+        }
+
+        .gs-ticker-ic {
+            font-size: 14px;
+        }
+
+        .gs-ticker-text {
+            color: #dbe6f7;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 600;
+        }
+
+        a.gs-ticker-text:hover {
+            color: #7dd3fc;
+            text-decoration: underline;
+        }
+
+        .gs-ticker-sep {
+            color: #3b4c6b;
+            margin: 0 14px;
+            font-size: 9px;
+        }
+
+        @@keyframes gsTicker {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-50%);
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .gs-ticker-track {
+                animation: none;
+            }
         }
 
         .gs-subbar {
@@ -668,6 +757,11 @@
             line-height: 1;
         }
 
+        .gs-user-avatar-img {
+            object-fit: cover;
+            background: #0b1220;
+        }
+
         /* các hiệu ứng effect avatar */
         .gs-user-avatar.effect-neon-purple {
             box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.22), 0 0 18px rgba(168, 85, 247, 0.72), 0 0 30px rgba(168, 85, 247, 0.42);
@@ -790,7 +884,14 @@
                                 <button class="btn btn-outline-light dropdown-toggle gs-user-toggle"
                                         data-bs-toggle="dropdown">
                                     <span class="gs-user-avatar @(equippedCssClass ?? "")">
-                                        <span class="gs-user-avatar-core">👤</span>
+                                        @if (!string.IsNullOrEmpty(userAvatar))
+                                        {
+                                            <img src="@Url.Content(userAvatar)" alt="avatar" class="gs-user-avatar-core gs-user-avatar-img" />
+                                        }
+                                        else
+                                        {
+                                            <span class="gs-user-avatar-core">👤</span>
+                                        }
                                     </span>
                                     <span class="gs-user-name">@User.Identity.Name</span>
                                 </button>
@@ -882,6 +983,40 @@
     <div class="gs-school-banner text-center">
         ĐÂY LÀ SẢN PHẨM BÀI TẬP PHỤC VỤ CHẤM ĐIỂM MÔN HỌC, KHÔNG NHẰM MỤC ĐÍCH THƯƠNG MẠI.
     </div>
+
+    <!-- Thanh thông báo chạy ngang (marquee) -->
+    @{
+        var tickerItems = NotificationService.GetTickerItems();
+    }
+    @if (tickerItems.Count > 0)
+    {
+        <div class="gs-ticker" aria-label="Thông báo">
+            <span class="gs-ticker-label">🔔 THÔNG BÁO</span>
+            <div class="gs-ticker-viewport">
+                <div class="gs-ticker-track">
+                    @* lặp 2 lần để chạy liền mạch *@
+                    @for (int loop = 0; loop < 2; loop++)
+                    {
+                        foreach (var it in tickerItems)
+                        {
+                            <span class="gs-ticker-item">
+                                <span class="gs-ticker-ic">@it.Icon</span>
+                                @if (!string.IsNullOrEmpty(it.Link))
+                                {
+                                    <a href="@it.Link" class="gs-ticker-text">@it.Text</a>
+                                }
+                                else
+                                {
+                                    <span class="gs-ticker-text">@it.Text</span>
+                                }
+                                <span class="gs-ticker-sep">◆</span>
+                            </span>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    }
 
     @if (ViewBag.HideSubBar == null)
     {

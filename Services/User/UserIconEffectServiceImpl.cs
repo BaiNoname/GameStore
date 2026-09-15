@@ -53,7 +53,7 @@ namespace GameStore.Services
             // Nếu người dùng không còn hoạt động, trả về null
             if (!IsUserActive(userId))
                 return null;
-            
+
             // Lấy CSS class của icon effect đang được trang bị của người dùng
             return db.UserIconEffects
                 .Include(x => x.IconEffect)

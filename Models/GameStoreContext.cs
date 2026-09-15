@@ -29,6 +29,7 @@ namespace GameStore.Models
         public DbSet<HoanTra> HoanTras => Set<HoanTra>();
         public DbSet<KhuyenMai> KhuyenMais => Set<KhuyenMai>();
         public DbSet<NguoiDungKhuyenMai> NguoiDungKhuyenMais => Set<NguoiDungKhuyenMai>();
+        public DbSet<ThongBao> ThongBaos => Set<ThongBao>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -86,6 +87,7 @@ namespace GameStore.Models
                 entity.Property(e => e.Quyen).HasColumnName("quyen");
                 entity.Property(e => e.SoDu).HasColumnName("sodu").HasPrecision(18, 2);
                 entity.Property(e => e.IsActive).HasColumnName("isactive").HasDefaultValue(true);
+                entity.Property(e => e.Avatar).HasColumnName("avatar");
 
                 // 🔥 reset password
                 entity.Property(e => e.ResetCode).HasColumnName("resetcode");
@@ -579,6 +581,29 @@ namespace GameStore.Models
                       .HasForeignKey(e => e.MaKM)
                       .OnDelete(DeleteBehavior.Cascade)
                       .HasConstraintName("fk_ndkm_khuyenmai");
+            });
+
+            // =========================
+            // ThongBao (thanh chạy ngang)
+            // =========================
+            modelBuilder.Entity<ThongBao>(entity =>
+            {
+                entity.ToTable("thongbao");
+                entity.HasKey(e => e.MaTB);
+
+                entity.Property(e => e.MaTB).HasColumnName("matb");
+                entity.Property(e => e.LoaiTB).HasColumnName("loaitb").HasMaxLength(30);
+                entity.Property(e => e.NoiDung).HasColumnName("noidung").HasMaxLength(500);
+                entity.Property(e => e.Link).HasColumnName("link").HasMaxLength(255);
+                entity.Property(e => e.MaGame).HasColumnName("magame");
+                entity.Property(e => e.MaNguoiDung).HasColumnName("manguoidung");
+                entity.Property(e => e.EventId).HasColumnName("eventid");
+                entity.Property(e => e.ThuTu).HasColumnName("thutu").HasDefaultValue(0);
+                entity.Property(e => e.IsActive).HasColumnName("isactive").HasDefaultValue(true);
+                entity.Property(e => e.NgayTao).HasColumnName("ngaytao").HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.NgayHetHan).HasColumnName("ngayhethan");
+
+                entity.HasIndex(e => new { e.IsActive, e.ThuTu });
             });
         }
     }

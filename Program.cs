@@ -145,6 +145,8 @@ public class Program
         builder.Services.AddScoped<UserIconEffectService, UserIconEffectServiceImpl>();
         builder.Services.AddScoped<RefundService, RefundServiceImpl>();
         builder.Services.AddScoped<CouponService, CouponServiceImpl>();
+        builder.Services.AddScoped<NotificationService, NotificationServiceImpl>();
+        builder.Services.AddScoped<EventAiService, EventAiServiceImpl>();
         builder.Services.AddHostedService<EventStatusBackgroundService>();
 
         // Register Vnpay service implementation

@@ -22,6 +22,7 @@ namespace GameStore.Controllers
         private readonly IHubContext<EventChatHub> eventChatHub;
         private readonly EventRewardService eventRewardService;
         private readonly UserIconEffectService userIconEffectService;
+        private readonly EventAiService eventAiService;
         private readonly GameStoreContext db;
 
         public EventController(
@@ -33,6 +34,7 @@ namespace GameStore.Controllers
             IHubContext<EventChatHub> _eventChatHub,
             EventRewardService _eventRewardService,
             UserIconEffectService _userIconEffectService,
+            EventAiService _eventAiService,
             GameStoreContext _db)
         {
             eventService = _eventService;
@@ -43,6 +45,7 @@ namespace GameStore.Controllers
             eventChatHub = _eventChatHub;
             eventRewardService = _eventRewardService;
             userIconEffectService = _userIconEffectService;
+            eventAiService = _eventAiService;
             db = _db;
         }
 
@@ -328,6 +331,23 @@ namespace GameStore.Controllers
             return View("~/Views/Event/Room.cshtml", ev);
         }
 
+        // Trợ lý AI tư vấn trong phạm vi sự kiện (Gemini). Trả về JSON { ok, reply }
+        [HttpPost]
+        [Route("room/{id}/ask-ai")]
+        public async Task<IActionResult> AskAi(int id, string question)
+        {
+            var activeUser = await GetCurrentActiveUserAsync();
+            if (activeUser == null)
+                return Json(new { ok = false, reply = "Bạn cần đăng nhập để dùng trợ lý AI." });
+
+            // Chỉ cho người đã tham gia sự kiện dùng trợ lý trong phòng
+            if (!participantService.IsJoined(id, activeUser.MaNguoiDung))
+                return Json(new { ok = false, reply = "Bạn cần tham gia sự kiện trước." });
+
+            var (ok, reply) = await eventAiService.AskAsync(id, activeUser.MaNguoiDung, question ?? "");
+            return Json(new { ok, reply });
+        }
+
         // Phương thức xử lý việc gửi tin nhắn trong phòng sự kiện, bao gồm kiểm tra điều kiện người dùng có thể gửi tin nhắn hay không,
         // lưu tin nhắn vào cơ sở dữ liệu và phát tin nhắn mới đến tất cả các client đang kết nối trong phòng sự kiện thông qua SignalR
         [HttpPost]
@@ -405,7 +425,8 @@ namespace GameStore.Controllers
                         userName = latest.NguoiDung?.TenNguoiDung ?? latest.NguoiDung?.Email ?? "User",
                         content = latest.Content,
                         createdAt = latest.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
-                        effectCssClass = effectCssClass ?? ""
+                        effectCssClass = effectCssClass ?? "",
+                        avatar = latest.NguoiDung?.Avatar ?? ""
                     });
                 }
 
@@ -545,7 +566,8 @@ namespace GameStore.Controllers
                             userName = latest.NguoiDung?.TenNguoiDung ?? latest.NguoiDung?.Email ?? "User",
                             content = latest.Content,
                             createdAt = latest.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
-                            effectCssClass = effectCssClass ?? ""
+                            effectCssClass = effectCssClass ?? "",
+                            avatar = latest.NguoiDung?.Avatar ?? ""
                         });
                     }
                 }

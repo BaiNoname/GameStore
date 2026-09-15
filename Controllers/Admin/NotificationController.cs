@@ -5,17 +5,17 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameStore.Controllers.Admin
 {
-    // Quản lý mã khuyến mãi (admin)
+    // Quản lý thông báo chạy ngang (admin tự tạo)
     [Authorize(Roles = "admin")]
-    [Route("admin/coupon")]
+    [Route("admin/notification")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public class CouponController : Controller
+    public class NotificationController : Controller
     {
-        private readonly CouponService couponService;
+        private readonly NotificationService notificationService;
 
-        public CouponController(CouponService _couponService)
+        public NotificationController(NotificationService _notificationService)
         {
-            couponService = _couponService;
+            notificationService = _notificationService;
         }
 
         [Route("index")]
@@ -23,52 +23,51 @@ namespace GameStore.Controllers.Admin
         {
             int pageSize = 10;
             int totalPages;
-            var data = couponService.FindAll(keyword, page, pageSize, out totalPages);
-
+            var data = notificationService.FindAll(keyword, page, pageSize, out totalPages);
             ViewBag.Keyword = keyword;
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
-            return View("~/Views/Admin/Coupon/Index.cshtml", data);
+            return View("~/Views/Admin/Notification/Index.cshtml", data);
         }
 
         [HttpPost("create")]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(KhuyenMai km)
+        public IActionResult Create(ThongBao tb)
         {
-            var (ok, message) = couponService.Create(km);
+            var (ok, message) = notificationService.Create(tb);
             TempData["ToastMessage"] = message;
             TempData["ToastType"] = ok ? "success" : "error";
-            return Redirect("/admin/coupon/index");
+            return Redirect("/admin/notification/index");
         }
 
         [HttpPost("edit")]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(KhuyenMai km)
+        public IActionResult Edit(ThongBao tb)
         {
-            var (ok, message) = couponService.Update(km);
+            var (ok, message) = notificationService.Update(tb);
             TempData["ToastMessage"] = message;
             TempData["ToastType"] = ok ? "success" : "error";
-            return Redirect("/admin/coupon/index");
+            return Redirect("/admin/notification/index");
         }
 
         [HttpPost("toggle")]
         [ValidateAntiForgeryToken]
-        public IActionResult Toggle(int maKM)
+        public IActionResult Toggle(int maTB)
         {
-            var (ok, message) = couponService.ToggleActive(maKM);
+            var (ok, message) = notificationService.ToggleActive(maTB);
             TempData["ToastMessage"] = message;
             TempData["ToastType"] = ok ? "success" : "error";
-            return Redirect("/admin/coupon/index");
+            return Redirect("/admin/notification/index");
         }
 
         [HttpPost("delete")]
         [ValidateAntiForgeryToken]
-        public IActionResult Delete(int maKM)
+        public IActionResult Delete(int maTB)
         {
-            var (ok, message) = couponService.Delete(maKM);
+            var (ok, message) = notificationService.Delete(maTB);
             TempData["ToastMessage"] = message;
             TempData["ToastType"] = ok ? "success" : "error";
-            return Redirect("/admin/coupon/index");
+            return Redirect("/admin/notification/index");
         }
     }
 }

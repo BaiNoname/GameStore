@@ -18,14 +18,46 @@
             <div class="mb-4">
                 <div class="d-flex flex-wrap align-items-center gap-3">
                     <div class="gs-profile-avatar @equippedEffectCssClass">
-                        <span class="gs-profile-avatar-core">
-                            @((Model.TenNguoiDung ?? Model.Email ?? "U").Substring(0, 1).ToUpper())
-                        </span>
+                        @if (!string.IsNullOrEmpty(Model.Avatar))
+                        {
+                            <img src="@Url.Content(Model.Avatar)" alt="avatar" class="gs-profile-avatar-core gs-avatar-img" />
+                        }
+                        else
+                        {
+                            <span class="gs-profile-avatar-core">
+                                @((Model.TenNguoiDung ?? Model.Email ?? "U").Substring(0, 1).ToUpper())
+                            </span>
+                        }
                     </div>
 
                     <div>
                         <h3 class="gs-profile-title mb-1">👤 Account Profile</h3>
                     </div>
+                </div>
+            </div>
+
+            <!-- UPLOAD AVATAR -->
+            <div class="gs-profile-card mb-4">
+                <div class="gs-profile-card-body">
+                    <h5 class="gs-section-heading mb-3">🖼️ Ảnh đại diện</h5>
+
+                    <form asp-action="UploadAvatar" method="post" enctype="multipart/form-data" class="gs-avatar-form">
+                        <input type="file" name="avatar" accept="image/*" required
+                               class="form-control gs-form-input gs-file-input" />
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <button type="submit" class="btn gs-btn-primary gs-main-btn px-4">
+                                ⬆ Tải ảnh lên
+                            </button>
+                            @if (!string.IsNullOrEmpty(Model.Avatar))
+                            {
+                                <button type="submit" formaction="@Url.Action("RemoveAvatar")" formnovalidate
+                                        class="btn gs-btn-muted gs-main-btn px-4">
+                                    🗑 Xóa ảnh
+                                </button>
+                            }
+                        </div>
+                        <div class="gs-avatar-hint mt-2">Chấp nhận JPG, PNG, GIF, WEBP · tối đa 3MB.</div>
+                    </form>
                 </div>
             </div>
 
@@ -329,6 +361,32 @@
         color: #fff;
         font-size: 1.5rem;
         font-weight: 800;
+    }
+
+    .gs-avatar-img {
+        object-fit: cover;
+        background: #0b1220;
+    }
+
+    .gs-file-input {
+        padding: 10px 12px;
+        color: #e2e8f0;
+    }
+
+        .gs-file-input::file-selector-button {
+            background: rgba(124, 58, 237, 0.25);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 6px 14px;
+            margin-right: 12px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+    .gs-avatar-hint {
+        color: var(--gs-muted);
+        font-size: .85rem;
     }
 
     <!-- các hiệu ứng cho avatar -->

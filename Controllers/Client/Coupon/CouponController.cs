@@ -63,7 +63,8 @@ namespace GameStore.Controllers.Client.Coupon
             var (ok, message) = couponService.Claim(user.MaNguoiDung, maKM);
             TempData["ToastMessage"] = message;
             TempData["ToastType"] = ok ? "success" : "error";
-            return RedirectToAction("Index");
+            // Redirect theo URL cố định để tránh nhầm sang CouponController của admin (trùng tên)
+            return Redirect("/coupon");
         }
     }
 }

@@ -292,26 +292,10 @@
             z-index: 2002;
         }
 
+        /* Thanh user căn giữa theo chiều dọc trong header, không đẩy xuống tạo khoảng trống */
         #navbarNav {
-            margin-top: 50px;
-        }
-
-        @@media (max-width: 991.98px) {
-            #navbarNav {
-                margin-top: 20px;
-            }
-        }
-
-        @@media (max-width: 767.98px) {
-            #navbarNav {
-                margin-top: 10px;
-            }
-        }
-
-        @@media (max-width: 575.98px) {
-            #navbarNav {
-                margin-top: 0;
-            }
+            margin-top: 0;
+            align-items: center;
         }
 
         .body-wrapper {
@@ -326,6 +310,7 @@
             .body-wrapper-inner .container-fluid.admin-content-fluid {
                 width: 100%;
                 max-width: 100% !important;
+                padding-top: 16px !important;
                 padding-left: 28px;
                 padding-right: 28px;
                 padding-bottom: 20px;
@@ -372,6 +357,7 @@
                 padding-bottom: 14px;
             }
         }
+
     </style>
     <!-- (Admin giu nguyen mau goc cua template, khong nap gaming-theme) -->
 
@@ -489,6 +475,13 @@
                             <a class="sidebar-link" href="/admin/coupon/index" aria-expanded="false">
                                 <i class="ti ti-discount-2"></i>
                                 <span class="hide-menu">Coupons</span>
+                            </a>
+                        </li>
+
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="/admin/notification/index" aria-expanded="false">
+                                <i class="ti ti-bell"></i>
+                                <span class="hide-menu">Notifications</span>
                             </a>
                         </li>
 

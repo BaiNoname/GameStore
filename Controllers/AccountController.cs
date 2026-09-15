@@ -3,6 +3,7 @@ using GameStore.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
 
 namespace GameStore.Controllers
 {
@@ -13,12 +14,15 @@ namespace GameStore.Controllers
         private readonly AuthService authService;
         private readonly GameStoreContext db;
         private readonly UserIconEffectService userIconEffectService;
+        private readonly IWebHostEnvironment env;
 
-        public AccountController(AuthService _authService, GameStoreContext _db, UserIconEffectService _userIconEffectService)
+        public AccountController(AuthService _authService, GameStoreContext _db,
+            UserIconEffectService _userIconEffectService, IWebHostEnvironment _env)
         {
             authService = _authService;
             db = _db;
             userIconEffectService = _userIconEffectService;
+            env = _env;
         }
 
         // Phương thức helper để lấy thông tin người dùng hiện tại và kiểm tra xem tài khoản còn hoạt động hay không
@@ -80,6 +84,100 @@ namespace GameStore.Controllers
             else
                 TempData["Msg"] = msg;
 
+            return RedirectToAction("Profile");
+        }
+
+        // Cập nhật ảnh đại diện (avatar): upload ảnh từ máy, lưu vào wwwroot/images/avatars
+        [HttpPost]
+        public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+        {
+            var user = await GetCurrentActiveUserAsync();
+            if (user == null)
+                return Redirect("/auth/login");
+
+            if (avatar == null || avatar.Length == 0)
+            {
+                TempData["Err"] = "Vui lòng chọn một ảnh.";
+                return RedirectToAction("Profile");
+            }
+
+            // Kiểm tra định dạng
+            var ext = Path.GetExtension(avatar.FileName).ToLowerInvariant();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            if (Array.IndexOf(allowed, ext) < 0)
+            {
+                TempData["Err"] = "Chỉ chấp nhận ảnh JPG, PNG, GIF hoặc WEBP.";
+                return RedirectToAction("Profile");
+            }
+
+            // Giới hạn 3MB
+            if (avatar.Length > 3 * 1024 * 1024)
+            {
+                TempData["Err"] = "Ảnh tối đa 3MB.";
+                return RedirectToAction("Profile");
+            }
+
+            // Lưu file vào wwwroot/images/avatars
+            var webRoot = env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var dir = Path.Combine(webRoot, "images", "avatars");
+            Directory.CreateDirectory(dir);
+
+            var fileName = $"user_{user.MaNguoiDung}_{Guid.NewGuid():N}{ext}";
+            var fullPath = Path.Combine(dir, fileName);
+            using (var fs = new FileStream(fullPath, FileMode.Create))
+            {
+                await avatar.CopyToAsync(fs);
+            }
+
+            var entity = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == user.MaNguoiDung);
+            if (entity == null)
+                return Redirect("/auth/login");
+
+            // Xóa avatar cũ (nếu có) để đỡ rác
+            if (!string.IsNullOrEmpty(entity.Avatar))
+            {
+                try
+                {
+                    var oldRel = entity.Avatar.TrimStart('~', '/').Replace('/', Path.DirectorySeparatorChar);
+                    var oldFull = Path.Combine(webRoot, oldRel);
+                    if (System.IO.File.Exists(oldFull)) System.IO.File.Delete(oldFull);
+                }
+                catch { /* bỏ qua lỗi xóa file cũ */ }
+            }
+
+            entity.Avatar = $"/images/avatars/{fileName}";
+            db.SaveChanges();
+
+            TempData["ToastMessage"] = "Cập nhật ảnh đại diện thành công 🖼️";
+            TempData["ToastType"] = "success";
+            return RedirectToAction("Profile");
+        }
+
+        // Xóa ảnh đại diện (trở về avatar chữ cái mặc định)
+        [HttpPost]
+        public async Task<IActionResult> RemoveAvatar()
+        {
+            var user = await GetCurrentActiveUserAsync();
+            if (user == null)
+                return Redirect("/auth/login");
+
+            var entity = db.NguoiDungs.FirstOrDefault(x => x.MaNguoiDung == user.MaNguoiDung);
+            if (entity != null && !string.IsNullOrEmpty(entity.Avatar))
+            {
+                try
+                {
+                    var webRoot = env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    var oldRel = entity.Avatar.TrimStart('~', '/').Replace('/', Path.DirectorySeparatorChar);
+                    var oldFull = Path.Combine(webRoot, oldRel);
+                    if (System.IO.File.Exists(oldFull)) System.IO.File.Delete(oldFull);
+                }
+                catch { }
+                entity.Avatar = null;
+                db.SaveChanges();
+            }
+
+            TempData["ToastMessage"] = "Đã xóa ảnh đại diện.";
+            TempData["ToastType"] = "success";
             return RedirectToAction("Profile");
         }
 

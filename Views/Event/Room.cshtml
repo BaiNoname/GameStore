@@ -1,6 +1,8 @@
 ﻿@model GameStore.Models.Event
+
 @{
     ViewData["Title"] = "Event Room";
+
     // Danh sách participant của event truyền từ controller qua ViewBag
     var participants = ViewBag.Participants as List<GameStore.Models.EventParticipant> ?? new List<GameStore.Models.EventParticipant>();
     // Danh sách announcement của event
@@ -19,28 +21,35 @@
     bool fromMyEvents = string.Equals(returnUrl, "/event/my-events", StringComparison.OrdinalIgnoreCase);
     // Đổi text nút quay lại tương ứng
     string listButtonText = fromMyEvents ? "Back to My Events" : "Event List";
+
     // Hàm xử lý ảnh banner event
     string GetImage(string? image)
     {
         // Nếu event chưa có ảnh -> dùng ảnh mặc định
         if (string.IsNullOrWhiteSpace(image))
             return "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1600&q=80";
+
         // Nếu là link online -> dùng trực tiếp
         if (image.StartsWith("http://") || image.StartsWith("https://"))
             return image;
+
         // Nếu là file local -> nối với thư mục images/events
         return Url.Content("~/images/events/" + image);
     }
+
     // Dictionary map: userId -> tên css effect
     var userEffectMap = ViewBag.UserEffectMap as Dictionary<int, string> ?? new Dictionary<int, string>();
+
     // Hàm lấy css effect avatar của user trong chat
     string GetEffectCssClass(int? userId)
     {
         if (userId.HasValue && userEffectMap.ContainsKey(userId.Value))
             return userEffectMap[userId.Value];
+
         return "";
     }
 }
+
 <main class="gs-page">
     <div class="container-xxl">
         <div class="row g-4">
@@ -55,6 +64,7 @@
                         <p class="text-secondary mb-3">
                             You have joined this event. This area is reserved for members only.
                         </p>
+
                         @if (isArchivedRoom)
                         {
                             <!--
@@ -63,6 +73,7 @@
                                 - chat cũ
                                 - announcements
                                 - participants
+
                                 Không được:
                                 - chat mới
                                 - check-in
@@ -75,6 +86,7 @@
                                 </div>
                             </div>
                         }
+
                         <div class="gs-room-actions">
                             @if (myParticipant != null)
                             {
@@ -112,13 +124,17 @@
                                     </form>
                                 }
                             }
+
                             <a href="/event/detail/@Model.Slug?returnUrl=@Uri.EscapeDataString(returnUrl)" class="gs-action-btn ghost">
                                 ← Event Detail
                             </a>
+
                             <a href="@returnUrl" class="gs-action-btn ghost">
                                 @listButtonText
                             </a>
+
                         </div>
+
                         @if (canClaimReward)
                         {
                             <!--
@@ -137,6 +153,7 @@
                         }
                     </div>
                 </div>
+
                 <div class="gs-room-card mb-4">
                     <div class="gs-chat-header">
                         <div>
@@ -147,6 +164,7 @@
                             <span id="chatCount">@messages.Count</span> message@(messages.Count == 1 ? "" : "s")
                         </div>
                     </div>
+
                     <div class="p-4 gs-chat-box" id="chatBox">
                         @if (messages.Any())
                         {
@@ -155,8 +173,16 @@
                             {
                                 <div class="gs-chat-message">
                                     <div class="gs-chat-avatar @(GetEffectCssClass(msg.UserId))">
-                                        @((msg.NguoiDung?.TenNguoiDung ?? msg.NguoiDung?.Email ?? "U").Substring(0, 1).ToUpper())
+                                        @if (!string.IsNullOrWhiteSpace(msg.NguoiDung?.Avatar))
+                                        {
+                                            <img src="@msg.NguoiDung.Avatar" alt="avatar" />
+                                        }
+                                        else
+                                        {
+                                            @((msg.NguoiDung?.TenNguoiDung ?? msg.NguoiDung?.Email ?? "U").Substring(0, 1).ToUpper())
+                                        }
                                     </div>
+
                                     <div class="gs-chat-bubble-wrap">
                                         <div class="gs-chat-meta">
                                             <span class="gs-chat-user">
@@ -166,6 +192,7 @@
                                                 @msg.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                                             </span>
                                         </div>
+
                                         <div class="gs-chat-bubble">
                                             @msg.Content
                                         </div>
@@ -185,6 +212,7 @@
                             </div>
                         }
                     </div>
+
                     <div class="gs-chat-compose-wrap">
                         @if (isArchivedRoom)
                         {
@@ -193,6 +221,7 @@
                                        class="gs-chat-input"
                                        value="Event ended - chat is closed"
                                        disabled />
+
                                 <button class="gs-chat-send-btn" type="button" disabled>
                                     Locked
                                 </button>
@@ -206,6 +235,7 @@
                                        name="content"
                                        class="gs-chat-input"
                                        placeholder="Enter a message for everyone in the event..." />
+
                                 <button class="gs-chat-send-btn" type="submit">
                                     Send
                                 </button>
@@ -214,6 +244,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="col-lg-4">
                 <!-- =========================
                 KHU VỰC ANNOUNCEMENTS
@@ -238,10 +269,12 @@
                         else
                         {
                             <!-- Event chưa có announcement -->
+
                             <p class="text-secondary mb-0">No announcements available.</p>
                         }
                     </div>
                 </div>
+
                 <!-- =========================
                 KHU VỰC PARTICIPANTS
                 ========================= -->
@@ -263,6 +296,7 @@
                                     <div class="small text-secondary">
                                         Joined: @p.JoinedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                                     </div>
+
                                     @if (p.IsCheckedIn)
                                     {
                                         <!-- User đã check-in event -->
@@ -288,6 +322,7 @@
             </div>
         </div>
     </div>
+
     @if (!isArchivedRoom)
     {
         <!--
@@ -309,22 +344,30 @@
                 const emptyChat = document.getElementById("emptyChat");
                 const chatCount = document.getElementById("chatCount");
                 const returnUrl = "@returnUrl";
+
                 function scrollToBottom() {
                     if (chatBox) {
                         chatBox.scrollTop = chatBox.scrollHeight;
                     }
                 }
-                function appendMessage(userName, content, createdAt, effectCssClass) {
+
+                function appendMessage(userName, content, createdAt, effectCssClass, avatarUrl) {
                     const empty = document.getElementById("emptyChat");
                     if (empty) {
                         empty.remove();
                     }
+
                     const firstLetter = (userName || "U").trim().charAt(0).toUpperCase();
                     const avatarClass = effectCssClass ? `gs-chat-avatar ${effectCssClass}` : "gs-chat-avatar";
+                    // Có avatar thì hiện ảnh, không thì hiện chữ cái đầu
+                    const avatarInner = avatarUrl
+                        ? `<img src="${avatarUrl}" alt="avatar" />`
+                        : firstLetter;
+
                     const wrapper = document.createElement("div");
                     wrapper.className = "gs-chat-message";
                     wrapper.innerHTML = `
-                        <div class="${avatarClass}">${firstLetter}</div>
+                        <div class="${avatarClass}">${avatarInner}</div>
                         <div class="gs-chat-bubble-wrap">
                             <div class="gs-chat-meta">
                                 <span class="gs-chat-user">${userName}</span>
@@ -333,38 +376,48 @@
                             <div class="gs-chat-bubble">${content}</div>
                         </div>
                     `;
+
                     chatBox.appendChild(wrapper);
+
                     if (chatCount) {
                         const current = parseInt(chatCount.textContent || "0");
                         chatCount.textContent = current + 1;
                     }
+
                     scrollToBottom();
                 }
+
                 // =========================
                 // SIGNALR CONNECTION
                 // =========================
                 const connection = new signalR.HubConnectionBuilder()
                     .withUrl("/eventChatHub")
                     .build();
+
                  // =========================
                 // NHẬN MESSAGE REALTIME
                 // =========================
                 connection.on("ReceiveEventMessage", function (message) {
-                appendMessage(message.userName, message.content, message.createdAt, message.effectCssClass);
+                appendMessage(message.userName, message.content, message.createdAt, message.effectCssClass, message.avatar);
                 });
+
                 try {
                     await connection.start();
                     await connection.invoke("JoinEventRoom", eventId);
                 } catch (err) {
                     console.error("SignalR connection error:", err);
                 }
+
                 scrollToBottom();
                 if (chatInput) chatInput.focus();
+
                 if (chatForm) {
                     chatForm.addEventListener("submit", async function (e) {
                         e.preventDefault();
+
                         const content = chatInput.value.trim();
                         if (!content) return;
+
                         try {
                             const response = await fetch(`/event/room/${eventId}/send-message`, {
                                 method: "POST",
@@ -374,6 +427,7 @@
                                 },
                                 body: new URLSearchParams({ content, returnUrl })
                             });
+
                             if (response.ok) {
                                 chatInput.value = "";
                                 chatInput.focus();
@@ -387,6 +441,7 @@
                         }
                     });
                 }
+
                 window.addEventListener("beforeunload", async function () {
                     try {
                         await connection.invoke("LeaveEventRoom", eventId);
@@ -396,10 +451,11 @@
         </script>
     }
 </main>
+
 <style>
     :root {
         --gs-line: rgba(255, 255, 255, 0.08);
-        --gs-primary: linear-gradient(135deg, #a855f7, #6366f1 55%, #22d3ee);
+        --gs-primary: linear-gradient(135deg, #7c3aed, #2563eb 55%, #06b6d4);
         --gs-card: linear-gradient(180deg, rgba(14,25,43,0.94), rgba(9,18,33,0.94));
         --gs-text: #f8fbff;
         --gs-muted: #8ea3bd;
@@ -409,7 +465,7 @@
     }
 
     body {
-        background: radial-gradient(circle at top left, rgba(168,85,247,0.20), transparent 24%), radial-gradient(circle at top right, rgba(34,211,238,0.16), transparent 22%), linear-gradient(180deg, #050b16 0%, #07111f 40%, #091626 100%);
+        background: radial-gradient(circle at top left, rgba(124,58,237,0.18), transparent 24%), radial-gradient(circle at top right, rgba(37,99,235,0.14), transparent 22%), linear-gradient(180deg, #050b16 0%, #07111f 40%, #091626 100%);
     }
 
     .gs-page {
@@ -436,7 +492,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 1.8px;
-        color: #67e8f9;
+        color: #7dd3fc;
         margin-bottom: 8px;
     }
 
@@ -445,7 +501,6 @@
         font-size: 2rem;
         font-weight: 800;
         margin-bottom: 10px;
-        font-family: 'Orbitron', 'Inter', sans-serif;
     }
 
     .gs-room-actions {
@@ -488,7 +543,7 @@
         }
 
             .gs-action-btn.ghost:hover {
-                background: rgba(34,211,238,0.12);
+                background: rgba(255,255,255,0.10);
                 color: #fff;
             }
 
@@ -590,12 +645,23 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #a855f7, #22d3ee);
+        background: linear-gradient(135deg, #7c3aed, #2563eb);
         color: #fff;
         font-weight: 800;
         font-size: 0.95rem;
-        box-shadow: 0 10px 20px rgba(124,58,237,0.25);
+        box-shadow: 0 10px 20px rgba(37,99,235,0.18);
+        overflow: visible; /* cho hao quang effect tran ra ngoai */
+        position: relative;
     }
+
+        /* Anh avatar that phu tron khung */
+        .gs-chat-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
 
     .gs-chat-bubble-wrap {
         flex: 1;
@@ -694,8 +760,8 @@
         }
 
         .gs-chat-input:focus {
-            border-color: rgba(168,85,247,0.5);
-            box-shadow: 0 0 0 4px rgba(168,85,247,0.14);
+            border-color: rgba(125,211,252,0.45);
+            box-shadow: 0 0 0 4px rgba(125,211,252,0.08);
             background: rgba(255,255,255,0.08);
         }
 
@@ -714,13 +780,13 @@
         color: #fff;
         font-weight: 700;
         padding: 0 22px;
-        box-shadow: 0 14px 28px rgba(124,58,237,0.3);
+        box-shadow: 0 14px 28px rgba(37,99,235,0.25);
         transition: transform .2s ease, box-shadow .2s ease;
     }
 
         .gs-chat-send-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 18px 30px rgba(124,58,237,0.4);
+            box-shadow: 0 18px 30px rgba(37,99,235,0.32);
         }
 
     .gs-mini-item {
@@ -731,7 +797,41 @@
         .gs-mini-item:last-child {
             border-bottom: none;
         }
-    /* Style effect cua avatar (map voi UserEffectMap) */
+
+    @@media (max-width: 575.98px) {
+        .gs-room-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .gs-action-btn,
+        .gs-status-pill {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .gs-chat-header,
+        .gs-chat-compose-wrap {
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+
+        .gs-chat-compose {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .gs-chat-send-btn {
+            width: 100%;
+        }
+
+        .gs-chat-avatar {
+            width: 38px;
+            height: 38px;
+        }
+    }
+
+    <!-- Style effect cua avatar-- >
     .gs-chat-avatar.effect-neon-purple {
         box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.22), 0 0 18px rgba(168, 85, 247, 0.72), 0 0 30px rgba(168, 85, 247, 0.42);
     }
@@ -772,39 +872,64 @@
         box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.24), 0 0 16px rgba(236, 72, 153, 0.72), 0 0 28px rgba(192, 132, 252, 0.32);
     }
 
-    @@media (max-width: 575.98px) {
-        .gs-room-actions {
-            flex-direction: column;
-            align-items: stretch;
+    /* ===== EFFECT FULL (legendary) - hao quang xoay + phat sang + vuong mien ===== */
+    .gs-chat-avatar.effect-legendary-full {
+        color: #fff;
+        z-index: 0;
+        animation: gsFullPulse 1.6s ease-in-out infinite;
+    }
+        /* Vong hao quang cau vong xoay quanh avatar */
+        .gs-chat-avatar.effect-legendary-full::before {
+            content: "";
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #f59e0b, #ef4444, #a855f7, #22d3ee, #10b981, #f59e0b);
+            z-index: -1;
+            animation: gsFullSpin 2.4s linear infinite;
+            filter: blur(1px);
+        }
+        /* Vuong mien nhun nhay tren dinh */
+        .gs-chat-avatar.effect-legendary-full::after {
+            content: "👑";
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 15px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,.55));
+            animation: gsFullCrown 1.6s ease-in-out infinite;
+            pointer-events: none;
         }
 
-        .gs-action-btn,
-        .gs-status-pill {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .gs-chat-header,
-        .gs-chat-compose-wrap {
-            padding-left: 18px;
-            padding-right: 18px;
-        }
-
-        .gs-chat-compose {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .gs-chat-send-btn {
-            width: 100%;
-        }
-
-        .gs-chat-avatar {
-            width: 38px;
-            height: 38px;
+    @@keyframes gsFullSpin {
+        to {
+            transform: rotate(360deg);
         }
     }
+
+    @@keyframes gsFullPulse {
+        0%, 100% {
+            box-shadow: 0 0 0 3px rgba(250,204,21,0.35), 0 0 22px rgba(168,85,247,0.85), 0 0 40px rgba(236,72,153,0.55);
+        }
+
+        50% {
+            box-shadow: 0 0 0 5px rgba(250,204,21,0.55), 0 0 34px rgba(168,85,247,1), 0 0 64px rgba(236,72,153,0.85);
+        }
+    }
+
+    @@keyframes gsFullCrown {
+        0%, 100% {
+            transform: translateX(-50%) translateY(0) rotate(-7deg);
+        }
+
+        50% {
+            transform: translateX(-50%) translateY(-3px) rotate(7deg);
+        }
+    }
+
 </style>
+
 <script>
     // xu ly thong bao cho su kien ket thuc
     function showArchivedRoomToast() {
@@ -814,4 +939,268 @@
             alert("This event has ended. The room is now in archived mode.");
         }
     }
+</script>
+
+<!-- ===== TRỢ LÝ AI TƯ VẤN SỰ KIỆN (Gemini) ===== -->
+<div id="gsEventAi" data-event-id="@Model.EventId">
+    <button type="button" id="gsAiToggle" class="gs-ai-fab" aria-label="Trợ lý AI sự kiện">
+        🤖 <span>Hỏi AI về sự kiện</span>
+    </button>
+
+    <div class="gs-ai-panel" id="gsAiPanel" hidden>
+        <div class="gs-ai-head">
+            <div class="gs-ai-title">🤖 Trợ lý sự kiện</div>
+            <button type="button" class="gs-ai-x" id="gsAiClose" aria-label="Đóng">✕</button>
+        </div>
+        <div class="gs-ai-body" id="gsAiBody">
+            <div class="gs-ai-msg gs-ai-bot">Chào bạn! Mình chỉ tư vấn về <b>sự kiện này</b> thôi nhé — thể lệ, phần thưởng, thời gian, cách tham gia, điểm danh... Bạn hỏi gì nào?</div>
+        </div>
+        <form class="gs-ai-input" id="gsAiForm" autocomplete="off">
+            <input type="text" id="gsAiText" placeholder="Nhập câu hỏi về sự kiện..." maxlength="500" required />
+            <button type="submit" id="gsAiSend">Gửi</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .gs-ai-fab {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        z-index: 3000;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        padding: 12px 18px;
+        font-weight: 800;
+        color: #fff;
+        background: linear-gradient(135deg, #7c3aed, #2563eb 60%, #06b6d4);
+        box-shadow: 0 14px 30px rgba(37, 99, 235, 0.4);
+    }
+
+        .gs-ai-fab:hover {
+            filter: brightness(1.08);
+        }
+
+    .gs-ai-panel {
+        position: fixed;
+        right: 22px;
+        bottom: 84px;
+        z-index: 3000;
+        width: min(380px, calc(100vw - 32px));
+        height: min(520px, calc(100vh - 140px));
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: linear-gradient(180deg, #0f1b30, #0a1424);
+        box-shadow: 0 30px 70px rgba(0,0,0,0.55);
+    }
+
+    .gs-ai-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(37,99,235,0.25));
+    }
+
+    .gs-ai-title {
+        color: #fff;
+        font-weight: 800;
+    }
+
+    .gs-ai-x {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 1.05rem;
+        cursor: pointer;
+    }
+
+        .gs-ai-x:hover {
+            color: #fff;
+        }
+
+    .gs-ai-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .gs-ai-msg {
+        max-width: 85%;
+        padding: 10px 12px;
+        border-radius: 14px;
+        font-size: 14px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        word-break: normal;
+        animation: gsAiFade .22s ease both;
+    }
+
+        .gs-ai-msg strong {
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .gs-ai-msg br {
+            line-height: 1.5;
+        }
+
+    @@keyframes gsAiFade {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .gs-ai-bot {
+        align-self: flex-start;
+        background: rgba(255,255,255,0.06);
+        color: #e2e8f0;
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .gs-ai-user {
+        align-self: flex-end;
+        background: linear-gradient(135deg, #7c3aed, #2563eb);
+        color: #fff;
+    }
+
+    .gs-ai-typing {
+        align-self: flex-start;
+        color: #94a3b8;
+        font-style: italic;
+        font-size: 13px;
+    }
+
+    .gs-ai-input {
+        display: flex;
+        gap: 8px;
+        padding: 12px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+        .gs-ai-input input {
+            flex: 1;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            padding: 10px 12px;
+            outline: none;
+        }
+
+            .gs-ai-input input:focus {
+                border-color: #38bdf8;
+            }
+
+        .gs-ai-input button {
+            border: none;
+            border-radius: 12px;
+            padding: 0 18px;
+            font-weight: 800;
+            color: #fff;
+            cursor: pointer;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+        }
+
+            .gs-ai-input button:disabled {
+                opacity: .5;
+                cursor: not-allowed;
+            }
+
+    @@media (max-width: 575.98px) {
+        .gs-ai-fab span {
+            display: none;
+        }
+    }
+</style>
+
+<script>
+    (function () {
+        var root = document.getElementById('gsEventAi');
+        if (!root) return;
+        var eventId = root.getAttribute('data-event-id');
+        var panel = document.getElementById('gsAiPanel');
+        var body = document.getElementById('gsAiBody');
+        var form = document.getElementById('gsAiForm');
+        var input = document.getElementById('gsAiText');
+        var sendBtn = document.getElementById('gsAiSend');
+
+        document.getElementById('gsAiToggle').addEventListener('click', function () {
+            panel.hidden = !panel.hidden;
+            if (!panel.hidden) input.focus();
+        });
+        document.getElementById('gsAiClose').addEventListener('click', function () { panel.hidden = true; });
+
+        // Chuyển markdown đơn giản của Gemini (**đậm**, * gạch đầu dòng, xuống dòng) thành HTML an toàn
+        function fmt(text) {
+            var esc = (text || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            esc = esc.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); // **đậm**
+            esc = esc.replace(/^\s*[\*\-]\s+/gm, '• ');                 // * / - đầu dòng -> bullet
+            esc = esc.replace(/\n{2,}/g, '\n').replace(/\n/g, '<br>');  // xuống dòng
+            return esc;
+        }
+
+        function addMsg(text, cls, isBot) {
+            var d = document.createElement('div');
+            d.className = 'gs-ai-msg ' + cls;
+            if (isBot) d.innerHTML = fmt(text);
+            else d.textContent = text;
+            body.appendChild(d);
+            body.scrollTop = body.scrollHeight;
+            return d;
+        }
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var q = input.value.trim();
+            if (!q) return;
+            addMsg(q, 'gs-ai-user');
+            input.value = '';
+            sendBtn.disabled = true;
+
+            var typing = document.createElement('div');
+            typing.className = 'gs-ai-typing';
+            typing.textContent = 'Đang soạn câu trả lời...';
+            body.appendChild(typing);
+            body.scrollTop = body.scrollHeight;
+
+            try {
+                var res = await fetch('/event/room/' + eventId + '/ask-ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'question=' + encodeURIComponent(q)
+                });
+                var data = await res.json();
+                typing.remove();
+                addMsg(data.reply || 'Xin lỗi, mình chưa trả lời được.', 'gs-ai-bot', true);
+            } catch (err) {
+                typing.remove();
+                addMsg('Không kết nối được trợ lý AI, thử lại sau nhé.', 'gs-ai-bot');
+            } finally {
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        });
+    })();
 </script>

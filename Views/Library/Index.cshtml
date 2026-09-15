@@ -131,7 +131,7 @@
 
                                     @if (activeRefundIds.Contains(item.MaGame))
                                     {
-                                        <span class="gs-badge gs-badge-pending gs-refund-flag">⏳ Đang chờ hoàn trả</span>
+                                        <span class="gs-badge gs-badge-pending gs-refund-flag" title="Đang chờ admin duyệt hoàn trả">⏳ Chờ duyệt hoàn trả</span>
                                     }
                                     else if (refundableIds.Contains(item.MaGame))
                                     {
@@ -142,6 +142,10 @@
                                                 data-game-name="@item.Game.TenGame">
                                             ↩ Hoàn trả
                                         </button>
+                                    }
+                                    else if (item.DaTai && (DateTime.UtcNow - item.NgayMua).TotalMinutes <= refundWindow)
+                                    {
+                                        <span class="gs-badge gs-badge-muted gs-refund-flag" title="Game đã tải nên không thể hoàn trả">🔒 Đã tải, không hoàn</span>
                                     }
                                 </div>
                             </div>
@@ -588,7 +592,18 @@
     }
 
     .gs-refund-flag {
-        white-space: nowrap;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.25;
+        max-width: 100%;
+        font-size: .8rem;
+        padding: 6px 10px;
+        height: auto;
+        min-height: 0;
+    }
+
+    .gs-action-stack {
+        max-width: 100%;
     }
 
     /* ===== Refund history ===== */
@@ -705,8 +720,15 @@
     }
 
     @@keyframes gsRefundIn {
-        from { transform: translateY(14px) scale(.98); opacity: 0; }
-        to { transform: translateY(0) scale(1); opacity: 1; }
+        from {
+            transform: translateY(14px) scale(.98);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
     }
 
     .gs-refund-modal-head {

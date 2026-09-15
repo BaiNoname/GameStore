@@ -12,6 +12,9 @@
         public decimal SoDu { get; set; }
         public bool IsActive { get; set; } = true;
 
+        // Ảnh đại diện (đường dẫn web, ví dụ /images/avatars/xxx.png)
+        public string? Avatar { get; set; }
+
         // 🔥 reset password
         public string? ResetCode { get; set; }
         public DateTime? ResetCodeExpiry { get; set; }

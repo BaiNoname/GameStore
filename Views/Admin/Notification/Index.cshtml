@@ -1,0 +1,171 @@
+@using GameStore.Models
+@model List<GameStore.Models.ThongBao>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Notification Management";
+    string keyword = ViewBag.Keyword as string ?? "";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    string Dt(DateTime? d) => d.HasValue ? d.Value.ToLocalTime().ToString("yyyy-MM-ddTHH:mm") : "";
+}
+
+<div class="card admin-list-card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <div>
+                <h4 class="card-title mb-1">Thanh thông báo chạy</h4>
+                <p class="card-subtitle mb-0">Thông báo admin tự tạo (ngoài các mục tự sinh: game mới, sự kiện, lượt mua)</p>
+            </div>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createTB">+ Thêm thông báo</button>
+        </div>
+
+        <form method="get" action="/admin/notification/index" class="d-flex gap-2 flex-wrap my-3">
+            <input type="text" name="keyword" value="@keyword" class="form-control" style="max-width:280px" placeholder="Tìm theo nội dung..." />
+            <button class="btn btn-primary">Tìm</button>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Nội dung</th>
+                        <th>Link</th>
+                        <th>Thứ tự</th>
+                        <th>Hết hạn</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model == null || Model.Count == 0)
+                    {
+                        <tr><td colspan="6" class="text-center text-muted py-4">Chưa có thông báo nào.</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var t in Model)
+                        {
+                            <tr>
+                                <td class="text-break" style="min-width:240px;">@t.NoiDung</td>
+                                <td class="text-break small">@(string.IsNullOrEmpty(t.Link) ? "—" : t.Link)</td>
+                                <td>@t.ThuTu</td>
+                                <td class="small text-nowrap">@(t.NgayHetHan?.ToLocalTime().ToString("dd/MM/yy HH:mm") ?? "—")</td>
+                                <td><span class="badge @(t.IsActive ? "bg-success" : "bg-secondary")">@(t.IsActive ? "Bật" : "Tắt")</span></td>
+                                <td>
+                                    <div class="d-flex gap-1 flex-nowrap">
+                                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editTB-@t.MaTB">Sửa</button>
+                                        <form method="post" action="/admin/notification/toggle">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="maTB" value="@t.MaTB" />
+                                            <button class="btn btn-sm btn-outline-secondary">@(t.IsActive ? "Tắt" : "Bật")</button>
+                                        </form>
+                                        <form method="post" action="/admin/notification/delete" onsubmit="return confirm('Xóa thông báo này?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="maTB" value="@t.MaTB" />
+                                            <button class="btn btn-sm btn-danger">Xóa</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+            <nav>
+                <ul class="pagination justify-content-center mt-3 flex-wrap">
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="?keyword=@keyword&page=@i">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+@* Modal thêm *@
+<div class="modal fade" id="createTB" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" action="/admin/notification/create">
+                @Html.AntiForgeryToken()
+                <div class="modal-header"><h5 class="modal-title">Thêm thông báo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nội dung <span class="text-danger">*</span></label>
+                        <input type="text" name="NoiDung" class="form-control" required maxlength="500" placeholder="VD: Flash sale cuối tuần giảm đến 50%!" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Link (tùy chọn)</label>
+                        <input type="text" name="Link" class="form-control" placeholder="VD: /coupon hoặc /Game/Detail/G001" />
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Thứ tự</label>
+                            <input type="number" name="ThuTu" class="form-control" value="0" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Trạng thái</label>
+                            <select name="IsActive" class="form-select"><option value="true" selected>Bật</option><option value="false">Tắt</option></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Hết hạn</label>
+                            <input type="datetime-local" name="NgayHetHan" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" class="btn btn-success">Tạo</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* Modal sửa cho từng dòng *@
+@if (Model != null)
+{
+    foreach (var t in Model)
+    {
+        <div class="modal fade" id="editTB-@t.MaTB" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="post" action="/admin/notification/edit">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="MaTB" value="@t.MaTB" />
+                        <div class="modal-header"><h5 class="modal-title">Sửa thông báo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Nội dung <span class="text-danger">*</span></label>
+                                <input type="text" name="NoiDung" class="form-control" required maxlength="500" value="@t.NoiDung" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Link (tùy chọn)</label>
+                                <input type="text" name="Link" class="form-control" value="@t.Link" />
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Thứ tự</label>
+                                    <input type="number" name="ThuTu" class="form-control" value="@t.ThuTu" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Trạng thái</label>
+                                    <select name="IsActive" class="form-select">
+                                        <option value="true" selected="@(t.IsActive)">Bật</option>
+                                        <option value="false" selected="@(!t.IsActive)">Tắt</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Hết hạn</label>
+                                    <input type="datetime-local" name="NgayHetHan" class="form-control" value="@Dt(t.NgayHetHan)" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button><button type="submit" class="btn btn-warning">Lưu</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+}

@@ -38,6 +38,8 @@ namespace GameStore.Services
         {
             if (item == null) return false;
             if (activeRefundGameIds.Contains(item.MaGame)) return false;
+            // Đã tải game về máy -> không cho hoàn trả (vì không có DRM để thu hồi file)
+            if (item.DaTai) return false;
             return (DateTime.UtcNow - item.NgayMua).TotalMinutes <= RefundWindowMinutes;
         }
 
@@ -49,6 +51,10 @@ namespace GameStore.Services
 
             if ((DateTime.UtcNow - lib.NgayMua).TotalMinutes > RefundWindowMinutes)
                 return (false, $"Đã quá {RefundWindowMinutes} phút kể từ khi mua, không thể hoàn trả.");
+
+            // Đã tải game về máy -> không cho hoàn trả
+            if (lib.DaTai)
+                return (false, "Game đã được tải về nên không thể hoàn trả.");
 
             // Chỉ chặn khi đang có 1 yêu cầu Pending cho chính game này.
             // (Đã Approved/Rejected trước đó không chặn, vì đây là lượt sở hữu mới.)
